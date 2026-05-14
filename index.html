@@ -49,6 +49,24 @@
     button.light { background: #f1f5f9; color: #1e293b; border: 1px solid #cbd5e1; }
     button.danger { background: #dc2626; }
     button.mini { padding: 5px 8px; border-radius: 6px; font-size: 11px; }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 31px;
+      max-width: 360px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      color: #475569;
+      font-size: 11px;
+      line-height: 1.2;
+      white-space: normal;
+    }
+    .status-pill.success { border-color: #86efac; background: #f0fdf4; color: #166534; }
+    .status-pill.warning { border-color: #fde68a; background: #fffbeb; color: #92400e; }
+    .status-pill.error { border-color: #fecaca; background: #fef2f2; color: #991b1b; }
+    .status-pill.loading { border-color: #bae6fd; background: #f0f9ff; color: #075985; }
     input, select, textarea {
       border: 1px solid #cbd5e1;
       border-radius: 8px;
@@ -478,6 +496,10 @@
           <option value="week">Week View</option>
           <option value="month">Month View</option>
         </select>
+        <select id="weekLabelInput">
+          <option value="project">Week: Project W1</option>
+          <option value="iso">Week: ISO Year Week</option>
+        </select>
         <select id="densityInput">
           <option value="compact">Compact / Fit</option>
           <option value="normal">Normal</option>
@@ -495,6 +517,8 @@
         <button class="secondary" id="exportCsvButton">Export CSV</button>
         <button class="secondary" id="exportExcelButton">Export Excel</button>
         <button class="light" id="importCsvButton">Import CSV</button>
+        <button class="light" id="updateHkHolidaysButton">Update HK Holidays</button>
+        <span id="holidayStatus" class="status-pill">HK Holidays: not updated</span>
         <button class="light" id="clientPdfButton">Client PDF Preset</button>
         <button id="printButton">Print / Save PDF</button>
         <input id="csvInput" type="file" accept=".csv,text/csv" style="display:none">
@@ -537,6 +561,7 @@
             <tr><th>Client Summary</th><td><textarea id="summaryInput" style="min-height:80px"></textarea></td></tr>
             <tr><th>Notes</th><td><textarea id="notesInput" style="min-height:90px"></textarea></td></tr>
             <tr><th>Holidays</th><td><input id="holidaysInput" placeholder="YYYY-MM-DD, YYYY-MM-DD"></td></tr>
+            <tr><th>Holiday Proxy URL</th><td><input id="holidayProxyInput" placeholder="https://holidays.napjoc.workers.dev/"><div style="margin-top:6px;color:#64748b">如 GovHK 被 CORS 擋住，可填入公司 proxy / Cloudflare Worker URL。</div></td></tr>
             <tr><th>Company Logo</th><td><button type="button" class="light" id="uploadLogoButton">Upload Logo</button> <button type="button" class="light" id="removeLogoButton">Remove Logo</button><input id="logoInput" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" style="display:none"><div id="logoStatus" style="margin-top:6px;color:#64748b"></div></td></tr>
           </tbody>
         </table>
@@ -623,13 +648,14 @@
       const STORE_KEY = 'noah_master_programme_display_v5';
       const TEMPLATE_KEY = 'noah_master_programme_templates_v1';
       const DELETED_TEMPLATE_KEY = 'noah_master_programme_deleted_templates_v1';
+      const DEFAULT_HOLIDAY_PROXY_URL = 'https://holidays.napjoc.workers.dev/';
       const LEGACY_KEYS = ['noah_master_programme_display_v4', 'noah_master_programme_display_v3', 'noah_master_programme_display_v2', 'noah_master_programme_display_v1'];
       const LF = String.fromCharCode(10);
       const CR = String.fromCharCode(13);
       const DQ = String.fromCharCode(34);
       const BOM = String.fromCharCode(65279);
       const BS = String.fromCharCode(92);
-      const REQUIRED_IDS = ['app', 'projectName', 'versionText', 'dateRangeText', 'lastUpdateText', 'viewText', 'clientSummary', 'notesText', 'startInput', 'endInput', 'viewInput', 'densityInput', 'programmeWrap', 'companyLogo'];
+      const REQUIRED_IDS = ['app', 'projectName', 'versionText', 'dateRangeText', 'lastUpdateText', 'viewText', 'clientSummary', 'notesText', 'startInput', 'endInput', 'viewInput', 'weekLabelInput', 'densityInput', 'programmeWrap', 'companyLogo', 'holidayStatus'];
       let editingRows = [];
       let quickPeriod = null;
       let dragState = null;
@@ -685,6 +711,11 @@
         startDate: '2025-09-26',
         endDate: '2025-11-18',
         viewMode: 'auto',
+        weekLabelMode: 'project',
+        holidayStatusText: 'HK Holidays: not updated',
+        holidayStatusType: '',
+        holidaySourceYears: [],
+        holidayProxyUrl: DEFAULT_HOLIDAY_PROXY_URL,
         summary: 'The following master programme outlines the key preparation, demolition, E&M, painting, flooring and handover activities for client reference. The schedule is indicative and subject to final confirmation.',
         notes: ['- Working HRS: Mon-Fri 08:00-18:00 except Sat, Sun and Public Holiday.', '- Reserved working schedule for ArchSD: 16 OCT 2025 - 05 NOV 2025 (14 Working Days).'].join(LF),
         holidays: ['2025-10-01', '2025-10-07', '2025-10-29'],
@@ -763,6 +794,17 @@
       function setValue(id, value) {
         const element = byId(id);
         if (element) element.value = value;
+      }
+
+      function setHolidayStatus(message, type = '') {
+        if (data) {
+          data.holidayStatusText = message;
+          data.holidayStatusType = type;
+        }
+        const element = byId('holidayStatus');
+        if (!element) return;
+        element.textContent = message;
+        element.className = `status-pill ${type}`.trim();
       }
 
       function loadDeletedTemplateNames() {
@@ -916,6 +958,11 @@
           startDate: startDate <= endDate ? startDate : endDate,
           endDate: endDate >= startDate ? endDate : startDate,
           viewMode: ['auto', 'day', 'week', 'month'].includes(source.viewMode) ? source.viewMode : 'auto',
+          weekLabelMode: ['project', 'iso'].includes(source.weekLabelMode) ? source.weekLabelMode : 'project',
+          holidayStatusText: String(source.holidayStatusText || 'HK Holidays: not updated'),
+          holidayStatusType: ['success', 'warning', 'error', 'loading'].includes(source.holidayStatusType) ? source.holidayStatusType : '',
+          holidaySourceYears: Array.isArray(source.holidaySourceYears) ? source.holidaySourceYears.map(Number).filter(Number.isInteger) : [],
+          holidayProxyUrl: String(source.holidayProxyUrl || DEFAULT_HOLIDAY_PROXY_URL),
           summary: String(source.summary || ''),
           notes: String(source.notes || ''),
           holidays: Array.isArray(source.holidays) ? source.holidays.filter(isValidDate) : [],
@@ -1072,10 +1119,23 @@
           periodEndDate.setDate(periodEndDate.getDate() + 6);
           if (periodEndDate > final) periodEndDate.setTime(final.getTime());
           const periodEnd = toISO(periodEndDate);
-          result.push({ start: periodStart, end: periodEnd, label1: monthLabel(periodStart), label2: `W${result.length + 1}`, label3: `${formatMd(periodStart)} to ${formatMd(periodEnd)}`, blocked: false, type: 'week' });
+          result.push({ start: periodStart, end: periodEnd, label1: monthLabel(periodStart), label2: weekLabel(periodStart, result.length + 1), label3: `${formatMd(periodStart)} to ${formatMd(periodEnd)}`, blocked: false, type: 'week' });
           current.setDate(current.getDate() + 7);
         }
         return result;
+      }
+
+      function weekLabel(iso, projectWeekNumber) {
+        if ((data.weekLabelMode || 'project') === 'iso') return `Y-W${String(isoWeekNumber(iso)).padStart(2, '0')}`;
+        return `W${projectWeekNumber}`;
+      }
+
+      function isoWeekNumber(iso) {
+        const date = parseDate(iso);
+        date.setHours(0, 0, 0, 0);
+        date.setDate(date.getDate() + 3 - ((date.getDay() + 6) % 7));
+        const week1 = new Date(date.getFullYear(), 0, 4);
+        return 1 + Math.round(((date - week1) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7);
       }
 
       function buildMonthPeriods(start, end) {
@@ -1132,6 +1192,124 @@
         });
         if (current) groups.push({ label: current, count });
         return groups;
+      }
+
+      function getProgrammeYearRange() {
+        const dates = [data.startDate, data.endDate];
+        if (Array.isArray(data.rows)) {
+          data.rows.forEach(row => {
+            dates.push(row.start, row.end);
+          });
+        }
+        const years = dates.filter(isValidDate).map(date => parseDate(date).getFullYear()).filter(Number.isInteger);
+        const startYear = years.length ? Math.min(...years) : parseDate(todayISO()).getFullYear();
+        const endYear = years.length ? Math.max(...years) : startYear;
+        const list = [];
+        for (let year = startYear; year <= endYear; year++) list.push(year);
+        return { startYear, endYear, years: list };
+      }
+
+      async function updateHongKongHolidays() {
+        const yearRange = getProgrammeYearRange();
+        setHolidayStatus(`HK Holidays: updating ${yearRange.startYear}-${yearRange.endYear} from GovHK...`, 'loading');
+        saveData();
+        try {
+          const startYear = yearRange.startYear;
+          const endYear = yearRange.endYear;
+          const requiredYears = yearRange.years;
+          const result = await fetchHongKongHolidays(requiredYears);
+          data.holidaySourceYears = result.availableYears;
+          const filtered = result.dates.filter(date => {
+            const year = Number(date.slice(0, 4));
+            return year >= startYear && year <= endYear;
+          });
+          if (!filtered.length) {
+            setHolidayStatus(`HK Holidays: no GovHK data for ${startYear}-${endYear}`, 'warning');
+            saveData();
+            alert('未能在 GovHK 年份頁面找到此年份範圍的香港公眾假期。可能政府尚未公布，或瀏覽器阻擋跨站讀取。');
+            return;
+          }
+          const replace = window.confirm(`從 GovHK 找到 ${filtered.length} 個香港公眾假期。按 OK 取代目前 Holidays；按 Cancel 則合併到目前 Holidays。`);
+          const merged = replace ? filtered : Array.from(new Set(data.holidays.concat(filtered)));
+          data.holidays = merged.filter(isValidDate).sort();
+          if (result.missingYears.length) {
+            setHolidayStatus(`HK Holidays: partial success from GovHK. Applied ${filtered.length}; missing ${result.missingYears.join(', ')}`, 'warning');
+          } else {
+            setHolidayStatus(`HK Holidays: success from GovHK. Applied ${filtered.length}. Years: ${result.availableYears.join(', ')}`, 'success');
+          }
+          render();
+          alert(`已套用 ${data.holidays.length} 個 holiday date。星期六日仍會自動灰色顯示。`);
+        } catch (error) {
+          setHolidayStatus('HK Holidays: GovHK fetch failed. Add proxy URL or use Edit Project → Holidays manually.', 'error');
+          saveData();
+          alert('未能自動連接 GovHK 取得香港公眾假期。可能是瀏覽器 CORS 或網絡限制。你可以在 Edit Project 填入 Holiday Proxy URL，或手動貼上日期。');
+        }
+      }
+
+      async function fetchHongKongHolidays(years) {
+        const uniqueYears = Array.from(new Set((years || []).map(Number).filter(Number.isInteger))).sort((a, b) => a - b);
+        const dates = [];
+        const availableYears = [];
+        const missingYears = [];
+        for (const year of uniqueYears) {
+          try {
+            const yearDates = await fetchGovHkHolidaysForYear(year);
+            if (yearDates.length) {
+              dates.push(...yearDates);
+              availableYears.push(year);
+            } else {
+              missingYears.push(year);
+            }
+          } catch (error) {
+            missingYears.push(year);
+          }
+        }
+        return {
+          dates: Array.from(new Set(dates)).sort(),
+          availableYears,
+          missingYears
+        };
+      }
+
+      async function fetchGovHkHolidaysForYear(year) {
+        const response = await fetch(buildHolidayFetchUrl(govHolidayUrl(year)), { cache: 'no-store' });
+        if (!response.ok) throw new Error(`GovHK holiday page not available for ${year}`);
+        const html = await response.text();
+        return parseGovHkHolidayPage(html, year);
+      }
+
+      function govHolidayUrl(year) {
+        return `https://www.gov.hk/tc/about/abouthk/holiday/${year}.htm`;
+      }
+
+      function buildHolidayFetchUrl(targetUrl) {
+        const proxy = String(data && data.holidayProxyUrl ? data.holidayProxyUrl : '').trim();
+        if (!proxy) return targetUrl;
+        const separator = proxy.includes('?') ? '&' : '?';
+        return `${proxy}${separator}url=${encodeURIComponent(targetUrl)}`;
+      }
+
+      function parseGovHkHolidayPage(html, year) {
+        const doc = new DOMParser().parseFromString(String(html || ''), 'text/html');
+        const main = doc.querySelector('#main-content, main, article, .content, #content') || doc.body;
+        const rawText = main ? main.textContent : doc.documentElement.textContent || '';
+        const text = rawText.replaceAll(CR, ' ').replaceAll(LF, ' ').replaceAll(String.fromCharCode(9), ' ').replace(new RegExp(' +', 'g'), ' ');
+        const dates = [];
+        const regex = new RegExp('([0-9]{1,2})月([0-9]{1,2})日', 'g');
+        let match;
+        while ((match = regex.exec(text))) {
+          const month = Number(match[1]);
+          const day = Number(match[2]);
+          const iso = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          if (isValidDate(iso)) dates.push(iso);
+        }
+        return Array.from(new Set(dates)).sort();
+      }
+
+      function compactDateToIso(value) {
+        const text = String(value || '');
+        if (text.length !== 8) return '';
+        return `${text.slice(0, 4)}-${text.slice(4, 6)}-${text.slice(6, 8)}`;
       }
 
       function applyTemplate() {
@@ -1209,11 +1387,13 @@
         setText('lastUpdateText', data.lastUpdate);
         setText('dateRangeText', `${formatDisplayDate(data.startDate)} - ${formatDisplayDate(data.endDate)}`);
         setText('viewText', `View: ${mode.toUpperCase()}`);
+        setHolidayStatus(data.holidayStatusText || 'HK Holidays: not updated', data.holidayStatusType || '');
         setText('clientSummary', data.summary);
         setHtml('notesText', escapeHtml(data.notes).split(LF).join('<br>'));
         setValue('startInput', data.startDate);
         setValue('endInput', data.endDate);
         setValue('viewInput', data.viewMode || 'auto');
+        setValue('weekLabelInput', data.weekLabelMode || 'project');
         safeClassToggle(byId('app'), 'compact', byId('densityInput') ? byId('densityInput').value === 'compact' : true);
         setHtml('programmeWrap', buildTable(rows, periods, mode));
         bindProgrammeDoubleClick();
@@ -1272,6 +1452,7 @@
         setValue('summaryInput', data.summary);
         setValue('notesInput', data.notes);
         setValue('holidaysInput', data.holidays.join(', '));
+        setValue('holidayProxyInput', data.holidayProxyUrl || '');
         setText('logoStatus', data.logoDataUrl ? 'Logo uploaded and will appear on client PDF.' : 'No logo uploaded.');
         safeClassAdd(byId('projectModal'), 'show');
       }
@@ -1318,6 +1499,7 @@
         data.summary = byId('summaryInput')?.value || '';
         data.notes = byId('notesInput')?.value || '';
         data.holidays = (byId('holidaysInput')?.value || '').split(',').map(value => value.trim()).filter(isValidDate);
+        data.holidayProxyUrl = (byId('holidayProxyInput')?.value || '').trim();
         closeProjectModal();
         render();
       }
@@ -1839,6 +2021,29 @@ ${visualRows}
         console.assert(isValidDate('2025-09-26') === true, 'valid date should pass');
         console.assert(isValidDate('2025-02-30') === false, 'invalid date should fail');
         console.assert(dayDiff('2025-09-26', '2025-09-30') === 4, 'dayDiff should count date difference');
+        console.assert(isoWeekNumber('2026-01-01') === 1, 'ISO week number should work');
+        console.assert(compactDateToIso('20260101') === '2026-01-01', 'compact holiday date should parse');
+        console.assert(govHolidayUrl(2026) === 'https://www.gov.hk/tc/about/abouthk/holiday/2026.htm', 'GovHK holiday URL should build by year');
+        const oldRowsForYearTest = data ? data.rows : [];
+        const oldStartForYearTest = data ? data.startDate : '2026-01-01';
+        const oldEndForYearTest = data ? data.endDate : '2026-01-02';
+        if (data) {
+          data.startDate = '2026-12-20';
+          data.endDate = '2026-12-31';
+          data.rows = [{ start: '2026-12-28', end: '2027-01-05' }];
+        }
+        console.assert(data && getProgrammeYearRange().years.join(',') === '2026,2027', 'programme year range should include task years across New Year');
+        if (data) {
+          data.rows = oldRowsForYearTest;
+          data.startDate = oldStartForYearTest;
+          data.endDate = oldEndForYearTest;
+        }
+        const oldProxy = data ? data.holidayProxyUrl : '';
+        if (data) data.holidayProxyUrl = 'https://proxy.example.com/';
+        console.assert(buildHolidayFetchUrl('https://example.com/a.htm').includes('url='), 'holiday proxy URL should append encoded target URL');
+        console.assert(DEFAULT_HOLIDAY_PROXY_URL === 'https://holidays.napjoc.workers.dev/', 'default holiday proxy should be preset');
+        if (data) data.holidayProxyUrl = oldProxy;
+        console.assert(parseGovHkHolidayPage('一月一日 1月1日 星期四 農曆年初一 2月17日 星期二', 2026).includes('2026-02-17'), 'GovHK holiday parser should parse Chinese page dates');
         console.assert(overlaps('2025-09-26', '2025-09-30', '2025-09-30', '2025-10-02') === true, 'overlap should include boundary');
         console.assert(overlaps('2025-09-26', '2025-09-29', '2025-09-30', '2025-10-02') === false, 'non-overlap should fail');
         const csv = 'A,B' + CR + LF + '"x,y",z';
@@ -1856,6 +2061,8 @@ ${visualRows}
         console.assert(typeof importTemplatesFromFile === 'function', 'template import should exist');
         console.assert(typeof deleteSelectedTemplate === 'function', 'template delete should exist');
         console.assert(typeof applyClientPdfPreset === 'function', 'client PDF preset should exist');
+        console.assert(typeof updateHongKongHolidays === 'function', 'HK holiday updater should exist');
+        console.assert(typeof setHolidayStatus === 'function', 'holiday status setter should exist');
         console.assert(hasAllRequiredElements() === true, 'required DOM elements should exist');
       }
 
@@ -1887,6 +2094,7 @@ ${visualRows}
         bind('exportCsvButton', 'click', exportCsv);
         bind('exportExcelButton', 'click', exportExcel);
         bind('importCsvButton', 'click', () => byId('csvInput')?.click());
+        bind('updateHkHolidaysButton', 'click', updateHongKongHolidays);
         bind('printButton', 'click', () => window.print());
         bind('cancelQuickRowButton', 'click', closeQuickRowModal);
         bind('applyQuickRowButton', 'click', applyQuickRowEditor);
@@ -1898,6 +2106,7 @@ ${visualRows}
         bind('startInput', 'change', event => { data.startDate = event.target.value; render(); });
         bind('endInput', 'change', event => { data.endDate = event.target.value; render(); });
         bind('viewInput', 'change', event => { data.viewMode = event.target.value; render(); });
+        bind('weekLabelInput', 'change', event => { data.weekLabelMode = event.target.value; render(); });
         bind('densityInput', 'change', render);
         bind('applyTemplateButton', 'click', applyTemplate);
         bind('saveTemplateButton', 'click', saveCurrentAsTemplate);
