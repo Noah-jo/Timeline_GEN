@@ -659,6 +659,7 @@
       let editingRows = [];
       let quickPeriod = null;
       let dragState = null;
+      let lastAutoHolidayFetchKey = '';
       let templates = {};
       let deletedTemplateNames = new Set();
       let data;
@@ -715,6 +716,8 @@
         holidayStatusText: 'HK Holidays: not updated',
         holidayStatusType: '',
         holidaySourceYears: [],
+        govHolidays: [],
+        holidayAutoUpdate: true,
         holidayProxyUrl: DEFAULT_HOLIDAY_PROXY_URL,
         summary: 'The following master programme outlines the key preparation, demolition, E&M, painting, flooring and handover activities for client reference. The schedule is indicative and subject to final confirmation.',
         notes: ['- Working HRS: Mon-Fri 08:00-18:00 except Sat, Sun and Public Holiday.', '- Reserved working schedule for ArchSD: 16 OCT 2025 - 05 NOV 2025 (14 Working Days).'].join(LF),
@@ -962,6 +965,8 @@
           holidayStatusText: String(source.holidayStatusText || 'HK Holidays: not updated'),
           holidayStatusType: ['success', 'warning', 'error', 'loading'].includes(source.holidayStatusType) ? source.holidayStatusType : '',
           holidaySourceYears: Array.isArray(source.holidaySourceYears) ? source.holidaySourceYears.map(Number).filter(Number.isInteger) : [],
+          govHolidays: Array.isArray(source.govHolidays) ? source.govHolidays.filter(isValidDate) : [],
+          holidayAutoUpdate: source.holidayAutoUpdate !== false,
           holidayProxyUrl: String(source.holidayProxyUrl || DEFAULT_HOLIDAY_PROXY_URL),
           summary: String(source.summary || ''),
           notes: String(source.notes || ''),
@@ -1079,7 +1084,7 @@
       }
 
       function isBlocked(iso) {
-        return isWeekend(iso) || data.holidays.includes(iso);
+        return isWeekend(iso) || data.holidays.includes(iso) || data.govHolidays.includes(iso);
       }
 
       function getResolvedViewMode() {
@@ -1209,7 +1214,8 @@
         return { startYear, endYear, years: list };
       }
 
-      async function updateHongKongHolidays() {
+      async function updateHongKongHolidays(options = {}) {
+        const silent = Boolean(options.silent);
         const yearRange = getProgrammeYearRange();
         setHolidayStatus(`HK Holidays: updating ${yearRange.startYear}-${yearRange.endYear} from GovHK...`, 'loading');
         saveData();
@@ -1226,24 +1232,43 @@
           if (!filtered.length) {
             setHolidayStatus(`HK Holidays: no GovHK data for ${startYear}-${endYear}`, 'warning');
             saveData();
-            alert('未能在 GovHK 年份頁面找到此年份範圍的香港公眾假期。可能政府尚未公布，或瀏覽器阻擋跨站讀取。');
-            return;
+            if (!silent) alert('未能在 GovHK 年份頁面找到此年份範圍的香港公眾假期。可能政府尚未公布，或瀏覽器阻擋跨站讀取。');
+            return false;
           }
-          const replace = window.confirm(`從 GovHK 找到 ${filtered.length} 個香港公眾假期。按 OK 取代目前 Holidays；按 Cancel 則合併到目前 Holidays。`);
-          const merged = replace ? filtered : Array.from(new Set(data.holidays.concat(filtered)));
-          data.holidays = merged.filter(isValidDate).sort();
+          applyFetchedGovHolidays(filtered, result.availableYears);
           if (result.missingYears.length) {
             setHolidayStatus(`HK Holidays: partial success from GovHK. Applied ${filtered.length}; missing ${result.missingYears.join(', ')}`, 'warning');
           } else {
             setHolidayStatus(`HK Holidays: success from GovHK. Applied ${filtered.length}. Years: ${result.availableYears.join(', ')}`, 'success');
           }
           render();
-          alert(`已套用 ${data.holidays.length} 個 holiday date。星期六日仍會自動灰色顯示。`);
+          if (!silent) alert(`已自動套用 ${data.govHolidays.length} 個 GovHK holiday date。手動 Holidays 會保留，星期六日仍會自動灰色顯示。`);
+          return true;
         } catch (error) {
           setHolidayStatus('HK Holidays: GovHK fetch failed. Add proxy URL or use Edit Project → Holidays manually.', 'error');
           saveData();
-          alert('未能自動連接 GovHK 取得香港公眾假期。可能是瀏覽器 CORS 或網絡限制。你可以在 Edit Project 填入 Holiday Proxy URL，或手動貼上日期。');
+          if (!silent) alert('未能自動連接 GovHK 取得香港公眾假期。可能是瀏覽器 CORS 或網絡限制。你可以在 Edit Project 填入 Holiday Proxy URL，或手動貼上日期。');
+          return false;
         }
+      }
+
+      function applyFetchedGovHolidays(fetchedDates, availableYears) {
+        const years = new Set((availableYears || []).map(Number));
+        const existing = Array.isArray(data.govHolidays) ? data.govHolidays : [];
+        const kept = existing.filter(date => !years.has(Number(date.slice(0, 4))));
+        data.govHolidays = Array.from(new Set(kept.concat(fetchedDates))).filter(isValidDate).sort();
+      }
+
+      function holidayYearKey() {
+        return getProgrammeYearRange().years.join(',');
+      }
+
+      function autoUpdateHolidays(reason = 'auto', force = false) {
+        if (!data || data.holidayAutoUpdate === false) return;
+        const key = holidayYearKey();
+        if (!force && key === lastAutoHolidayFetchKey) return;
+        lastAutoHolidayFetchKey = key;
+        updateHongKongHolidays({ silent: true, reason });
       }
 
       async function fetchHongKongHolidays(years) {
@@ -1341,6 +1366,7 @@
         data.endDate = data.rows.reduce((max, row) => row.end > max ? row.end : max, baseDate);
         data.viewMode = 'auto';
         render();
+        autoUpdateHolidays('template-apply', true);
       }
 
       function saveCurrentAsTemplate() {
@@ -1499,9 +1525,10 @@
         data.summary = byId('summaryInput')?.value || '';
         data.notes = byId('notesInput')?.value || '';
         data.holidays = (byId('holidaysInput')?.value || '').split(',').map(value => value.trim()).filter(isValidDate);
-        data.holidayProxyUrl = (byId('holidayProxyInput')?.value || '').trim();
+        data.holidayProxyUrl = (byId('holidayProxyInput')?.value || '').trim() || DEFAULT_HOLIDAY_PROXY_URL;
         closeProjectModal();
         render();
+        autoUpdateHolidays('project-apply', true);
       }
 
       function findRowById(rowId) {
@@ -1590,8 +1617,10 @@
       function endTimelineDrag() {
         window.removeEventListener('pointermove', onTimelineDragMove);
         safeClassRemove(document.body, 'timeline-dragging');
+        const shouldCheckHolidays = Boolean(dragState && dragState.moved);
         dragState = null;
         render();
+        if (shouldCheckHolidays) autoUpdateHolidays('timeline-drag', false);
       }
 
       function cssEscape(value) {
@@ -1693,6 +1722,7 @@
           if (isValidDate(end)) row.end = end;
           if (row.end < row.start) [row.start, row.end] = [row.end, row.start];
           render();
+          autoUpdateHolidays('inline-date-edit', false);
         };
         const cancel = () => render();
         applyButton.addEventListener('click', apply);
@@ -1746,6 +1776,7 @@
         row.highlight = (byId('quickHighlightInput')?.value || 'NO') === 'YES';
         closeQuickRowModal();
         render();
+        autoUpdateHolidays('quick-row-date-edit', false);
       }
 
       function deleteQuickRow() {
@@ -1843,9 +1874,11 @@
       }
 
       function applyRowsEditor() {
+        const previousKey = holidayYearKey();
         data.rows = editingRows.map((row, order) => normalizeRow({ ...row, order }, order, data.startDate));
         closeRowsModal();
         render();
+        if (previousKey !== holidayYearKey()) autoUpdateHolidays('rows-date-change', true);
       }
 
       function openDataModal() {
@@ -2005,6 +2038,7 @@ ${visualRows}
               order
             }, order, data.startDate));
             render();
+            autoUpdateHolidays('csv-import', true);
           } catch (error) {
             alert('CSV 格式不正確，請用 Export CSV 的格式再匯入。');
           }
@@ -2103,8 +2137,18 @@ ${visualRows}
         bind('useClickedAsEndButton', 'click', useClickedAsEnd);
         bind('cancelEditButton', 'click', closeDataModal);
         bind('applyEditButton', 'click', applyDataEditor);
-        bind('startInput', 'change', event => { data.startDate = event.target.value; render(); });
-        bind('endInput', 'change', event => { data.endDate = event.target.value; render(); });
+        bind('startInput', 'change', event => {
+          const previousKey = holidayYearKey();
+          data.startDate = event.target.value;
+          render();
+          if (previousKey !== holidayYearKey()) autoUpdateHolidays('start-date-change', true);
+        });
+        bind('endInput', 'change', event => {
+          const previousKey = holidayYearKey();
+          data.endDate = event.target.value;
+          render();
+          if (previousKey !== holidayYearKey()) autoUpdateHolidays('end-date-change', true);
+        });
         bind('viewInput', 'change', event => { data.viewMode = event.target.value; render(); });
         bind('weekLabelInput', 'change', event => { data.weekLabelMode = event.target.value; render(); });
         bind('densityInput', 'change', render);
