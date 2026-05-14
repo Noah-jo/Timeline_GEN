@@ -1,0 +1,1949 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Noah (Asia) Limited｜Master Programme Timeline</title>
+  <style>
+    :root {
+      --ink: #111827;
+      --muted: #64748b;
+      --line: #111827;
+      --weekend: #cfcfcf;
+      --work: #9ae6b4;
+      --paper: #ffffff;
+      --brand: #0f766e;
+      --danger: #c00000;
+      --category-w: 130px;
+      --item-w: 170px;
+      --action-w: 330px;
+      --person-w: 120px;
+      --period-w: 42px;
+      --row-h: 30px;
+      --header-h: 28px;
+    }
+    * { box-sizing: border-box; }
+    html, body, .app, .sheet, .programme, .programme th, .programme td, .swatch {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+      color-adjust: exact;
+    }
+    body {
+      margin: 0;
+      background: #e5e7eb;
+      color: var(--ink);
+      font-family: Arial, "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+      font-size: 12px;
+    }
+    button, input, select, textarea { font: inherit; }
+    button {
+      border: 0;
+      border-radius: 8px;
+      background: var(--brand);
+      color: white;
+      padding: 8px 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button.secondary { background: #334155; }
+    button.light { background: #f1f5f9; color: #1e293b; border: 1px solid #cbd5e1; }
+    button.danger { background: #dc2626; }
+    button.mini { padding: 5px 8px; border-radius: 6px; font-size: 11px; }
+    input, select, textarea {
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 7px 9px;
+      background: white;
+    }
+    .app { padding: 18px; }
+    .toolbar {
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+      padding: 14px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .toolbar h1 { margin: 0 0 4px; font-size: 20px; letter-spacing: -0.02em; }
+    .toolbar p { margin: 0; color: var(--muted); line-height: 1.45; }
+    .toolbar-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+      align-items: center;
+    }
+    .sheet {
+      background: var(--paper);
+      border-radius: 4px;
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
+      overflow: hidden;
+    }
+    .sheet-head {
+      padding: 14px 16px 12px;
+      border: 1px solid var(--line);
+      border-bottom: 0;
+      background: white;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 16px;
+      align-items: start;
+    }
+    .logo-box {
+      display: none;
+      align-items: flex-start;
+      justify-content: flex-start;
+      min-width: 120px;
+    }
+    body.has-logo .logo-box {
+      display: flex;
+    }
+    .brand-logo {
+      max-width: 150px;
+      max-height: 54px;
+      object-fit: contain;
+      display: block;
+    }
+    .project-title { font-size: 13px; line-height: 1.45; }
+    .project-title strong { display: block; font-size: 18px; margin-bottom: 4px; letter-spacing: 0.01em; }
+    .project-meta { text-align: right; font-size: 12px; line-height: 1.45; color: #334155; }
+    .client-summary {
+      padding: 8px 12px;
+      border-left: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      background: #f8fafc;
+      line-height: 1.5;
+      color: #334155;
+    }
+    .programme-wrap {
+      overflow: auto;
+      border: 1px solid var(--line);
+      background: white;
+      max-height: calc(100vh - 180px);
+    }
+    table.programme {
+      border-collapse: separate;
+      border-spacing: 0;
+      table-layout: fixed;
+      min-width: calc(var(--category-w) + var(--item-w) + var(--action-w) + var(--person-w) + var(--period-count) * var(--period-w));
+      width: max-content;
+      background: white;
+    }
+    .programme th, .programme td {
+      border: 0;
+      box-shadow: inset -1px -1px 0 var(--line);
+      padding: 4px 7px;
+      height: var(--row-h);
+      line-height: 1.28;
+      vertical-align: middle;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      background: white;
+    }
+    .programme .category-col, .programme .item-col, .programme .action-col, .programme .person-col {
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+    .programme thead th {
+      height: var(--header-h);
+      text-align: center;
+      font-weight: 700;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: #f8fafc;
+    }
+    .programme thead tr:nth-child(2) th { top: var(--header-h); z-index: 21; }
+    .programme thead tr:nth-child(3) th { top: calc(var(--header-h) * 2); z-index: 22; }
+    .left-head { text-align: left; background: #f8fafc; }
+    .category-col {
+      width: var(--category-w);
+      min-width: var(--category-w);
+      max-width: var(--category-w);
+      position: sticky;
+      left: 0;
+      z-index: 10;
+      background: white;
+      font-weight: 700;
+    }
+    .item-col {
+      width: var(--item-w);
+      min-width: var(--item-w);
+      max-width: var(--item-w);
+      position: sticky;
+      left: var(--category-w);
+      z-index: 10;
+      background: white;
+    }
+    .action-col {
+      width: var(--action-w);
+      min-width: var(--action-w);
+      max-width: var(--action-w);
+      position: sticky;
+      left: calc(var(--category-w) + var(--item-w));
+      z-index: 10;
+      background: white;
+    }
+    .person-col {
+      width: var(--person-w);
+      min-width: var(--person-w);
+      max-width: var(--person-w);
+      position: sticky;
+      left: calc(var(--category-w) + var(--item-w) + var(--action-w));
+      z-index: 10;
+      background: white;
+    }
+    .programme thead .category-col, .programme thead .item-col, .programme thead .action-col, .programme thead .person-col {
+      z-index: 40;
+      background: #f8fafc;
+    }
+    .period-col {
+      width: var(--period-w);
+      min-width: var(--period-w);
+      max-width: var(--period-w);
+      text-align: center;
+      padding: 2px 0 !important;
+    }
+    .month-cell { font-size: 11px; background: #f8fafc; }
+    .weekday-cell { font-size: 10px; color: #334155; background: #f8fafc; overflow: visible !important; text-overflow: clip !important; }
+    .day-cell { font-size: 10px; background: #f8fafc; overflow: visible !important; text-overflow: clip !important; }
+    .sat, .sun { color: var(--danger); }
+    .programme td.weekend, .programme th.weekend { background: var(--weekend) !important; }
+    .programme td.workday { background: var(--work) !important; }
+    .programme td.workday.weekend { background: var(--work) !important; }
+    .programme td.workday.start, .programme td.workday.end { background: var(--work) !important; }
+    .programme tr.group-start td, .programme tr.group-start th { box-shadow: inset -1px -1px 0 var(--line), inset 0 2px 0 var(--line); }
+    .programme tr.highlight td.category-col, .programme tr.highlight td.item-col, .programme tr.highlight td.action-col, .programme tr.highlight td.person-col { background: #fff7ed; }
+    .inline-edit-cell, .timeline-edit-cell, .sheet-head, .client-summary, .notes {
+      cursor: pointer;
+    }
+    .inline-edit-cell:hover, .timeline-edit-cell:hover {
+      outline: 2px solid #0f766e;
+      outline-offset: -2px;
+      background-image: linear-gradient(rgba(15, 118, 110, 0.08), rgba(15, 118, 110, 0.08));
+    }
+    .cell-editing {
+      background: #fef3c7 !important;
+      outline: 3px solid #f59e0b !important;
+      outline-offset: -3px;
+      z-index: 50 !important;
+      vertical-align: top !important;
+      padding: 2px !important;
+    }
+    .timeline-edit-cell {
+      position: relative;
+      user-select: none;
+      touch-action: none;
+    }
+    .timeline-edit-cell.workday {
+      cursor: grab;
+    }
+    .timeline-edit-cell.workday:active {
+      cursor: grabbing;
+    }
+    .timeline-edit-cell.cell-editing {
+      position: relative;
+      overflow: visible !important;
+    }
+    .drag-handle {
+      position: absolute;
+      top: 2px;
+      bottom: 2px;
+      width: 7px;
+      background: #0f766e;
+      border: 1px solid #064e3b;
+      border-radius: 4px;
+      opacity: 0;
+      z-index: 4;
+    }
+    .timeline-edit-cell.workday:hover .drag-handle,
+    .timeline-edit-cell.drag-active .drag-handle {
+      opacity: 0.9;
+    }
+    .drag-handle.left-handle {
+      left: 1px;
+      cursor: ew-resize;
+    }
+    .drag-handle.right-handle {
+      right: 1px;
+      cursor: ew-resize;
+    }
+    body.timeline-dragging {
+      cursor: grabbing;
+      user-select: none;
+    }
+    .timeline-edit-cell.drag-preview {
+      outline: 3px solid #0f766e !important;
+      outline-offset: -3px;
+    }
+    .inline-cell-input {
+      display: block;
+      width: 100%;
+      min-height: 24px;
+      border: 2px solid #f59e0b;
+      border-radius: 4px;
+      background: #fffbeb;
+      color: #111827;
+      padding: 4px 5px;
+      line-height: 1.2;
+      resize: vertical;
+      outline: none;
+    }
+    textarea.inline-cell-input {
+      min-height: 46px;
+      max-height: 160px;
+      font-family: Arial, "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+    }
+    .timeline-inline-editor {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 90;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px;
+      background: #fffbeb;
+      border: 2px solid #f59e0b;
+      border-radius: 8px;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.22);
+      white-space: nowrap;
+    }
+    .timeline-inline-editor input {
+      width: 118px;
+      padding: 4px 5px;
+      border-radius: 5px;
+      border: 1px solid #d97706;
+    }
+    .timeline-inline-editor button {
+      padding: 4px 7px;
+      border-radius: 5px;
+      font-size: 11px;
+    }
+    .timeline-inline-editor .cancel-inline-btn {
+      background: #e5e7eb;
+      color: #111827;
+    }
+    .edit-hint {
+      display: inline-block;
+      margin-left: 8px;
+      color: #64748b;
+      font-size: 11px;
+      font-weight: 400;
+    }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+      padding: 8px 12px;
+      border-left: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: white;
+      color: #334155;
+      line-height: 1.5;
+    }
+    .legend-item { display: inline-flex; align-items: center; gap: 6px; }
+    .swatch { width: 18px; height: 12px; border: 1px solid #334155; display: inline-block; }
+    .swatch.work { background: var(--work); }
+    .swatch.weekend { background: var(--weekend); }
+    .notes {
+      padding: 8px 12px 12px;
+      border-left: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: white;
+      line-height: 1.5;
+      color: #334155;
+    }
+    .compact {
+      --period-w: 34px;
+      --row-h: 26px;
+      --header-h: 25px;
+      --category-w: 125px;
+      --item-w: 170px;
+      --action-w: 360px;
+      --person-w: 125px;
+      font-size: 10px;
+    }
+    .compact .weekday-cell, .compact .day-cell { font-size: 9px; }
+    body.week-view .app { --period-w: 76px; }
+    body.week-view .app.compact { --period-w: 64px; }
+    body.month-view .app { --period-w: 86px; }
+    body.month-view .app.compact { --period-w: 72px; }
+    body.week-view .day-cell, body.month-view .day-cell {
+      white-space: normal !important;
+      overflow: visible !important;
+      text-overflow: clip !important;
+      line-height: 1.05;
+      font-size: 9px;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.5);
+      z-index: 100;
+      padding: 20px;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal.show { display: flex; }
+    .modal-card {
+      width: min(1100px, 96vw);
+      max-height: 92vh;
+      overflow: auto;
+      background: white;
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 30px 90px rgba(15, 23, 42, 0.3);
+    }
+    .modal-card h2 { margin: 0 0 8px; font-size: 18px; }
+    .modal-card textarea {
+      width: 100%;
+      min-height: 360px;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 10px;
+      font-family: Consolas, Monaco, monospace;
+      font-size: 12px;
+      resize: vertical;
+    }
+    .row-editor-wrap { overflow: auto; max-height: 58vh; border: 1px solid #cbd5e1; }
+    table.row-editor { border-collapse: collapse; width: 100%; min-width: 980px; }
+    .row-editor th, .row-editor td { border: 1px solid #cbd5e1; padding: 5px; vertical-align: middle; }
+    .row-editor th { background: #f8fafc; position: sticky; top: 0; z-index: 2; }
+    .row-editor input, .row-editor select { width: 100%; border-radius: 6px; padding: 5px 6px; }
+    .editor-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+    @media (max-width: 1000px) {
+      .toolbar { grid-template-columns: 1fr; }
+      .toolbar-actions { justify-content: flex-start; }
+    }
+    @media print {
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+      body { background: white; font-size: 9.5px; }
+      .app { padding: 0; }
+      .toolbar, .modal { display: none !important; }
+      .sheet { box-shadow: none; border-radius: 0; }
+      .sheet-head { padding: 0 0 4mm; border: 0; }
+      .client-summary { border: 0; padding: 0 0 3mm; background: white; }
+      .programme-wrap { overflow: visible; max-height: none; border: 1px solid #000; }
+      .sheet-head { padding: 0 0 5mm; grid-template-columns: auto 1fr auto; gap: 8mm; align-items: start; }
+      .brand-logo { max-width: 34mm; max-height: 16mm; }
+      .project-title strong { font-size: 15px; }
+      .client-summary { font-size: 9.5px; line-height: 1.35; margin-bottom: 2mm; }
+      table.programme { min-width: 100%; width: 100%; }
+      .programme th, .programme td { border: 0; box-shadow: inset -1px -1px 0 #000; min-height: 22px; height: auto; padding: 4px 5px; overflow: visible; text-overflow: clip; line-height: 1.25; }
+      .programme .category-col, .programme .item-col, .programme .action-col, .programme .person-col { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; word-break: break-word; overflow-wrap: anywhere; line-height: 1.25; }
+      .programme .category-col { width: 100px; min-width: 100px; max-width: 100px; }
+      .programme .item-col { width: 130px; min-width: 130px; max-width: 130px; }
+      .programme .action-col { width: 300px; min-width: 300px; max-width: 300px; }
+      .programme .person-col { width: 95px; min-width: 95px; max-width: 95px; }
+      .programme td.weekend, .programme th.weekend { background: #cfcfcf !important; }
+      .programme td.workday, .programme td.workday.weekend, .programme td.workday.start, .programme td.workday.end { background: #9ae6b4 !important; }
+      .programme thead th, .category-col, .item-col, .action-col, .person-col { position: static; }
+      .legend { border: 0; padding: 3mm 0 1mm; }
+      .notes { border: 0; padding: 1mm 0 0; }
+      .compact { --period-w: 16px; --row-h: 24px; --header-h: 22px; --category-w: 100px; --item-w: 130px; --action-w: 300px; --person-w: 95px; }
+      body.week-view .compact { --period-w: 54px; }
+      body.month-view .compact { --period-w: 62px; }
+      body.week-view .day-cell, body.month-view .day-cell { white-space: normal !important; font-size: 8px; line-height: 1.12; }
+      @page { size: A3 landscape; margin: 6mm; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app compact" id="app">
+    <div class="toolbar">
+      <div>
+        <h1>Noah Master Programme Timeline</h1>
+        <p>純展示型客戶版。左邊為 Category / Item / Action / Action By，右邊可切換 Day / Week / Month timeline，適合列印或 Save as PDF。</p>
+      </div>
+      <div class="toolbar-actions">
+        <label>Start <input id="startInput" type="date"></label>
+        <label>End <input id="endInput" type="date"></label>
+        <select id="viewInput">
+          <option value="auto">Auto View</option>
+          <option value="day">Day View</option>
+          <option value="week">Week View</option>
+          <option value="month">Month View</option>
+        </select>
+        <select id="densityInput">
+          <option value="compact">Compact / Fit</option>
+          <option value="normal">Normal</option>
+        </select>
+        <select id="templateInput"></select>
+        <button class="light" id="applyTemplateButton">Apply Template</button>
+        <button class="light" id="saveTemplateButton">Save As Template</button>
+        <button class="light" id="deleteTemplateButton">Delete Template</button>
+        <button class="light" id="exportTemplatesButton">Export Templates</button>
+        <button class="light" id="importTemplatesButton">Import Templates</button>
+        <input id="templateJsonInput" type="file" accept="application/json,.json" style="display:none">
+        <button id="editProjectButton">Edit Project</button>
+        <button id="editRowsButton">Edit Rows</button>
+        <button class="light" id="editDataButton">Advanced JSON</button>
+        <button class="secondary" id="exportCsvButton">Export CSV</button>
+        <button class="secondary" id="exportExcelButton">Export Excel</button>
+        <button class="light" id="importCsvButton">Import CSV</button>
+        <button class="light" id="clientPdfButton">Client PDF Preset</button>
+        <button id="printButton">Print / Save PDF</button>
+        <input id="csvInput" type="file" accept=".csv,text/csv" style="display:none">
+      </div>
+    </div>
+    <section class="sheet">
+      <div class="sheet-head">
+        <div class="logo-box"><img id="companyLogo" class="brand-logo" alt="Company Logo"></div>
+        <div class="project-title">
+          <strong id="projectName"></strong>
+          <div id="versionText"></div>
+          <div id="dateRangeText"></div>
+        </div>
+        <div class="project-meta">
+          <div>Noah (Asia) Limited</div>
+          <div id="lastUpdateText"></div>
+          <div id="viewText"></div>
+        </div>
+      </div>
+      <div class="client-summary" id="clientSummary"></div>
+      <div class="programme-wrap" id="programmeWrap"></div>
+      <div class="legend">
+        <span class="legend-item"><span class="swatch work"></span> Scheduled working period</span>
+        <span class="legend-item"><span class="swatch weekend"></span> Saturday / Sunday / Public holiday</span>
+      </div>
+      <div class="notes" id="notesText"></div>
+    </section>
+  </div>
+  <div class="modal" id="projectModal">
+    <div class="modal-card">
+      <h2>Edit Project Details</h2>
+      <div class="row-editor-wrap">
+        <table class="row-editor">
+          <tbody>
+            <tr><th style="width:180px">Project Name</th><td><input id="projectNameInput"></td></tr>
+            <tr><th>Version</th><td><input id="versionInput"></td></tr>
+            <tr><th>Last Update</th><td><input id="lastUpdateInput"></td></tr>
+            <tr><th>Display Start Date</th><td><input id="projectStartInput" type="date"></td></tr>
+            <tr><th>Display End Date</th><td><input id="projectEndInput" type="date"></td></tr>
+            <tr><th>Client Summary</th><td><textarea id="summaryInput" style="min-height:80px"></textarea></td></tr>
+            <tr><th>Notes</th><td><textarea id="notesInput" style="min-height:90px"></textarea></td></tr>
+            <tr><th>Holidays</th><td><input id="holidaysInput" placeholder="YYYY-MM-DD, YYYY-MM-DD"></td></tr>
+            <tr><th>Company Logo</th><td><button type="button" class="light" id="uploadLogoButton">Upload Logo</button> <button type="button" class="light" id="removeLogoButton">Remove Logo</button><input id="logoInput" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" style="display:none"><div id="logoStatus" style="margin-top:6px;color:#64748b"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-actions">
+        <button class="light" id="cancelProjectButton">Cancel</button>
+        <button id="applyProjectButton">Apply</button>
+      </div>
+    </div>
+  </div>
+  <div class="modal" id="rowsModal">
+    <div class="modal-card">
+      <h2>Edit Rows</h2>
+      <div class="editor-actions">
+        <button id="addRowButton">＋ Add Row</button>
+        <button class="light" id="duplicateLastRowButton">Duplicate Last Row</button>
+      </div>
+      <div class="row-editor-wrap">
+        <table class="row-editor">
+          <thead>
+            <tr>
+              <th style="width:42px">#</th>
+              <th style="width:135px">Category</th>
+              <th style="width:150px">Item</th>
+              <th>Action</th>
+              <th style="width:120px">Action By</th>
+              <th style="width:125px">Start</th>
+              <th style="width:125px">End</th>
+              <th style="width:80px">Highlight</th>
+              <th style="width:135px">Action</th>
+            </tr>
+          </thead>
+          <tbody id="rowsEditorBody"></tbody>
+        </table>
+      </div>
+      <div class="modal-actions">
+        <button class="light" id="cancelRowsButton">Cancel</button>
+        <button id="applyRowsButton">Apply</button>
+      </div>
+    </div>
+  </div>
+  <div class="modal" id="quickRowModal">
+    <div class="modal-card">
+      <h2>Quick Edit Row <span class="edit-hint" id="quickRowHint"></span></h2>
+      <input id="quickRowId" type="hidden">
+      <div class="row-editor-wrap">
+        <table class="row-editor">
+          <tbody>
+            <tr><th style="width:180px">Category</th><td><input id="quickCategoryInput"></td></tr>
+            <tr><th>Item</th><td><input id="quickItemInput"></td></tr>
+            <tr><th>Action</th><td><input id="quickActionInput"></td></tr>
+            <tr><th>Action By</th><td><input id="quickActionByInput"></td></tr>
+            <tr><th>Start</th><td><input id="quickStartInput" type="date"></td></tr>
+            <tr><th>End</th><td><input id="quickEndInput" type="date"></td></tr>
+            <tr><th>Highlight</th><td><select id="quickHighlightInput"><option value="NO">NO</option><option value="YES">YES</option></select></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="editor-actions">
+        <button class="light" id="useClickedAsStartButton">Use clicked period as Start</button>
+        <button class="light" id="useClickedAsEndButton">Use clicked period as End</button>
+      </div>
+      <div class="modal-actions">
+        <button class="danger" id="deleteQuickRowButton">Delete Row</button>
+        <button class="light" id="cancelQuickRowButton">Cancel</button>
+        <button id="applyQuickRowButton">Apply</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="dataModal">
+    <div class="modal-card">
+      <h2>Advanced JSON Data</h2>
+      <textarea id="dataEditor"></textarea>
+      <div class="modal-actions">
+        <button class="light" id="cancelEditButton">Cancel</button>
+        <button id="applyEditButton">Apply</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      'use strict';
+      const STORE_KEY = 'noah_master_programme_display_v5';
+      const TEMPLATE_KEY = 'noah_master_programme_templates_v1';
+      const DELETED_TEMPLATE_KEY = 'noah_master_programme_deleted_templates_v1';
+      const LEGACY_KEYS = ['noah_master_programme_display_v4', 'noah_master_programme_display_v3', 'noah_master_programme_display_v2', 'noah_master_programme_display_v1'];
+      const LF = String.fromCharCode(10);
+      const CR = String.fromCharCode(13);
+      const DQ = String.fromCharCode(34);
+      const BOM = String.fromCharCode(65279);
+      const BS = String.fromCharCode(92);
+      const REQUIRED_IDS = ['app', 'projectName', 'versionText', 'dateRangeText', 'lastUpdateText', 'viewText', 'clientSummary', 'notesText', 'startInput', 'endInput', 'viewInput', 'densityInput', 'programmeWrap', 'companyLogo'];
+      let editingRows = [];
+      let quickPeriod = null;
+      let dragState = null;
+      let templates = {};
+      let deletedTemplateNames = new Set();
+      let data;
+      const defaultTemplates = {
+        'Marketing Event / Roadshow': {
+          summary: 'Template for client-facing event / roadshow preparation, production, logistics, on-site execution and post-event reporting.',
+          rows: [
+            ['Preparation', 'A Kick-off', 'Client brief, requirement alignment and project kick-off', 'Account', 0, 2],
+            ['Preparation', 'B Proposal', 'Proposal, quotation and budget confirmation', 'Account', 1, 7],
+            ['Creative', 'C Design', 'Creative direction, key visual and artwork development', 'Design', 5, 18],
+            ['Approval', 'D Client Approval', 'Client review, revision and final approval', 'Client / Account', 15, 24],
+            ['Production', 'E Production', 'Printing, fabrication and production quality check', 'Production', 20, 35],
+            ['Manpower', 'F Staffing', 'Recruitment, roster arrangement and briefing', 'HR / OPS', 18, 38],
+            ['Logistics', 'G Logistics', 'Packing, inventory checking and delivery arrangement', 'Warehouse / OPS', 32, 42],
+            ['Execution', 'H On-site', 'Setup, event execution and teardown', 'OPS', 43, 45],
+            ['Reporting', 'I Closing', 'Post-event report, photo selection and project closing', 'Account', 46, 55]
+          ]
+        },
+        'Exhibition / Booth Setup': {
+          summary: 'Template for exhibition booth design, production, logistics, set-up, show period and dismantle arrangement.',
+          rows: [
+            ['Planning', 'A Brief', 'Booth requirement alignment and technical brief', 'Account / Client', 0, 3],
+            ['Design', 'B Layout', 'Booth layout, 3D design and client review', 'Design', 3, 14],
+            ['Design', 'C Artwork', 'Artwork adaptation and print file preparation', 'Design', 10, 20],
+            ['Production', 'D Fabrication', 'Booth structure, backdrop and display material production', 'Production', 18, 35],
+            ['Logistics', 'E Delivery', 'Packing, delivery and venue move-in arrangement', 'OPS', 34, 39],
+            ['On-site', 'F Setup', 'Booth setup and testing', 'OPS / Vendor', 40, 41],
+            ['On-site', 'G Show Period', 'Show operation and on-site support', 'OPS', 42, 45],
+            ['On-site', 'H Dismantle', 'Dismantling, return logistics and site clear-up', 'OPS / Vendor', 46, 47]
+          ]
+        },
+        'Digital / Social Campaign': {
+          summary: 'Template for social media campaign planning, content production, approval, publishing and performance reporting.',
+          rows: [
+            ['Planning', 'A Strategy', 'Campaign objective, audience and content direction', 'Account', 0, 4],
+            ['Content', 'B Copywriting', 'Post copy, caption and content calendar preparation', 'Content', 3, 10],
+            ['Creative', 'C Visual', 'Static visual, short video and adaptation production', 'Design', 6, 18],
+            ['Approval', 'D Approval', 'Client review, revision and final approval', 'Client / Account', 15, 23],
+            ['Publishing', 'E Scheduling', 'Post scheduling and publishing', 'Account', 24, 35],
+            ['Monitoring', 'F Monitoring', 'Campaign monitoring and optimization', 'Account', 24, 42],
+            ['Reporting', 'G Report', 'Performance report and recommendations', 'Account', 43, 50]
+          ]
+        }
+      };
+
+      const defaultData = {
+        projectName: 'Project AFCD_SQ_314_24',
+        version: 'Version: 2.0',
+        lastUpdate: 'Last update: 25 SEP 2025',
+        startDate: '2025-09-26',
+        endDate: '2025-11-18',
+        viewMode: 'auto',
+        summary: 'The following master programme outlines the key preparation, demolition, E&M, painting, flooring and handover activities for client reference. The schedule is indicative and subject to final confirmation.',
+        notes: ['- Working HRS: Mon-Fri 08:00-18:00 except Sat, Sun and Public Holiday.', '- Reserved working schedule for ArchSD: 16 OCT 2025 - 05 NOV 2025 (14 Working Days).'].join(LF),
+        holidays: ['2025-10-01', '2025-10-07', '2025-10-29'],
+        rows: [
+          ['Preparation work', 'A', '1 - Kick off Meeting at AFCD office', 'Luxe / AFCD', '2025-09-26', '2025-09-30'],
+          ['Preparation work', 'A', '2 - On-site Meeting to confirm execution detail', 'Luxe / AFCD', '2025-09-27', '2025-09-30'],
+          ['Preparation work', 'A', '3 - Working schedule confirmation', 'Luxe / AFCD', '2025-09-29', '2025-10-03'],
+          ['Preparation work', 'A', '4 - Finalize material selection', 'AFCD', '2025-09-30', '2025-10-08'],
+          ['Preparation work', 'A', '5 - Layout plan', 'Luxe / AFCD', '2025-10-01', '2025-10-06'],
+          ['Preparation work', 'B Insurance', '1 - Purchase CAR insurance', 'Luxe', '2025-10-02', '2025-10-03'],
+          ['Preparation work', 'C License application', '1 - Members & Vehicle Pre-registration', 'AFCD', '2025-09-26', '2025-11-18'],
+          ['Demolition', 'D Site Protection', '1 - Wrap & protect selected items', 'Luxe', '2025-10-02', '2025-10-06'],
+          ['Demolition', 'D Site Protection', '2 - Floor protection on selected area', 'Luxe', '2025-10-03', '2025-10-06'],
+          ['Demolition', 'E Demolish & Disposal', '1 - Demolish all unused items (Outer)', 'Luxe', '2025-10-06', '2025-10-10'],
+          ['Demolition', 'E Demolish & Disposal', '2 - Demolish all unused items (Inner)', 'Luxe', '2025-10-07', '2025-10-12'],
+          ['Demolition', 'E Demolish & Disposal', '3 - Clear & dispose debris', 'Luxe', '2025-10-08', '2025-10-12'],
+          ['E&M', 'F Preparation', '1 - Temporary Power Supply Setup', 'Luxe', '2025-10-04', '2025-10-10'],
+          ['E&M', 'G Lighting', '1 - Power cut & remove existing lights', 'Luxe', '2025-10-03', '2025-10-08'],
+          ['E&M', 'G Lighting', '2 - Install temporary lights', 'Luxe', '2025-10-03', '2025-10-10'],
+          ['E&M', 'G Lighting', '3 - Install ceiling lights', 'Luxe', '2025-11-05', '2025-11-18'],
+          ['E&M', 'H Air Conditioning', '1 - Air Condition Relocation', 'Luxe', '2025-11-05', '2025-11-13'],
+          ['E&M', 'H Air Conditioning', '2 - Power source relocation', 'Luxe', '2025-11-08', '2025-11-13'],
+          ['E&M', 'H Air Conditioning', '3 - Air circulation relocation', 'Luxe', '2025-11-10', '2025-11-18'],
+          ['E&M', 'H Air Conditioning', '4 - Air Condition installation', 'Luxe', '2025-11-10', '2025-11-18'],
+          ['E&M', 'I Power Supply', '1 - 13AMP socket installation (Single Face)', 'Luxe', '2025-11-05', '2025-11-18'],
+          ['E&M', 'J Fire system', '1 - Fire Exit sign installation', 'Luxe', '2025-11-15', '2025-11-18'],
+          ['E&M', 'J Fire system', '2 - Emergency Light installation', 'Luxe', '2025-11-15', '2025-11-18'],
+          ['Painting Wall & Ceiling', 'K Outer Area', '1 - Remove existing paint on spot area', 'Luxe', '2025-10-09', '2025-10-20'],
+          ['Painting Wall & Ceiling', 'K Outer Area', '2 - Apply Nippon emulsion paint', 'Luxe', '2025-11-05', '2025-11-12'],
+          ['Painting Wall & Ceiling', 'K Outer Area', '3 - Wall decoration - Painting', 'Artist', '2025-11-10', '2025-11-18', true],
+          ['Painting Wall & Ceiling', 'L Demo Room', '1 - Remove existing paint', 'Luxe', '2025-10-10', '2025-10-17'],
+          ['Painting Wall & Ceiling', 'L Demo Room', '2 - Apply Nippon emulsion paint', 'Luxe', '2025-11-05', '2025-11-13'],
+          ['Flooring', 'M Preparation', '1 - Floor Clean up', 'Luxe', '2025-10-16', '2025-10-18'],
+          ['Flooring', 'M Preparation', '2 - Manual Floor Polish', 'Luxe', '2025-10-20', '2025-10-28'],
+          ['Flooring', 'M Preparation', '3 - Install vinyl tile', 'Luxe', '2025-10-29', '2025-11-05'],
+          ['Others', 'N Fixture Production', '1 - Supply & install front door gate housing', 'Luxe', '2025-11-16', '2025-11-18'],
+          ['Others', 'O Cleaning', '1 - Site clean up', 'Luxe', '2025-11-17', '2025-11-18'],
+          ['Others', 'ArchSD', '1 - Maintenance Services (14 Days)', 'ArchSD', '2025-10-16', '2025-11-05']
+        ].map((row, order) => ({ category: row[0], item: row[1], action: row[2], actionBy: row[3], start: row[4], end: row[5], highlight: row[6] === true, order }))
+      };
+
+      function byId(id) {
+        return document.getElementById(id);
+      }
+
+      function uid(prefix = 'row') {
+        return `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+      }
+
+      function hasAllRequiredElements() {
+        return REQUIRED_IDS.every(id => byId(id));
+      }
+
+      function safeClassToggle(element, className, force) {
+        if (element && element.classList) element.classList.toggle(className, force);
+      }
+
+      function safeClassAdd(element, className) {
+        if (element && element.classList) element.classList.add(className);
+      }
+
+      function safeClassRemove(element, className) {
+        if (element && element.classList) element.classList.remove(className);
+      }
+
+      function setText(id, value) {
+        const element = byId(id);
+        if (element) element.textContent = value;
+      }
+
+      function setHtml(id, value) {
+        const element = byId(id);
+        if (element) element.innerHTML = value;
+      }
+
+      function setValue(id, value) {
+        const element = byId(id);
+        if (element) element.value = value;
+      }
+
+      function loadDeletedTemplateNames() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(DELETED_TEMPLATE_KEY));
+          if (Array.isArray(saved)) return new Set(saved.map(String));
+        } catch (error) {}
+        return new Set();
+      }
+
+      function saveDeletedTemplateNames() {
+        try {
+          localStorage.setItem(DELETED_TEMPLATE_KEY, JSON.stringify(Array.from(deletedTemplateNames)));
+        } catch (error) {}
+      }
+
+      function loadTemplates() {
+        let custom = {};
+        try {
+          const saved = JSON.parse(localStorage.getItem(TEMPLATE_KEY));
+          if (saved && typeof saved === 'object') custom = saved;
+        } catch (error) {}
+        const availableDefaults = {};
+        Object.keys(defaultTemplates).forEach(name => {
+          if (!deletedTemplateNames.has(name)) availableDefaults[name] = defaultTemplates[name];
+        });
+        return { ...availableDefaults, ...custom };
+      }
+
+      function saveTemplates() {
+        try {
+          localStorage.setItem(TEMPLATE_KEY, JSON.stringify(templates));
+        } catch (error) {}
+      }
+
+      function populateTemplateSelect() {
+        const select = byId('templateInput');
+        if (!select) return;
+        const current = select.value;
+        const names = Object.keys(templates).sort();
+        select.innerHTML = names.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');
+        if (current && names.includes(current)) select.value = current;
+      }
+
+      function uniqueTemplateName(name) {
+        const base = String(name || 'Imported Template').trim() || 'Imported Template';
+        if (!templates[base]) return base;
+        let counter = 2;
+        while (templates[`${base} ${counter}`]) counter++;
+        return `${base} ${counter}`;
+      }
+
+      function deleteSelectedTemplate() {
+        const select = byId('templateInput');
+        const name = select ? select.value : '';
+        if (!name || !templates[name]) return alert('No template selected.');
+        if (!window.confirm(`Delete template "${name}"?`)) return;
+        delete templates[name];
+        if (defaultTemplates[name]) {
+          deletedTemplateNames.add(name);
+          saveDeletedTemplateNames();
+        }
+        saveTemplates();
+        populateTemplateSelect();
+        alert('Template deleted.');
+      }
+
+      function exportTemplates() {
+        const normalized = {};
+        Object.keys(templates).sort().forEach(name => {
+          normalized[name] = normalizeTemplate(templates[name]);
+        });
+        const payload = {
+          app: 'Noah Master Programme Timeline',
+          type: 'programme-templates',
+          version: 1,
+          exportedAt: new Date().toISOString(),
+          templates: normalized
+        };
+        downloadBlob(JSON.stringify(payload, null, 2), `noah-programme-templates-${todayISO()}.json`, 'application/json;charset=utf-8');
+      }
+
+      function importTemplatesFromFile(file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const parsed = JSON.parse(reader.result);
+            const source = parsed && parsed.templates && typeof parsed.templates === 'object' ? parsed.templates : parsed;
+            if (!source || typeof source !== 'object' || Array.isArray(source)) throw new Error('bad template file');
+            const incomingNames = Object.keys(source);
+            if (!incomingNames.length) throw new Error('empty template file');
+            const conflicts = incomingNames.filter(name => templates[name]);
+            const overwrite = conflicts.length ? window.confirm(`${conflicts.length} 個 template 名稱已存在。按 OK 覆蓋；按 Cancel 會以新名稱匯入。`) : true;
+            incomingNames.forEach(name => {
+              const finalName = templates[name] && !overwrite ? uniqueTemplateName(name) : name;
+              templates[finalName] = normalizeTemplate(source[name]);
+              deletedTemplateNames.delete(finalName);
+            });
+            saveTemplates();
+            saveDeletedTemplateNames();
+            populateTemplateSelect();
+            alert(`已匯入 ${incomingNames.length} 個 template。`);
+          } catch (error) {
+            alert('Template JSON 格式不正確，請使用 Export Templates 產生的 JSON 檔。');
+          }
+        };
+        reader.readAsText(file);
+      }
+
+      function loadData() {
+        const keys = [STORE_KEY].concat(LEGACY_KEYS);
+        for (const key of keys) {
+          try {
+            const raw = localStorage.getItem(key);
+            if (!raw) continue;
+            const saved = JSON.parse(raw);
+            if (saved && Array.isArray(saved.rows)) return normalizeData(saved);
+          } catch (error) {}
+        }
+        return normalizeData(defaultData);
+      }
+
+      function saveData() {
+        try {
+          localStorage.setItem(STORE_KEY, JSON.stringify(data));
+        } catch (error) {}
+      }
+
+      function normalizeTemplate(template) {
+        const source = template && typeof template === 'object' ? template : { rows: [] };
+        const rows = Array.isArray(source.rows) ? source.rows.map((row, index) => Array.isArray(row) ? templateArrayRowToObject(row, index) : normalizeTemplateRow(row, index)) : [];
+        rows.forEach(row => {
+          if (row.offsetEnd < row.offsetStart) [row.offsetStart, row.offsetEnd] = [row.offsetEnd, row.offsetStart];
+        });
+        return {
+          summary: String(source.summary || ''),
+          notes: String(source.notes || ''),
+          rows
+        };
+      }
+
+      function normalizeData(input) {
+        const source = input && typeof input === 'object' ? input : defaultData;
+        const startDate = isValidDate(source.startDate) ? source.startDate : todayISO();
+        const endDate = isValidDate(source.endDate) ? source.endDate : addDays(startDate, 30);
+        const output = {
+          projectName: String(source.projectName || 'Project Timeline'),
+          logoDataUrl: String(source.logoDataUrl || ''),
+          version: String(source.version || 'Version: 1.0'),
+          lastUpdate: String(source.lastUpdate || `Last update: ${formatDisplayDate(todayISO())}`),
+          startDate: startDate <= endDate ? startDate : endDate,
+          endDate: endDate >= startDate ? endDate : startDate,
+          viewMode: ['auto', 'day', 'week', 'month'].includes(source.viewMode) ? source.viewMode : 'auto',
+          summary: String(source.summary || ''),
+          notes: String(source.notes || ''),
+          holidays: Array.isArray(source.holidays) ? source.holidays.filter(isValidDate) : [],
+          rows: []
+        };
+        output.rows = Array.isArray(source.rows) ? source.rows.map((row, index) => normalizeRow(row, index, output.startDate)) : [];
+        output.rows.forEach(row => {
+          if (row.end < row.start) [row.start, row.end] = [row.end, row.start];
+        });
+        return output;
+      }
+
+      function normalizeRow(row, index, fallbackDate) {
+        const start = isValidDate(row.start) ? row.start : fallbackDate;
+        const end = isValidDate(row.end) ? row.end : start;
+        return {
+          id: String(row.id || uid()),
+          category: String(row.category || ''),
+          item: String(row.item || ''),
+          action: String(row.action || ''),
+          actionBy: String(row.actionBy || row.owner || ''),
+          start,
+          end,
+          highlight: row.highlight === true || String(row.highlight || '').toUpperCase() === 'YES',
+          order: Number.isFinite(Number(row.order)) ? Number(row.order) : index
+        };
+      }
+
+      function normalizeTemplateRow(row, index) {
+        return {
+          category: String(row.category || ''),
+          item: String(row.item || ''),
+          action: String(row.action || ''),
+          actionBy: String(row.actionBy || row.owner || ''),
+          offsetStart: Number.isFinite(Number(row.offsetStart)) ? Number(row.offsetStart) : 0,
+          offsetEnd: Number.isFinite(Number(row.offsetEnd)) ? Number(row.offsetEnd) : Number(row.offsetStart || 0),
+          highlight: row.highlight === true || String(row.highlight || '').toUpperCase() === 'YES',
+          order: Number.isFinite(Number(row.order)) ? Number(row.order) : index
+        };
+      }
+
+      function templateArrayRowToObject(row, order) {
+        return normalizeTemplateRow({
+          category: row[0],
+          item: row[1],
+          action: row[2],
+          actionBy: row[3],
+          offsetStart: row[4],
+          offsetEnd: row[5],
+          highlight: row[6] === true,
+          order
+        }, order);
+      }
+
+      function isValidDate(value) {
+        const text = String(value || '');
+        if (text.length !== 10 || text.charAt(4) !== '-' || text.charAt(7) !== '-') return false;
+        const year = Number(text.slice(0, 4));
+        const month = Number(text.slice(5, 7));
+        const day = Number(text.slice(8, 10));
+        if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return false;
+        const date = new Date(year, month - 1, day);
+        return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
+      }
+
+      function parseDate(value) {
+        if (!isValidDate(value)) return parseDate(todayISO());
+        return new Date(Number(value.slice(0, 4)), Number(value.slice(5, 7)) - 1, Number(value.slice(8, 10)));
+      }
+
+      function toISO(date) {
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      }
+
+      function todayISO() {
+        const date = new Date();
+        date.setHours(0, 0, 0, 0);
+        return toISO(date);
+      }
+
+      function addDays(value, amount) {
+        const date = parseDate(value);
+        date.setDate(date.getDate() + Number(amount || 0));
+        return toISO(date);
+      }
+
+      function dayDiff(start, end) {
+        return Math.round((parseDate(end) - parseDate(start)) / 86400000);
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll(DQ, '&quot;').replaceAll("'", '&#039;');
+      }
+
+      function formatDisplayDate(iso) {
+        const date = parseDate(iso);
+        const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+        return `${String(date.getDate()).padStart(2, '0')} ${months[date.getMonth()]} ${date.getFullYear()}`;
+      }
+
+      function monthLabel(iso) {
+        const date = parseDate(iso);
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        return `${months[date.getMonth()]}-${String(date.getFullYear()).slice(2)}`;
+      }
+
+      function weekdayLabel(iso) {
+        return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][parseDate(iso).getDay()];
+      }
+
+      function isWeekend(iso) {
+        const day = parseDate(iso).getDay();
+        return day === 0 || day === 6;
+      }
+
+      function isBlocked(iso) {
+        return isWeekend(iso) || data.holidays.includes(iso);
+      }
+
+      function getResolvedViewMode() {
+        const selected = data.viewMode || 'auto';
+        if (selected !== 'auto') return selected;
+        const days = Math.max(1, dayDiff(data.startDate, data.endDate) + 1);
+        if (days > 210) return 'month';
+        if (days > 90) return 'week';
+        return 'day';
+      }
+
+      function buildPeriods(mode) {
+        if (mode === 'month') return buildMonthPeriods(data.startDate, data.endDate);
+        if (mode === 'week') return buildWeekPeriods(data.startDate, data.endDate);
+        return buildDayPeriods(data.startDate, data.endDate);
+      }
+
+      function buildDayPeriods(start, end) {
+        const result = [];
+        let current = parseDate(start);
+        const final = parseDate(end);
+        while (current <= final && result.length <= 730) {
+          const iso = toISO(current);
+          result.push({ start: iso, end: iso, label1: monthLabel(iso), label2: weekdayLabel(iso), label3: String(current.getDate()), blocked: isBlocked(iso), type: 'day' });
+          current.setDate(current.getDate() + 1);
+        }
+        return result;
+      }
+
+      function buildWeekPeriods(start, end) {
+        const result = [];
+        let current = parseDate(start);
+        const final = parseDate(end);
+        while (current <= final && result.length <= 160) {
+          const periodStart = toISO(current);
+          const periodEndDate = new Date(current);
+          periodEndDate.setDate(periodEndDate.getDate() + 6);
+          if (periodEndDate > final) periodEndDate.setTime(final.getTime());
+          const periodEnd = toISO(periodEndDate);
+          result.push({ start: periodStart, end: periodEnd, label1: monthLabel(periodStart), label2: `W${result.length + 1}`, label3: `${formatMd(periodStart)} to ${formatMd(periodEnd)}`, blocked: false, type: 'week' });
+          current.setDate(current.getDate() + 7);
+        }
+        return result;
+      }
+
+      function buildMonthPeriods(start, end) {
+        const result = [];
+        let current = new Date(parseDate(start).getFullYear(), parseDate(start).getMonth(), 1);
+        const final = parseDate(end);
+        while (current <= final && result.length <= 60) {
+          const first = toISO(current) < start ? start : toISO(current);
+          const lastDate = new Date(current.getFullYear(), current.getMonth() + 1, 0);
+          const last = lastDate > final ? end : toISO(lastDate);
+          result.push({ start: first, end: last, label1: String(current.getFullYear()), label2: monthLabel(first), label3: `${formatMd(first)}-${formatMd(last)}`, blocked: false, type: 'month' });
+          current.setMonth(current.getMonth() + 1);
+        }
+        return result;
+      }
+
+      function formatMd(iso) {
+        const date = parseDate(iso);
+        return `${date.getMonth() + 1}/${date.getDate()}`;
+      }
+
+      function overlaps(aStart, aEnd, bStart, bEnd) {
+        return aStart <= bEnd && aEnd >= bStart;
+      }
+
+      function calculateSpans(rows, key) {
+        const spans = new Map();
+        let current = null;
+        let start = 0;
+        for (let index = 0; index <= rows.length; index++) {
+          const value = index < rows.length ? rows[index][key] : null;
+          if (value !== current) {
+            if (current !== null) spans.set(`${key}:${start}`, index - start);
+            current = value;
+            start = index;
+          }
+        }
+        return spans;
+      }
+
+      function groupSpans(periods, key) {
+        const groups = [];
+        let current = '';
+        let count = 0;
+        periods.forEach(period => {
+          const label = period[key];
+          if (label !== current) {
+            if (current) groups.push({ label: current, count });
+            current = label;
+            count = 1;
+          } else {
+            count++;
+          }
+        });
+        if (current) groups.push({ label: current, count });
+        return groups;
+      }
+
+      function applyTemplate() {
+        const select = byId('templateInput');
+        const name = select ? select.value : '';
+        if (!name || !templates[name]) return;
+        const baseDate = window.prompt('Template 沒有固定日期。請輸入本 project 的開始日期 YYYY-MM-DD：', data.startDate || todayISO());
+        if (!isValidDate(baseDate)) return alert('開始日期格式不正確。');
+        if (data.rows.length && !window.confirm('Apply Template 會取代目前所有 rows。是否繼續？')) return;
+        const template = normalizeTemplate(templates[name]);
+        data.projectName = name;
+        data.summary = template.summary || data.summary;
+        if (template.notes) data.notes = template.notes;
+        data.startDate = baseDate;
+        data.rows = template.rows.map((row, order) => {
+          const start = addDays(baseDate, row.offsetStart);
+          const end = addDays(baseDate, row.offsetEnd);
+          return normalizeRow({
+            category: row.category,
+            item: row.item,
+            action: row.action,
+            actionBy: row.actionBy,
+            start,
+            end,
+            highlight: row.highlight,
+            order
+          }, order, baseDate);
+        });
+        data.endDate = data.rows.reduce((max, row) => row.end > max ? row.end : max, baseDate);
+        data.viewMode = 'auto';
+        render();
+      }
+
+      function saveCurrentAsTemplate() {
+        const name = window.prompt('Template name：', data.projectName ? `${data.projectName} Template` : 'New Programme Template');
+        if (!name) return;
+        const baseDate = data.startDate;
+        const rows = data.rows.slice().sort((a, b) => a.order - b.order).map((row, order) => normalizeTemplateRow({
+          category: row.category,
+          item: row.item,
+          action: row.action,
+          actionBy: row.actionBy,
+          offsetStart: dayDiff(baseDate, row.start),
+          offsetEnd: dayDiff(baseDate, row.end),
+          highlight: row.highlight,
+          order
+        }, order));
+        templates[name] = normalizeTemplate({
+          summary: data.summary,
+          notes: data.notes,
+          rows
+        });
+        deletedTemplateNames.delete(name);
+        saveTemplates();
+        saveDeletedTemplateNames();
+        populateTemplateSelect();
+        setValue('templateInput', name);
+      }
+
+      function render() {
+        if (!hasAllRequiredElements()) return;
+        data = normalizeData(data);
+        saveData();
+        const rows = data.rows.slice().sort((a, b) => a.order - b.order);
+        const mode = getResolvedViewMode();
+        const periods = buildPeriods(mode);
+        safeClassToggle(document.body, 'week-view', mode === 'week');
+        safeClassToggle(document.body, 'month-view', mode === 'month');
+        document.documentElement.style.setProperty('--period-count', String(periods.length));
+        setText('projectName', data.projectName);
+        const logoElement = byId('companyLogo');
+        if (logoElement) logoElement.src = data.logoDataUrl || '';
+        safeClassToggle(document.body, 'has-logo', Boolean(data.logoDataUrl));
+        setText('versionText', data.version);
+        setText('lastUpdateText', data.lastUpdate);
+        setText('dateRangeText', `${formatDisplayDate(data.startDate)} - ${formatDisplayDate(data.endDate)}`);
+        setText('viewText', `View: ${mode.toUpperCase()}`);
+        setText('clientSummary', data.summary);
+        setHtml('notesText', escapeHtml(data.notes).split(LF).join('<br>'));
+        setValue('startInput', data.startDate);
+        setValue('endInput', data.endDate);
+        setValue('viewInput', data.viewMode || 'auto');
+        safeClassToggle(byId('app'), 'compact', byId('densityInput') ? byId('densityInput').value === 'compact' : true);
+        setHtml('programmeWrap', buildTable(rows, periods, mode));
+        bindProgrammeDoubleClick();
+        bindProgrammeDrag();
+      }
+
+      function buildTable(rows, periods, mode) {
+        const categorySpans = calculateSpans(rows, 'category');
+        const itemSpans = calculateSpans(rows, 'item');
+        let html = '<table class="programme"><thead><tr>';
+        html += '<th class="left-head category-col" rowspan="3">Category</th>';
+        html += '<th class="left-head item-col" rowspan="3">Item</th>';
+        html += '<th class="left-head action-col" rowspan="3">Action</th>';
+        html += '<th class="left-head person-col" rowspan="3">Action By</th>';
+        groupSpans(periods, 'label1').forEach(group => {
+          html += `<th class="month-cell" colspan="${group.count}">${escapeHtml(group.label)}</th>`;
+        });
+        html += '</tr><tr>';
+        periods.forEach(period => {
+          const weekday = period.type === 'day' ? period.label2 : '';
+          html += `<th class="period-col weekday-cell ${period.blocked ? 'weekend' : ''} ${weekday === 'Sat' ? 'sat' : ''} ${weekday === 'Sun' ? 'sun' : ''}">${escapeHtml(period.label2)}</th>`;
+        });
+        html += '</tr><tr>';
+        periods.forEach(period => {
+          html += `<th class="period-col day-cell ${period.blocked ? 'weekend' : ''}" title="${escapeHtml(period.start + ' to ' + period.end)}">${escapeHtml(period.label3)}</th>`;
+        });
+        html += '</tr></thead><tbody>';
+        rows.forEach((row, index) => {
+          const groupStart = index === 0 || rows[index - 1].category !== row.category;
+          const firstActiveIndex = periods.findIndex(period => overlaps(row.start, row.end, period.start, period.end));
+          const lastActiveIndex = periods.map(period => overlaps(row.start, row.end, period.start, period.end)).lastIndexOf(true);
+          html += `<tr class="${groupStart ? 'group-start' : ''} ${row.highlight ? 'highlight' : ''}">`;
+          if (categorySpans.has(`category:${index}`)) html += `<td class="category-col inline-edit-cell" data-row-id="${escapeHtml(row.id)}" data-field="category" rowspan="${categorySpans.get(`category:${index}`)}" title="Double-click to edit Category">${escapeHtml(row.category)}</td>`;
+          if (itemSpans.has(`item:${index}`)) html += `<td class="item-col inline-edit-cell" data-row-id="${escapeHtml(row.id)}" data-field="item" rowspan="${itemSpans.get(`item:${index}`)}" title="Double-click to edit Item">${escapeHtml(row.item)}</td>`;
+          html += `<td class="action-col inline-edit-cell" data-row-id="${escapeHtml(row.id)}" data-field="action" title="Double-click to edit Action">${escapeHtml(row.action)}</td>`;
+          html += `<td class="person-col inline-edit-cell" data-row-id="${escapeHtml(row.id)}" data-field="actionBy" title="Double-click to edit Action By">${escapeHtml(row.actionBy)}</td>`;
+          periods.forEach((period, periodIndex) => {
+            const inRange = overlaps(row.start, row.end, period.start, period.end);
+            const isStart = periodIndex === firstActiveIndex;
+            const isEnd = periodIndex === lastActiveIndex;
+            const handles = inRange ? `${isStart ? '<span class="drag-handle left-handle" data-drag-action="resize-left"></span>' : ''}${isEnd ? '<span class="drag-handle right-handle" data-drag-action="resize-right"></span>' : ''}` : '';
+            html += `<td class="period-col timeline-edit-cell ${period.blocked ? 'weekend' : ''} ${inRange ? 'workday' : ''} ${isStart ? 'start' : ''} ${isEnd ? 'end' : ''}" data-row-id="${escapeHtml(row.id)}" data-period-index="${periodIndex}" data-period-start="${escapeHtml(period.start)}" data-period-end="${escapeHtml(period.end)}" title="Drag green cells to move. Drag side handles to resize. Double-click to edit dates.">${handles}</td>`;
+          });
+          html += '</tr>';
+        });
+        html += '</tbody></table>';
+        return html;
+      }
+
+      function openProjectModal() {
+        setValue('projectNameInput', data.projectName);
+        setValue('versionInput', data.version);
+        setValue('lastUpdateInput', data.lastUpdate);
+        setValue('projectStartInput', data.startDate);
+        setValue('projectEndInput', data.endDate);
+        setValue('summaryInput', data.summary);
+        setValue('notesInput', data.notes);
+        setValue('holidaysInput', data.holidays.join(', '));
+        setText('logoStatus', data.logoDataUrl ? 'Logo uploaded and will appear on client PDF.' : 'No logo uploaded.');
+        safeClassAdd(byId('projectModal'), 'show');
+      }
+
+      function closeProjectModal() {
+        safeClassRemove(byId('projectModal'), 'show');
+      }
+
+      function importLogoFile(file) {
+        if (!file) return;
+        if (file.size > 1000000) return alert('Logo 檔案太大，建議用 1MB 以下的 PNG / JPG / SVG。');
+        const reader = new FileReader();
+        reader.onload = () => {
+          data.logoDataUrl = String(reader.result || '');
+          setText('logoStatus', 'Logo uploaded and will appear on client PDF.');
+          render();
+        };
+        reader.readAsDataURL(file);
+      }
+
+      function removeLogo() {
+        data.logoDataUrl = '';
+        setText('logoStatus', 'No logo uploaded.');
+        render();
+      }
+
+      function applyClientPdfPreset() {
+        const days = Math.max(1, dayDiff(data.startDate, data.endDate) + 1);
+        data.viewMode = days > 180 ? 'month' : days > 31 ? 'week' : 'day';
+        setValue('densityInput', 'normal');
+        render();
+        window.alert('已切換到較適合客戶 PDF 的版面。長 programme 會自動改用 Week / Month View，列印時建議使用 A3 landscape。');
+      }
+
+      function applyProjectEditor() {
+        data.projectName = (byId('projectNameInput')?.value || '').trim() || 'Project Timeline';
+        data.version = (byId('versionInput')?.value || '').trim() || 'Version: 1.0';
+        data.lastUpdate = (byId('lastUpdateInput')?.value || '').trim() || `Last update: ${formatDisplayDate(todayISO())}`;
+        const start = byId('projectStartInput')?.value || '';
+        const end = byId('projectEndInput')?.value || '';
+        if (isValidDate(start)) data.startDate = start;
+        if (isValidDate(end)) data.endDate = end;
+        if (data.endDate < data.startDate) [data.startDate, data.endDate] = [data.endDate, data.startDate];
+        data.summary = byId('summaryInput')?.value || '';
+        data.notes = byId('notesInput')?.value || '';
+        data.holidays = (byId('holidaysInput')?.value || '').split(',').map(value => value.trim()).filter(isValidDate);
+        closeProjectModal();
+        render();
+      }
+
+      function findRowById(rowId) {
+        return data.rows.find(row => row.id === rowId) || null;
+      }
+
+      function bindProgrammeDoubleClick() {
+        const wrap = byId('programmeWrap');
+        if (!wrap) return;
+        wrap.ondblclick = event => {
+          const cell = event.target.closest('td');
+          if (!cell) return;
+          const rowId = cell.dataset.rowId;
+          if (!rowId) return;
+          if (cell.classList.contains('timeline-edit-cell')) {
+            startTimelineInlineEdit(cell, rowId, cell.dataset.periodStart, cell.dataset.periodEnd);
+            return;
+          }
+          if (cell.classList.contains('inline-edit-cell')) {
+            startTextInlineEdit(cell, rowId, cell.dataset.field);
+          }
+        };
+      }
+
+      function bindProgrammeDrag() {
+        const wrap = byId('programmeWrap');
+        if (!wrap) return;
+        wrap.onpointerdown = event => {
+          const handle = event.target.closest('.drag-handle');
+          const cell = event.target.closest('.timeline-edit-cell');
+          if (!cell || !cell.dataset.rowId) return;
+          if (!handle && !cell.classList.contains('workday')) return;
+          event.preventDefault();
+          startTimelineDrag(event, cell, handle ? handle.dataset.dragAction : 'move');
+        };
+      }
+
+      function startTimelineDrag(event, cell, action) {
+        const row = findRowById(cell.dataset.rowId);
+        if (!row) return;
+        clearInlineEditors();
+        dragState = {
+          rowId: row.id,
+          action,
+          originStart: row.start,
+          originEnd: row.end,
+          originPeriodStart: cell.dataset.periodStart,
+          originPeriodEnd: cell.dataset.periodEnd,
+          lastTargetStart: cell.dataset.periodStart,
+          moved: false
+        };
+        safeClassAdd(document.body, 'timeline-dragging');
+        safeClassAdd(cell, 'drag-active');
+        window.addEventListener('pointermove', onTimelineDragMove);
+        window.addEventListener('pointerup', endTimelineDrag, { once: true });
+      }
+
+      function getCellFromPointer(event) {
+        const element = document.elementFromPoint(event.clientX, event.clientY);
+        return element ? element.closest('.timeline-edit-cell') : null;
+      }
+
+      function onTimelineDragMove(event) {
+        if (!dragState) return;
+        const targetCell = getCellFromPointer(event);
+        if (!targetCell || !targetCell.dataset.periodStart) return;
+        if (targetCell.dataset.periodStart === dragState.lastTargetStart) return;
+        dragState.lastTargetStart = targetCell.dataset.periodStart;
+        const row = findRowById(dragState.rowId);
+        if (!row) return;
+        const deltaDays = dayDiff(dragState.originPeriodStart, targetCell.dataset.periodStart);
+        if (dragState.action === 'move') {
+          row.start = addDays(dragState.originStart, deltaDays);
+          row.end = addDays(dragState.originEnd, deltaDays);
+        } else if (dragState.action === 'resize-left') {
+          row.start = targetCell.dataset.periodStart <= row.end ? targetCell.dataset.periodStart : row.end;
+        } else if (dragState.action === 'resize-right') {
+          row.end = targetCell.dataset.periodEnd >= row.start ? targetCell.dataset.periodEnd : row.start;
+        }
+        dragState.moved = true;
+        render();
+        const newCell = document.querySelector(`.timeline-edit-cell[data-row-id="${cssEscape(row.id)}"][data-period-start="${cssEscape(targetCell.dataset.periodStart)}"]`);
+        safeClassAdd(newCell, 'drag-preview');
+      }
+
+      function endTimelineDrag() {
+        window.removeEventListener('pointermove', onTimelineDragMove);
+        safeClassRemove(document.body, 'timeline-dragging');
+        dragState = null;
+        render();
+      }
+
+      function cssEscape(value) {
+        if (window.CSS && typeof window.CSS.escape === 'function') return window.CSS.escape(String(value));
+        return String(value).replaceAll(BS, BS + BS).replaceAll(DQ, BS + DQ);
+      }
+
+      function clearInlineEditors() {
+        const wrap = byId('programmeWrap');
+        if (!wrap) return;
+        wrap.querySelectorAll('.cell-editing').forEach(cell => cell.classList.remove('cell-editing'));
+        wrap.querySelectorAll('.timeline-inline-editor').forEach(editor => editor.remove());
+        wrap.querySelectorAll('.inline-cell-input').forEach(input => {
+          const cell = input.closest('td');
+          if (cell && cell.dataset.originalHtml !== undefined) {
+            cell.innerHTML = cell.dataset.originalHtml;
+            delete cell.dataset.originalHtml;
+          }
+        });
+      }
+
+      function startTextInlineEdit(cell, rowId, field) {
+        const row = findRowById(rowId);
+        if (!row || !field) return;
+        clearInlineEditors();
+        const originalValue = row[field] || '';
+        cell.dataset.originalHtml = cell.innerHTML;
+        cell.classList.add('cell-editing');
+        const input = field === 'action' ? document.createElement('textarea') : document.createElement('input');
+        input.className = 'inline-cell-input';
+        input.value = originalValue;
+        input.dataset.rowId = rowId;
+        input.dataset.field = field;
+        cell.innerHTML = '';
+        cell.appendChild(input);
+        input.focus();
+        input.select();
+        let finished = false;
+        const finish = shouldSave => {
+          if (finished) return;
+          finished = true;
+          if (shouldSave) saveTextInlineEdit(rowId, field, input.value, originalValue);
+          else render();
+        };
+        input.addEventListener('keydown', event => {
+          if (event.key === 'Enter' && field !== 'action') {
+            event.preventDefault();
+            finish(true);
+          }
+          if (event.key === 'Enter' && field === 'action' && (event.ctrlKey || event.metaKey)) {
+            event.preventDefault();
+            finish(true);
+          }
+          if (event.key === 'Escape') {
+            event.preventDefault();
+            finish(false);
+          }
+        });
+        input.addEventListener('blur', () => finish(true));
+      }
+
+      function saveTextInlineEdit(rowId, field, nextValue, oldValue) {
+        const row = findRowById(rowId);
+        if (!row) return render();
+        if (field === 'category') {
+          data.rows.forEach(target => {
+            if (target.category === oldValue) target.category = nextValue;
+          });
+        } else if (field === 'item') {
+          data.rows.forEach(target => {
+            if (target.category === row.category && target.item === oldValue) target.item = nextValue;
+          });
+        } else {
+          row[field] = nextValue;
+        }
+        render();
+      }
+
+      function startTimelineInlineEdit(cell, rowId, periodStart = '', periodEnd = '') {
+        const row = findRowById(rowId);
+        if (!row) return;
+        clearInlineEditors();
+        cell.classList.add('cell-editing');
+        const editor = document.createElement('div');
+        editor.className = 'timeline-inline-editor';
+        editor.innerHTML = `<span>Start</span><input type="date" value="${escapeHtml(row.start)}"><span>End</span><input type="date" value="${escapeHtml(row.end)}"><button type="button">Apply</button><button type="button" class="cancel-inline-btn">Cancel</button>`;
+        cell.appendChild(editor);
+        const inputs = editor.querySelectorAll('input');
+        const applyButton = editor.querySelector('button:not(.cancel-inline-btn)');
+        const cancelButton = editor.querySelector('.cancel-inline-btn');
+        if (periodStart && !overlaps(row.start, row.end, periodStart, periodEnd || periodStart)) {
+          inputs[0].value = periodStart;
+          inputs[1].value = periodEnd || periodStart;
+        }
+        const apply = () => {
+          const start = inputs[0].value;
+          const end = inputs[1].value;
+          if (isValidDate(start)) row.start = start;
+          if (isValidDate(end)) row.end = end;
+          if (row.end < row.start) [row.start, row.end] = [row.end, row.start];
+          render();
+        };
+        const cancel = () => render();
+        applyButton.addEventListener('click', apply);
+        cancelButton.addEventListener('click', cancel);
+        editor.addEventListener('keydown', event => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            apply();
+          }
+          if (event.key === 'Escape') {
+            event.preventDefault();
+            cancel();
+          }
+        });
+        inputs[0].focus();
+      }
+
+      function openQuickRowModal(rowId, periodStart = '', periodEnd = '') {
+        const row = findRowById(rowId);
+        if (!row) return;
+        quickPeriod = { start: periodStart || row.start, end: periodEnd || row.end };
+        setValue('quickRowId', row.id);
+        setValue('quickCategoryInput', row.category);
+        setValue('quickItemInput', row.item);
+        setValue('quickActionInput', row.action);
+        setValue('quickActionByInput', row.actionBy);
+        setValue('quickStartInput', row.start);
+        setValue('quickEndInput', row.end);
+        setValue('quickHighlightInput', row.highlight ? 'YES' : 'NO');
+        setText('quickRowHint', quickPeriod ? `Clicked: ${quickPeriod.start} to ${quickPeriod.end}` : '');
+        safeClassAdd(byId('quickRowModal'), 'show');
+      }
+
+      function closeQuickRowModal() {
+        safeClassRemove(byId('quickRowModal'), 'show');
+        quickPeriod = null;
+      }
+
+      function applyQuickRowEditor() {
+        const row = findRowById(byId('quickRowId')?.value || '');
+        if (!row) return;
+        row.category = byId('quickCategoryInput')?.value || '';
+        row.item = byId('quickItemInput')?.value || '';
+        row.action = byId('quickActionInput')?.value || '';
+        row.actionBy = byId('quickActionByInput')?.value || '';
+        const start = byId('quickStartInput')?.value || row.start;
+        const end = byId('quickEndInput')?.value || row.end;
+        row.start = isValidDate(start) ? start : row.start;
+        row.end = isValidDate(end) ? end : row.end;
+        if (row.end < row.start) [row.start, row.end] = [row.end, row.start];
+        row.highlight = (byId('quickHighlightInput')?.value || 'NO') === 'YES';
+        closeQuickRowModal();
+        render();
+      }
+
+      function deleteQuickRow() {
+        const rowId = byId('quickRowId')?.value || '';
+        if (!rowId) return;
+        if (!window.confirm('Delete this row?')) return;
+        data.rows = data.rows.filter(row => row.id !== rowId).map((row, order) => ({ ...row, order }));
+        closeQuickRowModal();
+        render();
+      }
+
+      function useClickedAsStart() {
+        if (quickPeriod) setValue('quickStartInput', quickPeriod.start);
+      }
+
+      function useClickedAsEnd() {
+        if (quickPeriod) setValue('quickEndInput', quickPeriod.end);
+      }
+
+      function openRowsModal() {
+        editingRows = data.rows.slice().sort((a, b) => a.order - b.order).map((row, order) => ({ ...row, order }));
+        renderRowsEditor();
+        safeClassAdd(byId('rowsModal'), 'show');
+      }
+
+      function closeRowsModal() {
+        safeClassRemove(byId('rowsModal'), 'show');
+      }
+
+      function renderRowsEditor() {
+        const body = byId('rowsEditorBody');
+        if (!body) return;
+        body.innerHTML = editingRows.map((row, index) => `
+          <tr>
+            <td>${index + 1}</td>
+            <td><input data-index="${index}" data-field="category" value="${escapeHtml(row.category)}"></td>
+            <td><input data-index="${index}" data-field="item" value="${escapeHtml(row.item)}"></td>
+            <td><input data-index="${index}" data-field="action" value="${escapeHtml(row.action)}"></td>
+            <td><input data-index="${index}" data-field="actionBy" value="${escapeHtml(row.actionBy)}"></td>
+            <td><input data-index="${index}" data-field="start" type="date" value="${escapeHtml(row.start)}"></td>
+            <td><input data-index="${index}" data-field="end" type="date" value="${escapeHtml(row.end)}"></td>
+            <td><select data-index="${index}" data-field="highlight"><option value="NO" ${row.highlight ? '' : 'selected'}>NO</option><option value="YES" ${row.highlight ? 'selected' : ''}>YES</option></select></td>
+            <td>
+              <button class="mini light" data-action="up" data-index="${index}">↑</button>
+              <button class="mini light" data-action="down" data-index="${index}">↓</button>
+              <button class="mini danger" data-action="delete" data-index="${index}">Delete</button>
+            </td>
+          </tr>`).join('');
+        body.querySelectorAll('input, select').forEach(input => {
+          input.addEventListener('input', updateEditingRowField);
+          input.addEventListener('change', updateEditingRowField);
+        });
+        body.querySelectorAll('button[data-action]').forEach(button => {
+          button.addEventListener('click', handleRowButton);
+        });
+      }
+
+      function updateEditingRowField(event) {
+        const index = Number(event.target.dataset.index);
+        const field = event.target.dataset.field;
+        if (!editingRows[index]) return;
+        editingRows[index][field] = field === 'highlight' ? event.target.value === 'YES' : event.target.value;
+      }
+
+      function handleRowButton(event) {
+        const index = Number(event.currentTarget.dataset.index);
+        const action = event.currentTarget.dataset.action;
+        if (action === 'delete') editingRows.splice(index, 1);
+        if (action === 'up' && index > 0) [editingRows[index - 1], editingRows[index]] = [editingRows[index], editingRows[index - 1]];
+        if (action === 'down' && index < editingRows.length - 1) [editingRows[index + 1], editingRows[index]] = [editingRows[index], editingRows[index + 1]];
+        editingRows = editingRows.map((row, order) => ({ ...row, order }));
+        renderRowsEditor();
+      }
+
+      function addRow() {
+        const last = editingRows[editingRows.length - 1];
+        editingRows.push(normalizeRow({
+          category: last ? last.category : '',
+          item: '',
+          action: '',
+          actionBy: '',
+          start: data.startDate,
+          end: data.startDate,
+          highlight: false,
+          order: editingRows.length
+        }, editingRows.length, data.startDate));
+        renderRowsEditor();
+      }
+
+      function duplicateLastRow() {
+        const last = editingRows[editingRows.length - 1];
+        if (!last) return addRow();
+        editingRows.push({ ...last, id: uid(), order: editingRows.length });
+        renderRowsEditor();
+      }
+
+      function applyRowsEditor() {
+        data.rows = editingRows.map((row, order) => normalizeRow({ ...row, order }, order, data.startDate));
+        closeRowsModal();
+        render();
+      }
+
+      function openDataModal() {
+        setValue('dataEditor', JSON.stringify(data, null, 2));
+        safeClassAdd(byId('dataModal'), 'show');
+      }
+
+      function closeDataModal() {
+        safeClassRemove(byId('dataModal'), 'show');
+      }
+
+      function applyDataEditor() {
+        try {
+          data = normalizeData(JSON.parse(byId('dataEditor')?.value || '{}'));
+          closeDataModal();
+          render();
+        } catch (error) {
+          alert('JSON 格式不正確，請檢查後再試。');
+        }
+      }
+
+      function csvEscape(value) {
+        const text = String(value ?? '');
+        if (text.includes(',') || text.includes(LF) || text.includes(CR) || text.includes(DQ)) return DQ + text.split(DQ).join(DQ + DQ) + DQ;
+        return text;
+      }
+
+      function safeFileName(value) {
+        const banned = ['/', ':', '*', '?', DQ, '<', '>', '|', BS];
+        let text = String(value || 'programme');
+        banned.forEach(char => { text = text.split(char).join('-'); });
+        return text || 'programme';
+      }
+
+      function exportCsv() {
+        const headers = ['Category', 'Item', 'Action', 'Action By', 'Start', 'End', 'Highlight'];
+        const rows = [headers].concat(data.rows.map(row => [row.category, row.item, row.action, row.actionBy, row.start, row.end, row.highlight ? 'YES' : 'NO']));
+        const csv = BOM + rows.map(row => row.map(csvEscape).join(',')).join(CR + LF);
+        downloadBlob(csv, `${safeFileName(data.projectName)}-programme.csv`, 'text/csv;charset=utf-8');
+      }
+
+      function escapeXml(value) {
+        return String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll(DQ, '&quot;').replaceAll("'", '&apos;');
+      }
+
+      function excelCell(value, style = '') {
+        const attrs = style ? ` ss:StyleID="${style}"` : '';
+        return `<Cell${attrs}><Data ss:Type="String">${escapeXml(value)}</Data></Cell>`;
+      }
+
+      function excelNumberCell(value, style = '') {
+        const attrs = style ? ` ss:StyleID="${style}"` : '';
+        return `<Cell${attrs}><Data ss:Type="Number">${Number(value) || 0}</Data></Cell>`;
+      }
+
+      function exportExcel() {
+        const rows = data.rows.slice().sort((a, b) => a.order - b.order);
+        const mode = getResolvedViewMode();
+        const periods = buildPeriods(mode);
+        const visualRows = rows.map(row => {
+          const left = [row.category, row.item, row.action, row.actionBy].map(value => excelCell(value, 'TextWrap')).join('');
+          const timeline = periods.map(period => excelCell('', overlaps(row.start, row.end, period.start, period.end) ? 'Work' : period.blocked ? 'Weekend' : 'Normal')).join('');
+          return `<Row>${left}${timeline}</Row>`;
+        }).join('');
+        const header1 = ['Category', 'Item', 'Action', 'Action By'].map(value => excelCell(value, 'Header')).join('') + periods.map(period => excelCell(period.label1, 'Header')).join('');
+        const header2 = ['', '', '', ''].map(value => excelCell(value, 'Header')).join('') + periods.map(period => excelCell(period.label2, 'Header')).join('');
+        const header3 = ['', '', '', ''].map(value => excelCell(value, 'Header')).join('') + periods.map(period => excelCell(period.label3, period.blocked ? 'WeekendHeader' : 'Header')).join('');
+        const workbook = `<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+<Styles>
+<Style ss:ID="Normal"><Alignment ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>
+<Style ss:ID="Header"><Font ss:Bold="1"/><Interior ss:Color="#F8FAFC" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>
+<Style ss:ID="TextWrap"><Alignment ss:Vertical="Center" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>
+<Style ss:ID="Work"><Interior ss:Color="#9AE6B4" ss:Pattern="Solid"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>
+<Style ss:ID="Weekend"><Interior ss:Color="#CFCFCF" ss:Pattern="Solid"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>
+<Style ss:ID="WeekendHeader"><Font ss:Bold="1"/><Interior ss:Color="#CFCFCF" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>
+</Styles>
+<Worksheet ss:Name="Programme"><Table>
+<Row>${excelCell(data.projectName, 'Header')}</Row>
+<Row>${excelCell(data.version)}${excelCell(data.lastUpdate)}${excelCell(`${data.startDate} to ${data.endDate}`)}</Row>
+<Row></Row>
+<Row>${header1}</Row>
+<Row>${header2}</Row>
+<Row>${header3}</Row>
+${visualRows}
+</Table></Worksheet>
+</Workbook>`;
+        downloadBlob(workbook, `${safeFileName(data.projectName)}-programme.xls`, 'application/vnd.ms-excel;charset=utf-8');
+      }
+
+      function downloadBlob(content, filename, type) {
+        const blob = new Blob([content], { type });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        URL.revokeObjectURL(link.href);
+        link.remove();
+      }
+
+      function parseCsv(text) {
+        const source = String(text || '').charAt(0) === BOM ? String(text || '').slice(1) : String(text || '');
+        const rows = [];
+        let row = [];
+        let cell = '';
+        let quoted = false;
+        for (let index = 0; index < source.length; index++) {
+          const char = source[index];
+          const next = source[index + 1];
+          if (quoted && char === DQ && next === DQ) {
+            cell += DQ;
+            index++;
+          } else if (char === DQ) {
+            quoted = !quoted;
+          } else if (!quoted && char === ',') {
+            row.push(cell);
+            cell = '';
+          } else if (!quoted && (char === LF || char === CR)) {
+            if (char === CR && next === LF) index++;
+            row.push(cell);
+            rows.push(row);
+            row = [];
+            cell = '';
+          } else {
+            cell += char;
+          }
+        }
+        if (cell || row.length) {
+          row.push(cell);
+          rows.push(row);
+        }
+        return rows.filter(csvRow => csvRow.some(value => String(value).trim() !== ''));
+      }
+
+      function importCsv(file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const rows = parseCsv(reader.result);
+            if (!rows.length) throw new Error('empty csv');
+            const headers = rows.shift().map(header => header.trim().toLowerCase());
+            const index = name => headers.indexOf(name.toLowerCase());
+            const value = (row, name) => {
+              const position = index(name);
+              return position >= 0 ? row[position] || '' : '';
+            };
+            data.rows = rows.map((row, order) => normalizeRow({
+              category: value(row, 'Category'),
+              item: value(row, 'Item'),
+              action: value(row, 'Action'),
+              actionBy: value(row, 'Action By'),
+              start: value(row, 'Start'),
+              end: value(row, 'End'),
+              highlight: value(row, 'Highlight'),
+              order
+            }, order, data.startDate));
+            render();
+          } catch (error) {
+            alert('CSV 格式不正確，請用 Export CSV 的格式再匯入。');
+          }
+        };
+        reader.readAsText(file);
+      }
+
+      function bind(id, eventName, handler) {
+        const element = byId(id);
+        if (element) element.addEventListener(eventName, handler);
+      }
+
+      function runTests() {
+        console.assert(isValidDate('2025-09-26') === true, 'valid date should pass');
+        console.assert(isValidDate('2025-02-30') === false, 'invalid date should fail');
+        console.assert(dayDiff('2025-09-26', '2025-09-30') === 4, 'dayDiff should count date difference');
+        console.assert(overlaps('2025-09-26', '2025-09-30', '2025-09-30', '2025-10-02') === true, 'overlap should include boundary');
+        console.assert(overlaps('2025-09-26', '2025-09-29', '2025-09-30', '2025-10-02') === false, 'non-overlap should fail');
+        const csv = 'A,B' + CR + LF + '"x,y",z';
+        console.assert(parseCsv(csv)[1][0] === 'x,y', 'csv parser should handle quoted commas');
+        console.assert(normalizeRow({ start: 'bad', end: '2025-01-01' }, 0, '2025-01-02').start === '2025-01-02', 'normalizeRow should fallback invalid start');
+        console.assert(Boolean(normalizeRow({}, 0, '2025-01-02').id) === true, 'normalizeRow should create a row id');
+        console.assert(findRowById('missing') === null, 'findRowById should return null for missing row');
+        console.assert(typeof startTextInlineEdit === 'function', 'inline text editing should exist');
+        console.assert(typeof startTimelineInlineEdit === 'function', 'inline timeline editing should exist');
+        console.assert(typeof exportExcel === 'function', 'exportExcel should exist');
+        console.assert(typeof startTimelineDrag === 'function', 'timeline drag should exist');
+        console.assert(Object.keys(defaultTemplates).length >= 3, 'default templates should exist');
+        console.assert(normalizeTemplate({ rows: [{ offsetStart: 5, offsetEnd: 1 }] }).rows[0].offsetStart === 1, 'template offsets should normalize order');
+        console.assert(typeof exportTemplates === 'function', 'template export should exist');
+        console.assert(typeof importTemplatesFromFile === 'function', 'template import should exist');
+        console.assert(typeof deleteSelectedTemplate === 'function', 'template delete should exist');
+        console.assert(typeof applyClientPdfPreset === 'function', 'client PDF preset should exist');
+        console.assert(hasAllRequiredElements() === true, 'required DOM elements should exist');
+      }
+
+      function init() {
+        deletedTemplateNames = loadDeletedTemplateNames();
+        templates = loadTemplates();
+        Object.keys(templates).forEach(name => {
+          templates[name] = normalizeTemplate(templates[name]);
+        });
+        populateTemplateSelect();
+        data = loadData();
+        bind('editProjectButton', 'click', openProjectModal);
+        bind('clientPdfButton', 'click', applyClientPdfPreset);
+        bind('uploadLogoButton', 'click', () => byId('logoInput')?.click());
+        bind('removeLogoButton', 'click', removeLogo);
+        bind('logoInput', 'change', event => {
+          const file = event.target.files && event.target.files[0];
+          if (file) importLogoFile(file);
+          event.target.value = '';
+        });
+        bind('cancelProjectButton', 'click', closeProjectModal);
+        bind('applyProjectButton', 'click', applyProjectEditor);
+        bind('editRowsButton', 'click', openRowsModal);
+        bind('addRowButton', 'click', addRow);
+        bind('duplicateLastRowButton', 'click', duplicateLastRow);
+        bind('cancelRowsButton', 'click', closeRowsModal);
+        bind('applyRowsButton', 'click', applyRowsEditor);
+        bind('editDataButton', 'click', openDataModal);
+        bind('exportCsvButton', 'click', exportCsv);
+        bind('exportExcelButton', 'click', exportExcel);
+        bind('importCsvButton', 'click', () => byId('csvInput')?.click());
+        bind('printButton', 'click', () => window.print());
+        bind('cancelQuickRowButton', 'click', closeQuickRowModal);
+        bind('applyQuickRowButton', 'click', applyQuickRowEditor);
+        bind('deleteQuickRowButton', 'click', deleteQuickRow);
+        bind('useClickedAsStartButton', 'click', useClickedAsStart);
+        bind('useClickedAsEndButton', 'click', useClickedAsEnd);
+        bind('cancelEditButton', 'click', closeDataModal);
+        bind('applyEditButton', 'click', applyDataEditor);
+        bind('startInput', 'change', event => { data.startDate = event.target.value; render(); });
+        bind('endInput', 'change', event => { data.endDate = event.target.value; render(); });
+        bind('viewInput', 'change', event => { data.viewMode = event.target.value; render(); });
+        bind('densityInput', 'change', render);
+        bind('applyTemplateButton', 'click', applyTemplate);
+        bind('saveTemplateButton', 'click', saveCurrentAsTemplate);
+        bind('deleteTemplateButton', 'click', deleteSelectedTemplate);
+        bind('exportTemplatesButton', 'click', exportTemplates);
+        bind('importTemplatesButton', 'click', () => byId('templateJsonInput')?.click());
+        bind('csvInput', 'change', event => {
+          const file = event.target.files && event.target.files[0];
+          if (file) importCsv(file);
+          event.target.value = '';
+        });
+        bind('templateJsonInput', 'change', event => {
+          const file = event.target.files && event.target.files[0];
+          if (file) importTemplatesFromFile(file);
+          event.target.value = '';
+        });
+        bind('projectModal', 'click', event => {
+          if (event.target.id === 'projectModal') closeProjectModal();
+        });
+        bind('rowsModal', 'click', event => {
+          if (event.target.id === 'rowsModal') closeRowsModal();
+        });
+        bind('quickRowModal', 'click', event => {
+          if (event.target.id === 'quickRowModal') closeQuickRowModal();
+        });
+        bind('dataModal', 'click', event => {
+          if (event.target.id === 'dataModal') closeDataModal();
+        });
+        document.addEventListener('keydown', event => {
+          if (event.key === 'Escape') {
+            closeProjectModal();
+            closeRowsModal();
+            closeQuickRowModal();
+            closeDataModal();
+          }
+        });
+        runTests();
+        render();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
+  </script>
+</body>
+</html>
