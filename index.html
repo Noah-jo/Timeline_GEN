@@ -353,11 +353,24 @@
       white-space: normal;
       line-height: 1.25;
     }
-    .checklist-list {
+    .checklist-list, .remarks-list {
       max-height: 136px;
       overflow-y: auto;
       padding-right: 4px;
       scrollbar-width: thin;
+    }
+    .remarks-list {
+      align-content: start;
+    }
+    .project-code-control {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 6px;
+      align-items: end;
+      width: 100%;
+    }
+    .project-code-control span {
+      grid-column: 1 / -1;
     }
     .checklist-progress {
       position: sticky;
@@ -658,6 +671,29 @@
     }
     .editor-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
     .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+    .project-list-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 680px;
+    }
+    .project-list-table th,
+    .project-list-table td {
+      border: 1px solid #cbd5e1;
+      padding: 8px;
+      text-align: left;
+      vertical-align: middle;
+    }
+    .project-list-table th {
+      background: #f8fafc;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    .project-list-empty {
+      padding: 16px;
+      color: #64748b;
+      font-style: italic;
+    }
     @media (max-width: 1000px) {
       .toolbar { grid-template-columns: 1fr auto; }
       .toolbar > div:first-child { grid-column: 1 / -1; }
@@ -714,7 +750,7 @@
       </div>
       <div class="toolbar-actions">
         <div class="toolbar-group primary" data-title="Schedule & View">
-          <label>Project Code <input id="projectCodeInput" placeholder="e.g. AFCD-SQ-314"></label>
+          <label class="project-code-control"><span>Project Code</span><input id="projectCodeInput" placeholder="e.g. AFCD-SQ-314"><button class="light mini" id="projectListButton" type="button">List</button></label>
           <label>Start <input id="startInput" type="date"></label>
           <label>End <input id="endInput" type="date"></label>
           <select id="viewInput">
@@ -844,6 +880,29 @@
       </div>
     </div>
   </div>
+  <div class="modal" id="projectListModal">
+    <div class="modal-card">
+      <h2>Cloud Project List</h2>
+      <div id="projectListStatus" class="status-pill">Unlock cloud sync first</div>
+      <div class="row-editor-wrap" style="margin-top:10px">
+        <table class="project-list-table">
+          <thead>
+            <tr>
+              <th style="width:180px">Project Code</th>
+              <th>Project Name</th>
+              <th style="width:210px">Time Period</th>
+              <th style="width:90px">Action</th>
+            </tr>
+          </thead>
+          <tbody id="projectListBody"></tbody>
+        </table>
+      </div>
+      <div class="modal-actions">
+        <button class="light" id="refreshProjectListButton" type="button">Refresh</button>
+        <button id="closeProjectListButton" type="button">Close</button>
+      </div>
+    </div>
+  </div>
   <div class="modal" id="rowsModal">
     <div class="modal-card">
       <h2>Edit Rows</h2>
@@ -946,7 +1005,7 @@
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
     import { getAuth, onAuthStateChanged, signInAnonymously, signOut } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
-    import { doc, getDoc, getFirestore, onSnapshot, serverTimestamp, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
+    import { collection, doc, getDoc, getDocs, getFirestore, onSnapshot, serverTimestamp, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
 
     const firebaseConfig = {
       apiKey: 'AIzaSyA60JS9Pj3WiJ--5KEPXT76e96JATM5TpI',
@@ -964,8 +1023,10 @@
       onAuthStateChanged,
       signInAnonymously,
       signOut,
+      collection,
       doc,
       getDoc,
+      getDocs,
       onSnapshot,
       serverTimestamp,
       setDoc
@@ -1170,6 +1231,13 @@
         element.className = `status-pill ${type}`.trim();
       }
 
+      function setProjectListStatus(message, type = '') {
+        const element = byId('projectListStatus');
+        if (!element) return;
+        element.textContent = message;
+        element.className = `status-pill ${type}`.trim();
+      }
+
       function isCloudUnlocked() {
         try {
           return sessionStorage.getItem(CLOUD_UNLOCK_KEY) === '1';
@@ -1266,6 +1334,72 @@
       function cloudDocRef(projectCode) {
         const api = getFirebaseApi();
         return api.doc(api.db, 'programmeProjects', projectCode);
+      }
+
+      function closeProjectListModal() {
+        safeClassRemove(byId('projectListModal'), 'show');
+      }
+
+      function renderProjectList(projects) {
+        const body = byId('projectListBody');
+        if (!body) return;
+        if (!projects.length) {
+          body.innerHTML = '<tr><td colspan="4"><div class="project-list-empty">No cloud projects found.</div></td></tr>';
+          return;
+        }
+        body.innerHTML = projects.map(project => `
+          <tr>
+            <td><strong>${escapeHtml(project.code)}</strong></td>
+            <td>${escapeHtml(project.name || 'Untitled Project')}</td>
+            <td>${escapeHtml(project.period || '')}</td>
+            <td><button class="mini project-list-load-button" type="button" data-code="${escapeHtml(project.code)}">Load</button></td>
+          </tr>
+        `).join('');
+      }
+
+      async function refreshProjectList() {
+        const api = getFirebaseApi();
+        if (!api) return setProjectListStatus('Cloud: Firebase unavailable', 'error');
+        if (!cloudUser || !isCloudUnlocked()) {
+          renderProjectList([]);
+          return setProjectListStatus('Unlock cloud sync first', 'warning');
+        }
+        setProjectListStatus('Loading cloud projects...', 'loading');
+        try {
+          const snap = await api.getDocs(api.collection(api.db, 'programmeProjects'));
+          const projects = [];
+          snap.forEach(docSnap => {
+            const payload = docSnap.data() || {};
+            const projectData = payload.data || {};
+            const code = normalizeProjectCode(payload.projectCode || projectData.projectCode || docSnap.id);
+            const start = projectData.startDate || '';
+            const end = projectData.endDate || '';
+            projects.push({
+              code,
+              name: projectData.projectName || payload.projectName || '',
+              period: start && end ? `${formatDisplayDate(start)} - ${formatDisplayDate(end)}` : ''
+            });
+          });
+          projects.sort((a, b) => a.code.localeCompare(b.code));
+          renderProjectList(projects);
+          setProjectListStatus(`Loaded ${projects.length} project${projects.length === 1 ? '' : 's'}`, 'success');
+        } catch (error) {
+          renderProjectList([]);
+          setProjectListStatus(`Project list failed: ${error.code || error.message}`, 'error');
+        }
+      }
+
+      function openProjectListModal() {
+        safeClassAdd(byId('projectListModal'), 'show');
+        refreshProjectList();
+      }
+
+      function loadProjectFromList(code) {
+        const projectCode = normalizeProjectCode(code);
+        if (!projectCode) return;
+        closeProjectListModal();
+        resetProjectCodeInputs(projectCode);
+        loadCloudProject(projectCode);
       }
 
       function resetProjectCodeInputs(code = data?.projectCode || activeCloudProjectCode || '') {
@@ -3007,6 +3141,13 @@ ${visualRows}
         bind('cloudSignInButton', 'click', toggleCloudSignIn);
         bind('cloudPasswordInput', 'keydown', event => {
           if (event.key === 'Enter') toggleCloudSignIn();
+        });
+        bind('projectListButton', 'click', openProjectListModal);
+        bind('refreshProjectListButton', 'click', refreshProjectList);
+        bind('closeProjectListButton', 'click', closeProjectListModal);
+        bind('projectListBody', 'click', event => {
+          const button = event.target.closest('.project-list-load-button');
+          if (button) loadProjectFromList(button.dataset.code || '');
         });
         bind('projectCodeInput', 'change', event => {
           handleProjectCodeChange(event.target.value);
