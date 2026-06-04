@@ -344,7 +344,14 @@
       font-size: 10.5px;
     }
     .programme thead th.checklist-col,
-    .programme thead th.remarks-col,
+    .programme thead th.remarks-col {
+      position: sticky;
+      top: 0;
+      left: auto;
+      right: auto;
+      z-index: 23;
+      background: #f8fafc;
+    }
     .programme tbody td.checklist-col,
     .programme tbody td.remarks-col {
       position: static;
