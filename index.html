@@ -746,23 +746,17 @@
           <input id="templateJsonInput" type="file" accept="application/json,.json" style="display:none">
         </div>
         <div class="toolbar-group" data-title="Cloud Sync">
-          <button id="cloudSignInButton" type="button">Sign In</button>
-          <button class="light" id="cloudLoadButton" type="button">Load Project</button>
-          <button class="secondary" id="cloudSaveButton" type="button">Save Cloud</button>
+          <input id="cloudPasswordInput" type="password" inputmode="numeric" placeholder="Sync password">
+          <button id="cloudSignInButton" type="button">Unlock Sync</button>
           <span id="cloudStatus" class="status-pill">Cloud: not connected</span>
         </div>
-        <div class="toolbar-group health-group" data-title="Edit & Holidays">
+        <div class="toolbar-group health-group" data-title="Edit and Save">
           <button id="editProjectButton">Edit Project</button>
           <button id="editRowsButton">Edit Rows</button>
           <span class="toolbar-break"></span>
-          <button class="light" id="editDataButton">Advanced JSON</button>
-          <button class="light" id="updateHkHolidaysButton">Update HK Holidays</button>
-          <span id="holidayStatus" class="status-pill">HK Holidays: not updated</span>
-          <span id="saveStatus" class="status-pill">Saved locally</span>
-        </div>
-        <div class="toolbar-group status-group" data-title="Client Output">
           <button class="light" id="clientPdfButton">Client PDF Preset</button>
-          <button id="printButton">Print / Save PDF</button>
+          <button id="printButton">Save PDF</button>
+          <span id="saveStatus" class="status-pill">Saved locally</span>
         </div>
         <div class="toolbar-group" data-title="Import / Export">
           <button class="secondary" id="exportProjectButton">Export Project JSON</button>
@@ -771,6 +765,7 @@
           <button class="secondary" id="exportCsvButton">Export CSV</button>
           <button class="secondary" id="exportExcelButton">Export Excel (.xls)</button>
           <button class="light" id="importCsvButton">Import CSV</button>
+          <button class="light" id="editDataButton">Advanced JSON</button>
           <input id="csvInput" type="file" accept=".csv,text/csv" style="display:none">
         </div>
       </div>
@@ -815,6 +810,7 @@
             <tr><th>Display End Date</th><td><input id="projectEndInput" type="date"></td></tr>
             <tr><th>Client Summary</th><td><textarea id="summaryInput" style="min-height:80px"></textarea></td></tr>
             <tr><th>Notes</th><td><textarea id="notesInput" style="min-height:90px"></textarea></td></tr>
+            <tr><th>HK Holidays</th><td><button class="light" id="updateHkHolidaysButton" type="button">Update HK Holidays</button> <span id="holidayStatus" class="status-pill">HK Holidays: not updated</span></td></tr>
             <tr><th>Holidays</th><td><input id="holidaysInput" placeholder="YYYY-MM-DD, YYYY-MM-DD"></td></tr>
             <tr><th>Holiday Proxy URL</th><td><input id="holidayProxyInput" placeholder="https://holidays.napjoc.workers.dev/"><div style="margin-top:6px;color:#64748b">如 GovHK 被 CORS 擋住，可填入公司 proxy / Cloudflare Worker URL。</div></td></tr>
             <tr><th>Timeline Colours</th><td>
@@ -935,7 +931,7 @@
   </div>
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
-    import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
+    import { getAuth, onAuthStateChanged, signInAnonymously, signOut } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
     import { doc, getDoc, getFirestore, onSnapshot, serverTimestamp, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
 
     const firebaseConfig = {
@@ -951,9 +947,8 @@
     window.noahProgrammeFirebase = {
       auth: getAuth(app),
       db: getFirestore(app),
-      googleProvider: new GoogleAuthProvider(),
       onAuthStateChanged,
-      signInWithPopup,
+      signInAnonymously,
       signOut,
       doc,
       getDoc,
@@ -970,6 +965,8 @@
       const TEMPLATE_KEY = 'noah_master_programme_templates_v1';
       const DELETED_TEMPLATE_KEY = 'noah_master_programme_deleted_templates_v1';
       const UI_KEY = 'noah_master_programme_ui_v1';
+      const CLOUD_UNLOCK_KEY = 'noah_master_programme_cloud_unlocked_v1';
+      const CLOUD_PASSWORD = '36961500';
       const DEFAULT_HOLIDAY_PROXY_URL = 'https://holidays.napjoc.workers.dev/';
       const LEGACY_KEYS = ['noah_master_programme_display_v4', 'noah_master_programme_display_v3', 'noah_master_programme_display_v2', 'noah_master_programme_display_v1'];
       const LF = String.fromCharCode(10);
@@ -977,7 +974,7 @@
       const DQ = String.fromCharCode(34);
       const BOM = String.fromCharCode(65279);
       const BS = String.fromCharCode(92);
-      const REQUIRED_IDS = ['app', 'projectName', 'versionText', 'dateRangeText', 'lastUpdateText', 'viewText', 'clientSummary', 'notesText', 'startInput', 'endInput', 'viewInput', 'weekLabelInput', 'densityInput', 'programmeWrap', 'companyLogo', 'holidayStatus', 'saveStatus', 'projectCodeInput', 'cloudStatus'];
+      const REQUIRED_IDS = ['app', 'projectName', 'versionText', 'dateRangeText', 'lastUpdateText', 'viewText', 'clientSummary', 'notesText', 'startInput', 'endInput', 'viewInput', 'weekLabelInput', 'densityInput', 'programmeWrap', 'companyLogo', 'holidayStatus', 'saveStatus', 'projectCodeInput', 'cloudPasswordInput', 'cloudStatus'];
       let editingRows = [];
       let editingItems = [];
       let quickPeriod = null;
@@ -1157,6 +1154,30 @@
         element.className = `status-pill ${type}`.trim();
       }
 
+      function isCloudUnlocked() {
+        try {
+          return sessionStorage.getItem(CLOUD_UNLOCK_KEY) === '1';
+        } catch (error) {
+          return false;
+        }
+      }
+
+      function setCloudUnlocked(unlocked) {
+        try {
+          if (unlocked) sessionStorage.setItem(CLOUD_UNLOCK_KEY, '1');
+          else sessionStorage.removeItem(CLOUD_UNLOCK_KEY);
+        } catch (error) {
+          // Session storage can be blocked in strict browser modes; cloud sync still works for the current action.
+        }
+        const button = byId('cloudSignInButton');
+        if (button) button.textContent = unlocked ? 'Lock Sync' : 'Unlock Sync';
+        const input = byId('cloudPasswordInput');
+        if (input) {
+          input.disabled = unlocked;
+          if (unlocked) input.value = '';
+        }
+      }
+
       function getFirebaseApi() {
         firebaseApi = firebaseApi || window.noahProgrammeFirebase || null;
         return firebaseApi;
@@ -1173,16 +1194,21 @@
         if (!api) return setCloudStatus('Cloud: Firebase unavailable', 'error');
         api.onAuthStateChanged(api.auth, user => {
           cloudUser = user || null;
-          const button = byId('cloudSignInButton');
-          if (button) button.textContent = cloudUser ? 'Sign Out' : 'Sign In';
-          if (cloudUser) {
-            setCloudStatus(`Cloud: signed in ${cloudUser.email}`, 'success');
+          if (cloudUser && isCloudUnlocked()) {
+            setCloudUnlocked(true);
             const code = getProjectCode();
-            if (code) subscribeCloudProject(code);
+            if (code) {
+              setCloudStatus(`Cloud: syncing ${code}`, 'success');
+              loadCloudProject();
+            } else {
+              setCloudStatus('Cloud: enter Project Code to sync', 'warning');
+            }
           } else {
             if (cloudUnsubscribe) cloudUnsubscribe();
             cloudUnsubscribe = null;
-            setCloudStatus('Cloud: sign in to sync', 'warning');
+            setCloudUnlocked(false);
+            if (cloudUser) api.signOut(api.auth).catch(() => {});
+            setCloudStatus('Cloud: enter password to sync', 'warning');
           }
         });
       }
@@ -1192,12 +1218,30 @@
         if (!api) return setCloudStatus('Cloud: Firebase unavailable', 'error');
         try {
           if (cloudUser) {
+            setCloudUnlocked(false);
+            if (cloudUnsubscribe) cloudUnsubscribe();
+            cloudUnsubscribe = null;
             await api.signOut(api.auth);
+            setCloudStatus('Cloud: locked', 'warning');
           } else {
-            await api.signInWithPopup(api.auth, api.googleProvider);
+            const input = byId('cloudPasswordInput');
+            const password = input ? input.value.trim() : '';
+            if (password !== CLOUD_PASSWORD) {
+              setCloudStatus('Cloud: wrong password', 'error');
+              if (input) input.select();
+              return;
+            }
+            if (!getProjectCode()) {
+              setCloudStatus('Cloud: enter Project Code first', 'warning');
+              return;
+            }
+            setCloudUnlocked(true);
+            setCloudStatus('Cloud: connecting...', 'loading');
+            await api.signInAnonymously(api.auth);
           }
         } catch (error) {
-          setCloudStatus(`Cloud sign-in failed: ${error.code || error.message}`, 'error');
+          setCloudUnlocked(false);
+          setCloudStatus(`Cloud sync failed: ${error.code || error.message}`, 'error');
         }
       }
 
@@ -1209,7 +1253,7 @@
       async function loadCloudProject() {
         const api = getFirebaseApi();
         if (!api) return setCloudStatus('Cloud: Firebase unavailable', 'error');
-        if (!cloudUser) return setCloudStatus('Cloud: sign in first', 'warning');
+        if (!cloudUser || !isCloudUnlocked()) return setCloudStatus('Cloud: unlock sync first', 'warning');
         const code = getProjectCode();
         if (!code || code.length < 3) return setCloudStatus('Cloud: enter Project Code first', 'warning');
         setCloudStatus(`Cloud: loading ${code}...`, 'loading');
@@ -1220,7 +1264,7 @@
             setValue('projectCodeInput', code);
             setValue('projectCodeProjectInput', code);
             subscribeCloudProject(code);
-            setCloudStatus(`Cloud: no saved data for ${code}`, 'warning');
+            await saveCloudProjectNow();
             return;
           }
           const payload = snap.data();
@@ -1241,7 +1285,7 @@
       async function saveCloudProjectNow() {
         const api = getFirebaseApi();
         if (!api) return setCloudStatus('Cloud: Firebase unavailable', 'error');
-        if (!cloudUser) return setCloudStatus('Cloud: sign in first', 'warning');
+        if (!cloudUser || !isCloudUnlocked()) return setCloudStatus('Cloud: unlock sync first', 'warning');
         const code = getProjectCode();
         if (!code || code.length < 3) return setCloudStatus('Cloud: enter Project Code first', 'warning');
         data.projectCode = code;
@@ -1251,7 +1295,7 @@
           await api.setDoc(cloudDocRef(code), {
             data: normalizeData(data),
             updatedAt: api.serverTimestamp(),
-            updatedBy: cloudUser.email || '',
+            updatedBy: 'team',
             projectCode: code
           }, { merge: true });
           setCloudStatus(`Cloud: saved ${code}`, 'success');
@@ -1262,14 +1306,14 @@
       }
 
       function queueCloudSave() {
-        if (suppressCloudSave || !cloudUser || !getProjectCode()) return;
+        if (suppressCloudSave || !cloudUser || !isCloudUnlocked() || !getProjectCode()) return;
         window.clearTimeout(cloudSaveTimer);
         cloudSaveTimer = window.setTimeout(saveCloudProjectNow, 900);
       }
 
       function subscribeCloudProject(projectCode) {
         const api = getFirebaseApi();
-        if (!api || !cloudUser || !projectCode) return;
+        if (!api || !cloudUser || !isCloudUnlocked() || !projectCode) return;
         if (cloudUnsubscribe) cloudUnsubscribe();
         cloudUnsubscribe = api.onSnapshot(cloudDocRef(projectCode), snap => {
           if (!snap.exists()) return;
@@ -2872,14 +2916,15 @@ ${visualRows}
         bind('hideToolbarButton', 'click', () => setToolbarHidden(true));
         bind('showToolbarButton', 'click', () => setToolbarHidden(false));
         bind('cloudSignInButton', 'click', toggleCloudSignIn);
-        bind('cloudLoadButton', 'click', loadCloudProject);
-        bind('cloudSaveButton', 'click', saveCloudProjectNow);
+        bind('cloudPasswordInput', 'keydown', event => {
+          if (event.key === 'Enter') toggleCloudSignIn();
+        });
         bind('projectCodeInput', 'change', event => {
           data.projectCode = normalizeProjectCode(event.target.value);
           setValue('projectCodeInput', data.projectCode);
           setValue('projectCodeProjectInput', data.projectCode);
           saveData();
-          if (cloudUser && data.projectCode) subscribeCloudProject(data.projectCode);
+          if (cloudUser && isCloudUnlocked() && data.projectCode) loadCloudProject();
         });
         bind('editProjectButton', 'click', openProjectModal);
         bind('clientPdfButton', 'click', applyClientPdfPreset);
