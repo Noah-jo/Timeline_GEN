@@ -343,6 +343,14 @@
       background: white;
       font-size: 10.5px;
     }
+    .programme thead th.checklist-col,
+    .programme thead th.remarks-col,
+    .programme tbody td.checklist-col,
+    .programme tbody td.remarks-col {
+      position: static;
+      inset: auto;
+      z-index: auto;
+    }
     .checklist-list, .remarks-list {
       display: grid;
       gap: 4px;
@@ -1024,7 +1032,7 @@
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
     import { getAuth, onAuthStateChanged, signInAnonymously, signOut } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
-    import { collection, deleteDoc, doc, getDoc, getDocs, getFirestore, onSnapshot, serverTimestamp, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
+    import { collection, doc, getDoc, getDocs, getFirestore, onSnapshot, serverTimestamp, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
 
     const firebaseConfig = {
       apiKey: 'AIzaSyA60JS9Pj3WiJ--5KEPXT76e96JATM5TpI',
@@ -1043,7 +1051,6 @@
       signInAnonymously,
       signOut,
       collection,
-      deleteDoc,
       doc,
       getDoc,
       getDocs,
@@ -1393,6 +1400,7 @@
           const projects = [];
           snap.forEach(docSnap => {
             const payload = docSnap.data() || {};
+            if (payload.deleted === true) return;
             const projectData = payload.data || {};
             const code = normalizeProjectCode(payload.projectCode || projectData.projectCode || docSnap.id);
             const start = projectData.startDate || '';
@@ -1495,7 +1503,7 @@
         try {
           const ref = cloudDocRef(projectData.projectCode);
           const existing = await api.getDoc(ref);
-          if (existing.exists()) {
+          if (existing.exists() && existing.data()?.deleted !== true) {
             setProjectListStatus(`Project ${projectData.projectCode} already exists`, 'error');
             return;
           }
@@ -1532,8 +1540,14 @@
         }
         setProjectListStatus(`Deleting ${projectCode}...`, 'loading');
         try {
-          await api.deleteDoc(cloudDocRef(projectCode));
+          await api.setDoc(cloudDocRef(projectCode), {
+            deleted: true,
+            deletedAt: api.serverTimestamp(),
+            updatedBy: 'team',
+            projectCode
+          }, { merge: false });
           if (activeCloudProjectCode === projectCode) {
+            window.clearTimeout(cloudSaveTimer);
             if (cloudUnsubscribe) cloudUnsubscribe();
             cloudUnsubscribe = null;
             activeCloudProjectCode = '';
@@ -1656,6 +1670,14 @@
             return;
           }
           const payload = snap.data();
+          if (payload?.deleted === true) {
+            window.clearTimeout(cloudSaveTimer);
+            if (cloudUnsubscribe) cloudUnsubscribe();
+            cloudUnsubscribe = null;
+            activeCloudProjectCode = '';
+            setCloudStatus(`Cloud: project ${code} was deleted`, 'warning');
+            return;
+          }
           if (!payload || !payload.data || !Array.isArray(payload.data.rows)) throw new Error('Bad cloud project data');
           suppressCloudSave = true;
           data = normalizeData({ ...payload.data, projectCode: code });
@@ -1680,6 +1702,15 @@
         setValue('projectCodeInput', code);
         setValue('projectCodeProjectInput', code);
         try {
+          const existing = await api.getDoc(cloudDocRef(code));
+          if (existing.exists() && existing.data()?.deleted === true) {
+            window.clearTimeout(cloudSaveTimer);
+            if (cloudUnsubscribe) cloudUnsubscribe();
+            cloudUnsubscribe = null;
+            activeCloudProjectCode = '';
+            setCloudStatus(`Cloud: project ${code} was deleted; save stopped`, 'warning');
+            return;
+          }
           await api.setDoc(cloudDocRef(code), {
             data: normalizeData(data),
             updatedAt: api.serverTimestamp(),
@@ -1707,6 +1738,14 @@
         cloudUnsubscribe = api.onSnapshot(cloudDocRef(projectCode), snap => {
           if (!snap.exists()) return;
           const payload = snap.data();
+          if (payload?.deleted === true) {
+            window.clearTimeout(cloudSaveTimer);
+            if (cloudUnsubscribe) cloudUnsubscribe();
+            cloudUnsubscribe = null;
+            activeCloudProjectCode = '';
+            setCloudStatus(`Cloud: project ${projectCode} was deleted; current screen is local only`, 'warning');
+            return;
+          }
           if (!payload || !payload.data || !Array.isArray(payload.data.rows)) return;
           const incoming = JSON.stringify(normalizeData({ ...payload.data, projectCode }));
           const current = JSON.stringify(normalizeData(data));
@@ -2540,7 +2579,7 @@
       }
 
       function renderRemarksCell(row) {
-        const remarks = normalizeChecklist(row.checklist).filter(item => item.remarks).slice(0, 8);
+        const remarks = normalizeChecklist(row.checklist).filter(item => item.remarks);
         if (!remarks.length) return '<div class="items-empty">No remarks</div>';
         return `<div class="remarks-list">${remarks.map(item => `<div><strong>${escapeHtml(item.text)}:</strong> ${escapeHtml(item.remarks)}</div>`).join('')}</div>`;
       }
