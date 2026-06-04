@@ -294,9 +294,7 @@
       width: var(--category-w);
       min-width: var(--category-w);
       max-width: var(--category-w);
-      position: sticky;
-      left: 0;
-      z-index: 10;
+      --freeze-left: 0px;
       background: white;
       font-weight: 700;
     }
@@ -304,34 +302,28 @@
       width: var(--item-w);
       min-width: var(--item-w);
       max-width: var(--item-w);
-      position: sticky;
-      left: var(--category-w);
-      z-index: 10;
+      --freeze-left: var(--category-w);
       background: white;
     }
     .action-col {
       width: var(--action-w);
       min-width: var(--action-w);
       max-width: var(--action-w);
-      position: sticky;
-      left: calc(var(--category-w) + var(--item-w));
-      z-index: 10;
+      --freeze-left: calc(var(--category-w) + var(--item-w));
       background: white;
     }
     .person-col {
       width: var(--person-w);
       min-width: var(--person-w);
       max-width: var(--person-w);
-      position: sticky;
-      left: calc(var(--category-w) + var(--item-w) + var(--action-w));
-      z-index: 10;
+      --freeze-left: calc(var(--category-w) + var(--item-w) + var(--action-w));
       background: white;
     }
     .checklist-col {
       width: var(--checklist-w);
       min-width: var(--checklist-w);
       max-width: var(--checklist-w);
-      position: static;
+      --freeze-left: calc(var(--category-w) + var(--item-w) + var(--action-w) + var(--person-w));
       background: white;
       font-size: 10.5px;
     }
@@ -339,10 +331,14 @@
       width: var(--remarks-w);
       min-width: var(--remarks-w);
       max-width: var(--remarks-w);
-      position: static;
+      --freeze-left: calc(var(--category-w) + var(--item-w) + var(--action-w) + var(--person-w) + var(--checklist-w));
       background: white;
       font-size: 10.5px;
     }
+    .programme thead th.category-col,
+    .programme thead th.item-col,
+    .programme thead th.action-col,
+    .programme thead th.person-col,
     .programme thead th.checklist-col,
     .programme thead th.remarks-col {
       position: sticky;
@@ -352,11 +348,29 @@
       z-index: 23;
       background: #f8fafc;
     }
+    body.freeze-cols-1 .programme .category-col,
+    body.freeze-cols-2 .programme :is(.category-col, .item-col),
+    body.freeze-cols-3 .programme :is(.category-col, .item-col, .action-col),
+    body.freeze-cols-4 .programme :is(.category-col, .item-col, .action-col, .person-col),
+    body.freeze-cols-5 .programme :is(.category-col, .item-col, .action-col, .person-col, .checklist-col),
+    body.freeze-cols-6 .programme :is(.category-col, .item-col, .action-col, .person-col, .checklist-col, .remarks-col) {
+      position: sticky;
+      left: var(--freeze-left);
+      z-index: 10;
+      background: white;
+    }
+    body.freeze-cols-1 .programme thead .category-col,
+    body.freeze-cols-2 .programme thead :is(.category-col, .item-col),
+    body.freeze-cols-3 .programme thead :is(.category-col, .item-col, .action-col),
+    body.freeze-cols-4 .programme thead :is(.category-col, .item-col, .action-col, .person-col),
+    body.freeze-cols-5 .programme thead :is(.category-col, .item-col, .action-col, .person-col, .checklist-col),
+    body.freeze-cols-6 .programme thead :is(.category-col, .item-col, .action-col, .person-col, .checklist-col, .remarks-col) {
+      z-index: 30;
+      background: #f8fafc;
+    }
     .programme tbody td.checklist-col,
     .programme tbody td.remarks-col {
-      position: static;
-      inset: auto;
-      z-index: auto;
+      right: auto;
     }
     .checklist-list, .remarks-list {
       display: grid;
@@ -738,6 +752,12 @@
       .programme .person-col { width: 95px; min-width: 95px; max-width: 95px; }
       .programme .checklist-col { width: var(--checklist-w); min-width: var(--checklist-w); max-width: var(--checklist-w); }
       .programme .remarks-col { width: var(--remarks-w); min-width: var(--remarks-w); max-width: var(--remarks-w); }
+      body[class*="freeze-cols-"] .programme :is(.category-col, .item-col, .action-col, .person-col, .checklist-col, .remarks-col) {
+        position: static;
+        left: auto;
+        right: auto;
+        z-index: auto;
+      }
       .programme td.weekend, .programme th.weekend { background: var(--weekend) !important; }
       .programme td.workday, .programme td.workday.weekend, .programme td.workday.start, .programme td.workday.end { background: var(--work) !important; }
       .programme thead th, .category-col, .item-col, .action-col, .person-col, .checklist-col, .remarks-col { position: static; }
@@ -781,6 +801,15 @@
           <select id="audienceInput">
             <option value="internal">Internal View</option>
             <option value="client">Client View</option>
+          </select>
+          <select id="freezeColumnsInput" title="Freeze columns from the left">
+            <option value="0">Freeze: None</option>
+            <option value="1">Freeze: Category</option>
+            <option value="2">Freeze: Sub-Category</option>
+            <option value="3">Freeze: Action</option>
+            <option value="4">Freeze: Action By</option>
+            <option value="5">Freeze: Action Items</option>
+            <option value="6">Freeze: Remarks</option>
           </select>
         </div>
         <div class="toolbar-group" data-title="Templates">
@@ -1083,7 +1112,7 @@
       const DQ = String.fromCharCode(34);
       const BOM = String.fromCharCode(65279);
       const BS = String.fromCharCode(92);
-      const REQUIRED_IDS = ['app', 'projectName', 'versionText', 'dateRangeText', 'lastUpdateText', 'viewText', 'clientSummary', 'notesText', 'startInput', 'endInput', 'viewInput', 'weekLabelInput', 'densityInput', 'programmeWrap', 'companyLogo', 'holidayStatus', 'saveStatus', 'projectCodeInput', 'cloudPasswordInput', 'cloudStatus'];
+      const REQUIRED_IDS = ['app', 'projectName', 'versionText', 'dateRangeText', 'lastUpdateText', 'viewText', 'clientSummary', 'notesText', 'startInput', 'endInput', 'viewInput', 'weekLabelInput', 'densityInput', 'freezeColumnsInput', 'programmeWrap', 'companyLogo', 'holidayStatus', 'saveStatus', 'projectCodeInput', 'cloudPasswordInput', 'cloudStatus'];
       let editingRows = [];
       let editingItems = [];
       let quickPeriod = null;
@@ -1091,7 +1120,7 @@
       let dragRenderRequest = null;
       let lastAutoHolidayFetchKey = '';
       let lastSaveError = false;
-      let uiState = { toolbarHidden: false };
+      let uiState = { toolbarHidden: false, freezeColumns: 4 };
       let firebaseApi = null;
       let cloudUser = null;
       let cloudUnsubscribe = null;
@@ -1767,9 +1796,15 @@
       function loadUiState() {
         try {
           const saved = JSON.parse(localStorage.getItem(UI_KEY));
-          if (saved && typeof saved === 'object') return { toolbarHidden: saved.toolbarHidden === true };
+          if (saved && typeof saved === 'object') {
+            const freezeColumns = Number(saved.freezeColumns);
+            return {
+              toolbarHidden: saved.toolbarHidden === true,
+              freezeColumns: Number.isInteger(freezeColumns) && freezeColumns >= 0 && freezeColumns <= 6 ? freezeColumns : 4
+            };
+          }
         } catch (error) {}
-        return { toolbarHidden: false };
+        return { toolbarHidden: false, freezeColumns: 4 };
       }
 
       function saveUiState() {
@@ -1781,6 +1816,17 @@
       function setToolbarHidden(hidden) {
         uiState.toolbarHidden = Boolean(hidden);
         safeClassToggle(document.body, 'toolbar-hidden', uiState.toolbarHidden);
+        saveUiState();
+      }
+
+      function setFreezeColumns(value) {
+        const requested = Number(value);
+        const freezeColumns = Number.isInteger(requested) && requested >= 0 && requested <= 6 ? requested : 4;
+        uiState.freezeColumns = freezeColumns;
+        for (let index = 0; index <= 6; index += 1) {
+          safeClassToggle(document.body, `freeze-cols-${index}`, index === freezeColumns);
+        }
+        setValue('freezeColumnsInput', String(freezeColumns));
         saveUiState();
       }
 
@@ -3342,6 +3388,7 @@ ${visualRows}
       function init() {
         uiState = loadUiState();
         setToolbarHidden(uiState.toolbarHidden);
+        setFreezeColumns(uiState.freezeColumns);
         deletedTemplateNames = loadDeletedTemplateNames();
         templates = loadTemplates();
         Object.keys(templates).forEach(name => {
@@ -3421,6 +3468,7 @@ ${visualRows}
         bind('weekLabelInput', 'change', event => { data.weekLabelMode = event.target.value; render(); });
         bind('audienceInput', 'change', event => { data.audienceMode = event.target.value; render(); });
         bind('densityInput', 'change', render);
+        bind('freezeColumnsInput', 'change', event => setFreezeColumns(event.target.value));
         bind('applyTemplateButton', 'click', applyTemplate);
         bind('saveTemplateButton', 'click', saveCurrentAsTemplate);
         bind('deleteTemplateButton', 'click', deleteSelectedTemplate);
