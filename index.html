@@ -331,9 +331,7 @@
       width: var(--checklist-w);
       min-width: var(--checklist-w);
       max-width: var(--checklist-w);
-      position: sticky;
-      left: calc(var(--category-w) + var(--item-w) + var(--action-w) + var(--person-w));
-      z-index: 10;
+      position: static;
       background: white;
       font-size: 10.5px;
     }
@@ -341,9 +339,7 @@
       width: var(--remarks-w);
       min-width: var(--remarks-w);
       max-width: var(--remarks-w);
-      position: sticky;
-      left: calc(var(--category-w) + var(--item-w) + var(--action-w) + var(--person-w) + var(--checklist-w));
-      z-index: 10;
+      position: static;
       background: white;
       font-size: 10.5px;
     }
@@ -1551,8 +1547,8 @@
 
       function deleteLocalProjectOnly(projectCode) {
         const label = projectCode || data?.projectName || 'current project';
-        const typed = window.prompt(`Cloud sync is locked. Type DELETE to remove the current local project from this browser.`);
-        if (typed !== 'DELETE') {
+        const confirmed = window.confirm(`Delete the current local project "${label}" from this browser?`);
+        if (!confirmed) {
           setCloudStatus('Local delete cancelled', 'warning');
           return;
         }
@@ -1568,12 +1564,11 @@
       }
 
       function deleteCurrentProject() {
-        const currentCode = activeCloudProjectCode || getProjectCode();
-        if (cloudUser && isCloudUnlocked() && currentCode) {
-          deleteCloudProject(currentCode);
+        if (cloudUser && isCloudUnlocked() && activeCloudProjectCode) {
+          deleteCloudProject(activeCloudProjectCode);
           return;
         }
-        deleteLocalProjectOnly(currentCode);
+        deleteLocalProjectOnly(getProjectCode());
       }
 
       function resetProjectCodeInputs(code = data?.projectCode || activeCloudProjectCode || '') {
