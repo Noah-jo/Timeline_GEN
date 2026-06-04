@@ -18,9 +18,12 @@
       --item-w: 170px;
       --action-w: 330px;
       --person-w: 120px;
+      --checklist-w: 230px;
+      --remarks-w: 260px;
       --period-w: 42px;
       --row-h: 30px;
       --header-h: 28px;
+      --highlight: #fff7ed;
     }
     * { box-sizing: border-box; }
     html, body, .app, .sheet, .programme, .programme th, .programme td, .swatch {
@@ -80,19 +83,125 @@
       box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
       padding: 14px;
       display: grid;
-      grid-template-columns: 1fr auto;
+      grid-template-columns: 180px minmax(0, 1fr) auto;
       gap: 12px;
-      align-items: center;
+      align-items: start;
       margin-bottom: 14px;
+    }
+    body.toolbar-hidden .toolbar {
+      display: none;
+    }
+    .toolbar-toggle {
+      position: sticky;
+      top: 0;
+      z-index: 80;
+      display: flex;
+      justify-content: flex-end;
+      margin: 0 0 8px;
+      pointer-events: none;
+    }
+    .toolbar-toggle button {
+      pointer-events: auto;
+      background: #111827;
+      color: #fff;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.2);
+    }
+    body:not(.toolbar-hidden) .toolbar-toggle {
+      display: none;
     }
     .toolbar h1 { margin: 0 0 4px; font-size: 20px; letter-spacing: -0.02em; }
     .toolbar p { margin: 0; color: var(--muted); line-height: 1.45; }
     .toolbar-actions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      grid-auto-rows: auto;
+      align-items: start;
+      min-width: 0;
+    }
+    .toolbar-group {
+      position: relative;
       display: flex;
       flex-wrap: wrap;
-      justify-content: flex-end;
       gap: 8px;
       align-items: center;
+      align-content: flex-start;
+      min-height: 112px;
+      padding: 22px 10px 10px;
+      border: 1.5px solid #c5d1df;
+      border-radius: 12px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 1px 2px rgba(15, 23, 42, 0.05);
+    }
+    .toolbar-group::before {
+      content: attr(data-title);
+      position: absolute;
+      top: 7px;
+      left: 10px;
+      color: #475569;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .toolbar-group.primary {
+      border-color: #9fb3c8;
+      background: #ffffff;
+    }
+    .toolbar-group.status-group {
+      justify-content: flex-start;
+      align-content: flex-start;
+    }
+    .toolbar-group.health-group {
+      display: flex;
+    }
+    .toolbar-break {
+      flex-basis: 100%;
+      width: 0;
+      height: 0;
+    }
+    .toolbar-group.health-group .toolbar-break {
+      grid-column: 1 / -1;
+    }
+    .toolbar-group.health-group .status-pill,
+    .toolbar-group.status-group .status-pill {
+      max-width: 100%;
+    }
+    .toolbar-controls {
+      display: flex;
+      justify-content: flex-end;
+      align-items: start;
+    }
+    .toolbar-controls button {
+      min-width: 96px;
+    }
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(150px, 1fr));
+      gap: 10px;
+    }
+    .color-control {
+      display: grid;
+      grid-template-columns: 1fr 42px;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      background: #fff;
+    }
+    .color-control span {
+      color: #334155;
+      font-weight: 700;
+    }
+    .row-editor .color-control input[type="color"],
+    input[type="color"].color-input {
+      width: 42px;
+      min-width: 42px;
+      height: 32px;
+      padding: 2px;
+      border-radius: 8px;
+      cursor: pointer;
     }
     .sheet {
       background: var(--paper);
@@ -146,7 +255,7 @@
       border-collapse: separate;
       border-spacing: 0;
       table-layout: fixed;
-      min-width: calc(var(--category-w) + var(--item-w) + var(--action-w) + var(--person-w) + var(--period-count) * var(--period-w));
+      min-width: calc(var(--category-w) + var(--item-w) + var(--action-w) + var(--person-w) + var(--checklist-w) + var(--remarks-w) + var(--period-count) * var(--period-w));
       width: max-content;
       background: white;
     }
@@ -162,7 +271,7 @@
       text-overflow: ellipsis;
       background: white;
     }
-    .programme .category-col, .programme .item-col, .programme .action-col, .programme .person-col {
+    .programme .category-col, .programme .item-col, .programme .action-col, .programme .person-col, .programme .checklist-col, .programme .remarks-col {
       white-space: normal;
       overflow: visible;
       text-overflow: clip;
@@ -218,6 +327,89 @@
       z-index: 10;
       background: white;
     }
+    .checklist-col {
+      width: var(--checklist-w);
+      min-width: var(--checklist-w);
+      max-width: var(--checklist-w);
+      position: sticky;
+      left: calc(var(--category-w) + var(--item-w) + var(--action-w) + var(--person-w));
+      z-index: 10;
+      background: white;
+      font-size: 10.5px;
+    }
+    .remarks-col {
+      width: var(--remarks-w);
+      min-width: var(--remarks-w);
+      max-width: var(--remarks-w);
+      position: sticky;
+      left: calc(var(--category-w) + var(--item-w) + var(--action-w) + var(--person-w) + var(--checklist-w));
+      z-index: 10;
+      background: white;
+      font-size: 10.5px;
+    }
+    .checklist-list, .remarks-list {
+      display: grid;
+      gap: 4px;
+      white-space: normal;
+      line-height: 1.25;
+    }
+    .checklist-list {
+      max-height: 136px;
+      overflow-y: auto;
+      padding-right: 4px;
+      scrollbar-width: thin;
+    }
+    .checklist-progress {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      display: grid;
+      gap: 3px;
+      padding: 2px 0 5px;
+      background: white;
+    }
+    tr.highlight .checklist-progress { background: var(--highlight); }
+    .progress-label {
+      color: #334155;
+      font-weight: 700;
+      font-size: 10px;
+    }
+    .progress-track {
+      height: 5px;
+      border-radius: 999px;
+      background: #e2e8f0;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: #0f766e;
+    }
+    .check-item {
+      display: grid;
+      grid-template-columns: 14px 1fr;
+      gap: 5px;
+      align-items: start;
+    }
+    .check-item input {
+      width: 12px;
+      height: 12px;
+      margin: 1px 0 0;
+      padding: 0;
+    }
+    .check-item.done span {
+      color: #64748b;
+      text-decoration: line-through;
+    }
+    .remarks-list div {
+      padding-left: 4px;
+      border-left: 2px solid #cbd5e1;
+      color: #475569;
+    }
+    .items-empty {
+      color: #94a3b8;
+      font-style: italic;
+    }
     .programme thead .category-col, .programme thead .item-col, .programme thead .action-col, .programme thead .person-col {
       z-index: 40;
       background: #f8fafc;
@@ -238,7 +430,15 @@
     .programme td.workday.weekend { background: var(--work) !important; }
     .programme td.workday.start, .programme td.workday.end { background: var(--work) !important; }
     .programme tr.group-start td, .programme tr.group-start th { box-shadow: inset -1px -1px 0 var(--line), inset 0 2px 0 var(--line); }
-    .programme tr.highlight td.category-col, .programme tr.highlight td.item-col, .programme tr.highlight td.action-col, .programme tr.highlight td.person-col { background: #fff7ed; }
+    .programme tr.highlight td.category-col, .programme tr.highlight td.item-col, .programme tr.highlight td.action-col, .programme tr.highlight td.person-col, .programme tr.highlight td.checklist-col, .programme tr.highlight td.remarks-col { background: var(--highlight); }
+    body.client-view .app {
+      --checklist-w: 0px;
+      --remarks-w: 0px;
+    }
+    body.client-view .checklist-col,
+    body.client-view .remarks-col {
+      display: none !important;
+    }
     .inline-edit-cell, .timeline-edit-cell, .sheet-head, .client-summary, .notes {
       cursor: pointer;
     }
@@ -389,8 +589,10 @@
       --header-h: 25px;
       --category-w: 125px;
       --item-w: 170px;
-      --action-w: 360px;
+      --action-w: 300px;
       --person-w: 125px;
+      --checklist-w: 210px;
+      --remarks-w: 230px;
       font-size: 10px;
     }
     .compact .weekday-cell, .compact .day-cell { font-size: 9px; }
@@ -417,8 +619,8 @@
     }
     .modal.show { display: flex; }
     .modal-card {
-      width: min(1100px, 96vw);
-      max-height: 92vh;
+      width: min(1280px, 98vw);
+      max-height: 94vh;
       overflow: auto;
       background: white;
       border-radius: 14px;
@@ -436,16 +638,36 @@
       font-size: 12px;
       resize: vertical;
     }
-    .row-editor-wrap { overflow: auto; max-height: 58vh; border: 1px solid #cbd5e1; }
-    table.row-editor { border-collapse: collapse; width: 100%; min-width: 980px; }
+    #quickChecklistInput, #quickRemarksInput, .modal-card textarea.item-remark-input {
+      min-height: 70px;
+      font-family: inherit;
+      font-size: 12px;
+    }
+    .row-editor-wrap { overflow: auto; max-height: 70vh; border: 1px solid #cbd5e1; }
+    table.row-editor { border-collapse: collapse; width: 100%; min-width: 1220px; }
     .row-editor th, .row-editor td { border: 1px solid #cbd5e1; padding: 5px; vertical-align: middle; }
     .row-editor th { background: #f8fafc; position: sticky; top: 0; z-index: 2; }
-    .row-editor input, .row-editor select { width: 100%; border-radius: 6px; padding: 5px 6px; }
+    .row-editor input, .row-editor select, .row-editor textarea { width: 100%; border-radius: 6px; padding: 7px 8px; border: 1px solid #cbd5e1; }
+    .row-editor textarea {
+      min-height: 72px;
+      resize: vertical;
+      font: inherit;
+    }
+    .row-editor textarea[data-field="action"] {
+      min-width: 360px;
+    }
     .editor-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
     .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
     @media (max-width: 1000px) {
+      .toolbar { grid-template-columns: 1fr auto; }
+      .toolbar > div:first-child { grid-column: 1 / -1; }
+      .toolbar-actions { grid-template-columns: repeat(2, minmax(220px, 1fr)); grid-auto-rows: auto; }
+      .toolbar-controls { justify-content: flex-end; }
+    }
+    @media (max-width: 620px) {
       .toolbar { grid-template-columns: 1fr; }
-      .toolbar-actions { justify-content: flex-start; }
+      .toolbar-actions { grid-template-columns: 1fr; }
+      .toolbar-controls { justify-content: flex-start; }
     }
     @media print {
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
@@ -465,14 +687,16 @@
       .programme .category-col, .programme .item-col, .programme .action-col, .programme .person-col { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; word-break: break-word; overflow-wrap: anywhere; line-height: 1.25; }
       .programme .category-col { width: 100px; min-width: 100px; max-width: 100px; }
       .programme .item-col { width: 130px; min-width: 130px; max-width: 130px; }
-      .programme .action-col { width: 300px; min-width: 300px; max-width: 300px; }
+      .programme .action-col { width: 240px; min-width: 240px; max-width: 240px; }
       .programme .person-col { width: 95px; min-width: 95px; max-width: 95px; }
-      .programme td.weekend, .programme th.weekend { background: #cfcfcf !important; }
-      .programme td.workday, .programme td.workday.weekend, .programme td.workday.start, .programme td.workday.end { background: #9ae6b4 !important; }
-      .programme thead th, .category-col, .item-col, .action-col, .person-col { position: static; }
+      .programme .checklist-col { width: var(--checklist-w); min-width: var(--checklist-w); max-width: var(--checklist-w); }
+      .programme .remarks-col { width: var(--remarks-w); min-width: var(--remarks-w); max-width: var(--remarks-w); }
+      .programme td.weekend, .programme th.weekend { background: var(--weekend) !important; }
+      .programme td.workday, .programme td.workday.weekend, .programme td.workday.start, .programme td.workday.end { background: var(--work) !important; }
+      .programme thead th, .category-col, .item-col, .action-col, .person-col, .checklist-col, .remarks-col { position: static; }
       .legend { border: 0; padding: 3mm 0 1mm; }
       .notes { border: 0; padding: 1mm 0 0; }
-      .compact { --period-w: 16px; --row-h: 24px; --header-h: 22px; --category-w: 100px; --item-w: 130px; --action-w: 300px; --person-w: 95px; }
+      .compact { --period-w: 16px; --row-h: 24px; --header-h: 22px; --category-w: 100px; --item-w: 130px; --action-w: 240px; --person-w: 95px; --checklist-w: 180px; --remarks-w: 200px; }
       body.week-view .compact { --period-w: 54px; }
       body.month-view .compact { --period-w: 62px; }
       body.week-view .day-cell, body.month-view .day-cell { white-space: normal !important; font-size: 8px; line-height: 1.12; }
@@ -482,46 +706,76 @@
 </head>
 <body>
   <div class="app compact" id="app">
+    <div class="toolbar-toggle"><button id="showToolbarButton" type="button">Show Tools</button></div>
     <div class="toolbar">
       <div>
         <h1>Noah Master Programme Timeline</h1>
-        <p>純展示型客戶版。左邊為 Category / Item / Action / Action By，右邊可切換 Day / Week / Month timeline，適合列印或 Save as PDF。</p>
+        <p>純展示型客戶版。左邊為 Category / Sub-Category / Action / Action By，右邊可切換 Day / Week / Month timeline，適合列印或 Save as PDF。</p>
       </div>
       <div class="toolbar-actions">
-        <label>Start <input id="startInput" type="date"></label>
-        <label>End <input id="endInput" type="date"></label>
-        <select id="viewInput">
-          <option value="auto">Auto View</option>
-          <option value="day">Day View</option>
-          <option value="week">Week View</option>
-          <option value="month">Month View</option>
-        </select>
-        <select id="weekLabelInput">
-          <option value="project">Week: Project W1</option>
-          <option value="iso">Week: ISO Year Week</option>
-        </select>
-        <select id="densityInput">
-          <option value="compact">Compact / Fit</option>
-          <option value="normal">Normal</option>
-        </select>
-        <select id="templateInput"></select>
-        <button class="light" id="applyTemplateButton">Apply Template</button>
-        <button class="light" id="saveTemplateButton">Save As Template</button>
-        <button class="light" id="deleteTemplateButton">Delete Template</button>
-        <button class="light" id="exportTemplatesButton">Export Templates</button>
-        <button class="light" id="importTemplatesButton">Import Templates</button>
-        <input id="templateJsonInput" type="file" accept="application/json,.json" style="display:none">
-        <button id="editProjectButton">Edit Project</button>
-        <button id="editRowsButton">Edit Rows</button>
-        <button class="light" id="editDataButton">Advanced JSON</button>
-        <button class="secondary" id="exportCsvButton">Export CSV</button>
-        <button class="secondary" id="exportExcelButton">Export Excel</button>
-        <button class="light" id="importCsvButton">Import CSV</button>
-        <button class="light" id="updateHkHolidaysButton">Update HK Holidays</button>
-        <span id="holidayStatus" class="status-pill">HK Holidays: not updated</span>
-        <button class="light" id="clientPdfButton">Client PDF Preset</button>
-        <button id="printButton">Print / Save PDF</button>
-        <input id="csvInput" type="file" accept=".csv,text/csv" style="display:none">
+        <div class="toolbar-group primary" data-title="Schedule & View">
+          <label>Project Code <input id="projectCodeInput" placeholder="e.g. AFCD-SQ-314"></label>
+          <label>Start <input id="startInput" type="date"></label>
+          <label>End <input id="endInput" type="date"></label>
+          <select id="viewInput">
+            <option value="auto">Auto View</option>
+            <option value="day">Day View</option>
+            <option value="week">Week View</option>
+            <option value="month">Month View</option>
+          </select>
+          <select id="weekLabelInput">
+            <option value="project">Week: Project W1</option>
+            <option value="iso">Week: ISO Year Week</option>
+          </select>
+          <select id="densityInput">
+            <option value="compact">Compact / Fit</option>
+            <option value="normal">Normal</option>
+          </select>
+          <select id="audienceInput">
+            <option value="internal">Internal View</option>
+            <option value="client">Client View</option>
+          </select>
+        </div>
+        <div class="toolbar-group" data-title="Templates">
+          <select id="templateInput"></select>
+          <button class="light" id="applyTemplateButton">Apply Template</button>
+          <button class="light" id="saveTemplateButton">Save As Template</button>
+          <button class="light" id="deleteTemplateButton">Delete Template</button>
+          <button class="light" id="exportTemplatesButton">Export Templates</button>
+          <button class="light" id="importTemplatesButton">Import Templates</button>
+          <input id="templateJsonInput" type="file" accept="application/json,.json" style="display:none">
+        </div>
+        <div class="toolbar-group" data-title="Cloud Sync">
+          <button id="cloudSignInButton" type="button">Sign In</button>
+          <button class="light" id="cloudLoadButton" type="button">Load Project</button>
+          <button class="secondary" id="cloudSaveButton" type="button">Save Cloud</button>
+          <span id="cloudStatus" class="status-pill">Cloud: not connected</span>
+        </div>
+        <div class="toolbar-group health-group" data-title="Edit & Holidays">
+          <button id="editProjectButton">Edit Project</button>
+          <button id="editRowsButton">Edit Rows</button>
+          <span class="toolbar-break"></span>
+          <button class="light" id="editDataButton">Advanced JSON</button>
+          <button class="light" id="updateHkHolidaysButton">Update HK Holidays</button>
+          <span id="holidayStatus" class="status-pill">HK Holidays: not updated</span>
+          <span id="saveStatus" class="status-pill">Saved locally</span>
+        </div>
+        <div class="toolbar-group status-group" data-title="Client Output">
+          <button class="light" id="clientPdfButton">Client PDF Preset</button>
+          <button id="printButton">Print / Save PDF</button>
+        </div>
+        <div class="toolbar-group" data-title="Import / Export">
+          <button class="secondary" id="exportProjectButton">Export Project JSON</button>
+          <button class="light" id="importProjectButton">Import Project JSON</button>
+          <input id="projectJsonInput" type="file" accept="application/json,.json" style="display:none">
+          <button class="secondary" id="exportCsvButton">Export CSV</button>
+          <button class="secondary" id="exportExcelButton">Export Excel (.xls)</button>
+          <button class="light" id="importCsvButton">Import CSV</button>
+          <input id="csvInput" type="file" accept=".csv,text/csv" style="display:none">
+        </div>
+      </div>
+      <div class="toolbar-controls">
+        <button class="light" id="hideToolbarButton" type="button">Hide Tools</button>
       </div>
     </div>
     <section class="sheet">
@@ -554,6 +808,7 @@
         <table class="row-editor">
           <tbody>
             <tr><th style="width:180px">Project Name</th><td><input id="projectNameInput"></td></tr>
+            <tr><th>Project Code</th><td><input id="projectCodeProjectInput" placeholder="Same code used for cloud sync"></td></tr>
             <tr><th>Version</th><td><input id="versionInput"></td></tr>
             <tr><th>Last Update</th><td><input id="lastUpdateInput"></td></tr>
             <tr><th>Display Start Date</th><td><input id="projectStartInput" type="date"></td></tr>
@@ -562,6 +817,13 @@
             <tr><th>Notes</th><td><textarea id="notesInput" style="min-height:90px"></textarea></td></tr>
             <tr><th>Holidays</th><td><input id="holidaysInput" placeholder="YYYY-MM-DD, YYYY-MM-DD"></td></tr>
             <tr><th>Holiday Proxy URL</th><td><input id="holidayProxyInput" placeholder="https://holidays.napjoc.workers.dev/"><div style="margin-top:6px;color:#64748b">如 GovHK 被 CORS 擋住，可填入公司 proxy / Cloudflare Worker URL。</div></td></tr>
+            <tr><th>Timeline Colours</th><td>
+              <div class="color-grid">
+                <label class="color-control"><span>Work</span><input id="workColorInput" class="color-input" type="color"></label>
+                <label class="color-control"><span>Weekend / Holiday</span><input id="weekendColorInput" class="color-input" type="color"></label>
+                <label class="color-control"><span>Highlight</span><input id="highlightColorInput" class="color-input" type="color"></label>
+              </div>
+            </td></tr>
             <tr><th>Company Logo</th><td><button type="button" class="light" id="uploadLogoButton">Upload Logo</button> <button type="button" class="light" id="removeLogoButton">Remove Logo</button><input id="logoInput" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" style="display:none"><div id="logoStatus" style="margin-top:6px;color:#64748b"></div></td></tr>
           </tbody>
         </table>
@@ -584,10 +846,10 @@
           <thead>
             <tr>
               <th style="width:42px">#</th>
-              <th style="width:135px">Category</th>
-              <th style="width:150px">Item</th>
-              <th>Action</th>
-              <th style="width:120px">Action By</th>
+              <th style="width:170px">Category</th>
+              <th style="width:210px">Sub-Category</th>
+              <th style="width:420px">Action</th>
+              <th style="width:150px">Action By</th>
               <th style="width:125px">Start</th>
               <th style="width:125px">End</th>
               <th style="width:80px">Highlight</th>
@@ -611,12 +873,14 @@
         <table class="row-editor">
           <tbody>
             <tr><th style="width:180px">Category</th><td><input id="quickCategoryInput"></td></tr>
-            <tr><th>Item</th><td><input id="quickItemInput"></td></tr>
+            <tr><th>Sub-Category</th><td><input id="quickItemInput"></td></tr>
             <tr><th>Action</th><td><input id="quickActionInput"></td></tr>
             <tr><th>Action By</th><td><input id="quickActionByInput"></td></tr>
             <tr><th>Start</th><td><input id="quickStartInput" type="date"></td></tr>
             <tr><th>End</th><td><input id="quickEndInput" type="date"></td></tr>
             <tr><th>Highlight</th><td><select id="quickHighlightInput"><option value="NO">NO</option><option value="YES">YES</option></select></td></tr>
+            <tr><th>Action Items</th><td><textarea id="quickChecklistInput" style="min-height:110px" placeholder="One action item per line"></textarea></td></tr>
+            <tr><th>Remarks</th><td><textarea id="quickRemarksInput" style="min-height:110px" placeholder="One remark per line, matching action items by line"></textarea></td></tr>
           </tbody>
         </table>
       </div>
@@ -632,6 +896,33 @@
     </div>
   </div>
 
+  <div class="modal" id="itemsModal">
+    <div class="modal-card">
+      <h2>Edit Action Items <span class="edit-hint" id="itemsModalHint"></span></h2>
+      <input id="itemsRowId" type="hidden">
+      <div class="editor-actions">
+        <button id="addChecklistItemButton">＋ Add Item</button>
+      </div>
+      <div class="row-editor-wrap">
+        <table class="row-editor">
+          <thead>
+            <tr>
+              <th style="width:60px">Done</th>
+              <th>Action Item</th>
+              <th>Remarks</th>
+              <th style="width:85px">Action</th>
+            </tr>
+          </thead>
+          <tbody id="itemsEditorBody"></tbody>
+        </table>
+      </div>
+      <div class="modal-actions">
+        <button class="light" id="cancelItemsButton">Cancel</button>
+        <button id="applyItemsButton">Apply</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal" id="dataModal">
     <div class="modal-card">
       <h2>Advanced JSON Data</h2>
@@ -642,12 +933,43 @@
       </div>
     </div>
   </div>
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
+    import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
+    import { doc, getDoc, getFirestore, onSnapshot, serverTimestamp, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: 'AIzaSyA60JS9Pj3WiJ--5KEPXT76e96JATM5TpI',
+      authDomain: 'noah-programme-mgt.firebaseapp.com',
+      projectId: 'noah-programme-mgt',
+      storageBucket: 'noah-programme-mgt.firebasestorage.app',
+      messagingSenderId: '130356290874',
+      appId: '1:130356290874:web:3c9458836599f546f51c03'
+    };
+
+    const app = initializeApp(firebaseConfig);
+    window.noahProgrammeFirebase = {
+      auth: getAuth(app),
+      db: getFirestore(app),
+      googleProvider: new GoogleAuthProvider(),
+      onAuthStateChanged,
+      signInWithPopup,
+      signOut,
+      doc,
+      getDoc,
+      onSnapshot,
+      serverTimestamp,
+      setDoc
+    };
+    window.dispatchEvent(new Event('noah-programme-firebase-ready'));
+  </script>
   <script>
     (() => {
       'use strict';
       const STORE_KEY = 'noah_master_programme_display_v5';
       const TEMPLATE_KEY = 'noah_master_programme_templates_v1';
       const DELETED_TEMPLATE_KEY = 'noah_master_programme_deleted_templates_v1';
+      const UI_KEY = 'noah_master_programme_ui_v1';
       const DEFAULT_HOLIDAY_PROXY_URL = 'https://holidays.napjoc.workers.dev/';
       const LEGACY_KEYS = ['noah_master_programme_display_v4', 'noah_master_programme_display_v3', 'noah_master_programme_display_v2', 'noah_master_programme_display_v1'];
       const LF = String.fromCharCode(10);
@@ -655,11 +977,20 @@
       const DQ = String.fromCharCode(34);
       const BOM = String.fromCharCode(65279);
       const BS = String.fromCharCode(92);
-      const REQUIRED_IDS = ['app', 'projectName', 'versionText', 'dateRangeText', 'lastUpdateText', 'viewText', 'clientSummary', 'notesText', 'startInput', 'endInput', 'viewInput', 'weekLabelInput', 'densityInput', 'programmeWrap', 'companyLogo', 'holidayStatus'];
+      const REQUIRED_IDS = ['app', 'projectName', 'versionText', 'dateRangeText', 'lastUpdateText', 'viewText', 'clientSummary', 'notesText', 'startInput', 'endInput', 'viewInput', 'weekLabelInput', 'densityInput', 'programmeWrap', 'companyLogo', 'holidayStatus', 'saveStatus', 'projectCodeInput', 'cloudStatus'];
       let editingRows = [];
+      let editingItems = [];
       let quickPeriod = null;
       let dragState = null;
+      let dragRenderRequest = null;
       let lastAutoHolidayFetchKey = '';
+      let lastSaveError = false;
+      let uiState = { toolbarHidden: false };
+      let firebaseApi = null;
+      let cloudUser = null;
+      let cloudUnsubscribe = null;
+      let cloudSaveTimer = null;
+      let suppressCloudSave = false;
       let templates = {};
       let deletedTemplateNames = new Set();
       let data;
@@ -719,7 +1050,9 @@
         govHolidays: [],
         holidayAutoUpdate: true,
         holidayProxyUrl: DEFAULT_HOLIDAY_PROXY_URL,
-        summary: 'The following master programme outlines the key preparation, demolition, E&M, painting, flooring and handover activities for client reference. The schedule is indicative and subject to final confirmation.',
+          colors: { work: '#9ae6b4', weekend: '#cfcfcf', highlight: '#fff7ed' },
+          audienceMode: 'internal',
+          summary: 'The following master programme outlines the key preparation, demolition, E&M, painting, flooring and handover activities for client reference. The schedule is indicative and subject to final confirmation.',
         notes: ['- Working HRS: Mon-Fri 08:00-18:00 except Sat, Sun and Public Holiday.', '- Reserved working schedule for ArchSD: 16 OCT 2025 - 05 NOV 2025 (14 Working Days).'].join(LF),
         holidays: ['2025-10-01', '2025-10-07', '2025-10-29'],
         rows: [
@@ -808,6 +1141,172 @@
         if (!element) return;
         element.textContent = message;
         element.className = `status-pill ${type}`.trim();
+      }
+
+      function setSaveStatus(message, type = '') {
+        const element = byId('saveStatus');
+        if (!element) return;
+        element.textContent = message;
+        element.className = `status-pill ${type}`.trim();
+      }
+
+      function setCloudStatus(message, type = '') {
+        const element = byId('cloudStatus');
+        if (!element) return;
+        element.textContent = message;
+        element.className = `status-pill ${type}`.trim();
+      }
+
+      function getFirebaseApi() {
+        firebaseApi = firebaseApi || window.noahProgrammeFirebase || null;
+        return firebaseApi;
+      }
+
+      function initFirebaseWhenReady() {
+        if (getFirebaseApi()) return initCloudAuth();
+        window.addEventListener('noah-programme-firebase-ready', initCloudAuth, { once: true });
+        setCloudStatus('Cloud: loading Firebase...', 'loading');
+      }
+
+      function initCloudAuth() {
+        const api = getFirebaseApi();
+        if (!api) return setCloudStatus('Cloud: Firebase unavailable', 'error');
+        api.onAuthStateChanged(api.auth, user => {
+          cloudUser = user || null;
+          const button = byId('cloudSignInButton');
+          if (button) button.textContent = cloudUser ? 'Sign Out' : 'Sign In';
+          if (cloudUser) {
+            setCloudStatus(`Cloud: signed in ${cloudUser.email}`, 'success');
+            const code = getProjectCode();
+            if (code) subscribeCloudProject(code);
+          } else {
+            if (cloudUnsubscribe) cloudUnsubscribe();
+            cloudUnsubscribe = null;
+            setCloudStatus('Cloud: sign in to sync', 'warning');
+          }
+        });
+      }
+
+      async function toggleCloudSignIn() {
+        const api = getFirebaseApi();
+        if (!api) return setCloudStatus('Cloud: Firebase unavailable', 'error');
+        try {
+          if (cloudUser) {
+            await api.signOut(api.auth);
+          } else {
+            await api.signInWithPopup(api.auth, api.googleProvider);
+          }
+        } catch (error) {
+          setCloudStatus(`Cloud sign-in failed: ${error.code || error.message}`, 'error');
+        }
+      }
+
+      function cloudDocRef(projectCode) {
+        const api = getFirebaseApi();
+        return api.doc(api.db, 'programmeProjects', projectCode);
+      }
+
+      async function loadCloudProject() {
+        const api = getFirebaseApi();
+        if (!api) return setCloudStatus('Cloud: Firebase unavailable', 'error');
+        if (!cloudUser) return setCloudStatus('Cloud: sign in first', 'warning');
+        const code = getProjectCode();
+        if (!code || code.length < 3) return setCloudStatus('Cloud: enter Project Code first', 'warning');
+        setCloudStatus(`Cloud: loading ${code}...`, 'loading');
+        try {
+          const snap = await api.getDoc(cloudDocRef(code));
+          if (!snap.exists()) {
+            data.projectCode = code;
+            setValue('projectCodeInput', code);
+            setValue('projectCodeProjectInput', code);
+            subscribeCloudProject(code);
+            setCloudStatus(`Cloud: no saved data for ${code}`, 'warning');
+            return;
+          }
+          const payload = snap.data();
+          if (!payload || !payload.data || !Array.isArray(payload.data.rows)) throw new Error('Bad cloud project data');
+          suppressCloudSave = true;
+          data = normalizeData({ ...payload.data, projectCode: code });
+          setValue('projectCodeInput', code);
+          render();
+          suppressCloudSave = false;
+          subscribeCloudProject(code);
+          setCloudStatus(`Cloud: loaded ${code}`, 'success');
+        } catch (error) {
+          suppressCloudSave = false;
+          setCloudStatus(`Cloud load failed: ${error.code || error.message}`, 'error');
+        }
+      }
+
+      async function saveCloudProjectNow() {
+        const api = getFirebaseApi();
+        if (!api) return setCloudStatus('Cloud: Firebase unavailable', 'error');
+        if (!cloudUser) return setCloudStatus('Cloud: sign in first', 'warning');
+        const code = getProjectCode();
+        if (!code || code.length < 3) return setCloudStatus('Cloud: enter Project Code first', 'warning');
+        data.projectCode = code;
+        setValue('projectCodeInput', code);
+        setValue('projectCodeProjectInput', code);
+        try {
+          await api.setDoc(cloudDocRef(code), {
+            data: normalizeData(data),
+            updatedAt: api.serverTimestamp(),
+            updatedBy: cloudUser.email || '',
+            projectCode: code
+          }, { merge: true });
+          setCloudStatus(`Cloud: saved ${code}`, 'success');
+          subscribeCloudProject(code);
+        } catch (error) {
+          setCloudStatus(`Cloud save failed: ${error.code || error.message}`, 'error');
+        }
+      }
+
+      function queueCloudSave() {
+        if (suppressCloudSave || !cloudUser || !getProjectCode()) return;
+        window.clearTimeout(cloudSaveTimer);
+        cloudSaveTimer = window.setTimeout(saveCloudProjectNow, 900);
+      }
+
+      function subscribeCloudProject(projectCode) {
+        const api = getFirebaseApi();
+        if (!api || !cloudUser || !projectCode) return;
+        if (cloudUnsubscribe) cloudUnsubscribe();
+        cloudUnsubscribe = api.onSnapshot(cloudDocRef(projectCode), snap => {
+          if (!snap.exists()) return;
+          const payload = snap.data();
+          if (!payload || !payload.data || !Array.isArray(payload.data.rows)) return;
+          const incoming = JSON.stringify(normalizeData({ ...payload.data, projectCode }));
+          const current = JSON.stringify(normalizeData(data));
+          if (incoming === current) return;
+          suppressCloudSave = true;
+          data = normalizeData({ ...payload.data, projectCode });
+          setValue('projectCodeInput', projectCode);
+          render();
+          suppressCloudSave = false;
+          setCloudStatus(`Cloud: updated from ${payload.updatedBy || 'team'}`, 'success');
+        }, error => {
+          setCloudStatus(`Cloud listener failed: ${error.code || error.message}`, 'error');
+        });
+      }
+
+      function loadUiState() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(UI_KEY));
+          if (saved && typeof saved === 'object') return { toolbarHidden: saved.toolbarHidden === true };
+        } catch (error) {}
+        return { toolbarHidden: false };
+      }
+
+      function saveUiState() {
+        try {
+          localStorage.setItem(UI_KEY, JSON.stringify(uiState));
+        } catch (error) {}
+      }
+
+      function setToolbarHidden(hidden) {
+        uiState.toolbarHidden = Boolean(hidden);
+        safeClassToggle(document.body, 'toolbar-hidden', uiState.toolbarHidden);
+        saveUiState();
       }
 
       function loadDeletedTemplateNames() {
@@ -933,7 +1432,44 @@
       function saveData() {
         try {
           localStorage.setItem(STORE_KEY, JSON.stringify(data));
-        } catch (error) {}
+          lastSaveError = false;
+          setSaveStatus(`Saved locally ${new Date().toLocaleTimeString()}`, 'success');
+          queueCloudSave();
+          return true;
+        } catch (error) {
+          lastSaveError = true;
+          setSaveStatus('Local save failed. Export Project JSON now.', 'error');
+          return false;
+        }
+      }
+
+      function exportProject() {
+        const payload = {
+          app: 'Noah Master Programme Timeline',
+          type: 'programme-project',
+          version: 2,
+          exportedAt: new Date().toISOString(),
+          data: normalizeData(data)
+        };
+        downloadBlob(JSON.stringify(payload, null, 2), `${safeFileName(data.projectName)}-project-${todayISO()}.json`, 'application/json;charset=utf-8');
+      }
+
+      function importProjectFromFile(file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const parsed = JSON.parse(reader.result);
+            const source = parsed && parsed.data && typeof parsed.data === 'object' ? parsed.data : parsed;
+            if (!source || typeof source !== 'object' || !Array.isArray(source.rows)) throw new Error('bad project file');
+            if (data.rows.length && !window.confirm('Import Project JSON 會取代目前 project data。是否繼續？')) return;
+            data = normalizeData(source);
+            render();
+            alert('Project JSON 已匯入。');
+          } catch (error) {
+            alert('Project JSON 格式不正確，請使用 Export Project JSON 產生的檔案。');
+          }
+        };
+        reader.readAsText(file);
       }
 
       function normalizeTemplate(template) {
@@ -953,9 +1489,11 @@
         const source = input && typeof input === 'object' ? input : defaultData;
         const startDate = isValidDate(source.startDate) ? source.startDate : todayISO();
         const endDate = isValidDate(source.endDate) ? source.endDate : addDays(startDate, 30);
+        const sourceColors = source.colors && typeof source.colors === 'object' ? source.colors : {};
         const output = {
           projectName: String(source.projectName || 'Project Timeline'),
           logoDataUrl: String(source.logoDataUrl || ''),
+          projectCode: normalizeProjectCode(source.projectCode || source.code || ''),
           version: String(source.version || 'Version: 1.0'),
           lastUpdate: String(source.lastUpdate || `Last update: ${formatDisplayDate(todayISO())}`),
           startDate: startDate <= endDate ? startDate : endDate,
@@ -968,6 +1506,12 @@
           govHolidays: Array.isArray(source.govHolidays) ? source.govHolidays.filter(isValidDate) : [],
           holidayAutoUpdate: source.holidayAutoUpdate !== false,
           holidayProxyUrl: String(source.holidayProxyUrl || DEFAULT_HOLIDAY_PROXY_URL),
+          colors: {
+            work: isHexColor(sourceColors.work) ? sourceColors.work : '#9ae6b4',
+            weekend: isHexColor(sourceColors.weekend) ? sourceColors.weekend : '#cfcfcf',
+            highlight: isHexColor(sourceColors.highlight) ? sourceColors.highlight : '#fff7ed'
+          },
+          audienceMode: ['internal', 'client'].includes(source.audienceMode) ? source.audienceMode : 'internal',
           summary: String(source.summary || ''),
           notes: String(source.notes || ''),
           holidays: Array.isArray(source.holidays) ? source.holidays.filter(isValidDate) : [],
@@ -991,6 +1535,7 @@
           actionBy: String(row.actionBy || row.owner || ''),
           start,
           end,
+          checklist: normalizeChecklist(row.checklist || row.actionItems || row.items),
           highlight: row.highlight === true || String(row.highlight || '').toUpperCase() === 'YES',
           order: Number.isFinite(Number(row.order)) ? Number(row.order) : index
         };
@@ -1004,6 +1549,7 @@
           actionBy: String(row.actionBy || row.owner || ''),
           offsetStart: Number.isFinite(Number(row.offsetStart)) ? Number(row.offsetStart) : 0,
           offsetEnd: Number.isFinite(Number(row.offsetEnd)) ? Number(row.offsetEnd) : Number(row.offsetStart || 0),
+          checklist: normalizeChecklist(row.checklist || row.actionItems || row.items),
           highlight: row.highlight === true || String(row.highlight || '').toUpperCase() === 'YES',
           order: Number.isFinite(Number(row.order)) ? Number(row.order) : index
         };
@@ -1020,6 +1566,58 @@
           highlight: row[6] === true,
           order
         }, order);
+      }
+
+      function isHexColor(value) {
+        return /^#[0-9a-f]{6}$/i.test(String(value || ''));
+      }
+
+      function normalizeProjectCode(value) {
+        return String(value || '').trim().replace(/\s+/g, '-').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40);
+      }
+
+      function getProjectCode() {
+        return normalizeProjectCode(byId('projectCodeInput')?.value || data?.projectCode || '');
+      }
+
+      function normalizeChecklist(items) {
+        if (!Array.isArray(items)) return [];
+        return items.map((item, index) => {
+          if (typeof item === 'string') {
+            return { id: uid('item'), text: item, remarks: '', done: false, order: index };
+          }
+          const source = item && typeof item === 'object' ? item : {};
+          return {
+            id: String(source.id || uid('item')),
+            text: String(source.text || source.item || source.action || ''),
+            remarks: String(source.remarks || source.remark || source.note || ''),
+            done: source.done === true || String(source.done || '').toUpperCase() === 'YES',
+            order: Number.isFinite(Number(source.order)) ? Number(source.order) : index
+          };
+        }).filter(item => item.text || item.remarks).sort((a, b) => a.order - b.order).map((item, order) => ({ ...item, order }));
+      }
+
+      function checklistItemsText(row) {
+        return normalizeChecklist(row.checklist).map(item => item.text).join(LF);
+      }
+
+      function checklistRemarksText(row) {
+        return normalizeChecklist(row.checklist).map(item => item.remarks).join(LF);
+      }
+
+      function checklistFromTextareas(itemsText, remarksText, existing = []) {
+        const oldItems = normalizeChecklist(existing);
+        const remarks = String(remarksText || '').split(/\r?\n/);
+        return String(itemsText || '').split(/\r?\n/).map((text, index) => {
+          const old = oldItems[index] || {};
+          return {
+            id: old.id || uid('item'),
+            text: text.trim(),
+            remarks: String(remarks[index] || '').trim(),
+            done: old.done === true,
+            order: index
+          };
+        }).filter(item => item.text || item.remarks);
       }
 
       function isValidDate(value) {
@@ -1320,12 +1918,13 @@
         const rawText = main ? main.textContent : doc.documentElement.textContent || '';
         const text = rawText.replaceAll(CR, ' ').replaceAll(LF, ' ').replaceAll(String.fromCharCode(9), ' ').replace(new RegExp(' +', 'g'), ' ');
         const dates = [];
-        const regex = new RegExp('([0-9]{1,2})月([0-9]{1,2})日', 'g');
+        const regex = new RegExp('([0-9]{1,2})月([0-9]{1,2})日|([0-9]{4})[-/]?([0-9]{2})[-/]?([0-9]{2})', 'g');
         let match;
         while ((match = regex.exec(text))) {
-          const month = Number(match[1]);
-          const day = Number(match[2]);
-          const iso = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          const parsedYear = match[3] ? Number(match[3]) : year;
+          const month = Number(match[3] ? match[4] : match[1]);
+          const day = Number(match[3] ? match[5] : match[2]);
+          const iso = `${parsedYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
           if (isValidDate(iso)) dates.push(iso);
         }
         return Array.from(new Set(dates)).sort();
@@ -1359,6 +1958,7 @@
             actionBy: row.actionBy,
             start,
             end,
+            checklist: row.checklist,
             highlight: row.highlight,
             order
           }, order, baseDate);
@@ -1366,7 +1966,7 @@
         data.endDate = data.rows.reduce((max, row) => row.end > max ? row.end : max, baseDate);
         data.viewMode = 'auto';
         render();
-        autoUpdateHolidays('template-apply', true);
+        autoUpdateHolidays('template', true);
       }
 
       function saveCurrentAsTemplate() {
@@ -1380,6 +1980,7 @@
           actionBy: row.actionBy,
           offsetStart: dayDiff(baseDate, row.start),
           offsetEnd: dayDiff(baseDate, row.end),
+          checklist: row.checklist,
           highlight: row.highlight,
           order
         }, order));
@@ -1402,8 +2003,12 @@
         const rows = data.rows.slice().sort((a, b) => a.order - b.order);
         const mode = getResolvedViewMode();
         const periods = buildPeriods(mode);
+        document.documentElement.style.setProperty('--work', data.colors.work);
+        document.documentElement.style.setProperty('--weekend', data.colors.weekend);
+        document.documentElement.style.setProperty('--highlight', data.colors.highlight);
         safeClassToggle(document.body, 'week-view', mode === 'week');
         safeClassToggle(document.body, 'month-view', mode === 'month');
+        safeClassToggle(document.body, 'client-view', data.audienceMode === 'client');
         document.documentElement.style.setProperty('--period-count', String(periods.length));
         setText('projectName', data.projectName);
         const logoElement = byId('companyLogo');
@@ -1412,28 +2017,34 @@
         setText('versionText', data.version);
         setText('lastUpdateText', data.lastUpdate);
         setText('dateRangeText', `${formatDisplayDate(data.startDate)} - ${formatDisplayDate(data.endDate)}`);
-        setText('viewText', `View: ${mode.toUpperCase()}`);
+        setText('viewText', `View: ${mode.toUpperCase()} / ${data.audienceMode === 'client' ? 'CLIENT' : 'INTERNAL'}`);
         setHolidayStatus(data.holidayStatusText || 'HK Holidays: not updated', data.holidayStatusType || '');
         setText('clientSummary', data.summary);
         setHtml('notesText', escapeHtml(data.notes).split(LF).join('<br>'));
+        setValue('projectCodeInput', data.projectCode || '');
         setValue('startInput', data.startDate);
         setValue('endInput', data.endDate);
         setValue('viewInput', data.viewMode || 'auto');
         setValue('weekLabelInput', data.weekLabelMode || 'project');
+        setValue('audienceInput', data.audienceMode || 'internal');
         safeClassToggle(byId('app'), 'compact', byId('densityInput') ? byId('densityInput').value === 'compact' : true);
         setHtml('programmeWrap', buildTable(rows, periods, mode));
         bindProgrammeDoubleClick();
         bindProgrammeDrag();
+        bindProgrammeChecklist();
       }
 
       function buildTable(rows, periods, mode) {
         const categorySpans = calculateSpans(rows, 'category');
-        const itemSpans = calculateSpans(rows, 'item');
+        const spanRows = rows.map(row => ({ ...row, itemSpanKey: `${row.category}|${row.item}` }));
+        const itemSpans = calculateSpans(spanRows, 'itemSpanKey');
         let html = '<table class="programme"><thead><tr>';
         html += '<th class="left-head category-col" rowspan="3">Category</th>';
-        html += '<th class="left-head item-col" rowspan="3">Item</th>';
+        html += '<th class="left-head item-col" rowspan="3">Sub-Category</th>';
         html += '<th class="left-head action-col" rowspan="3">Action</th>';
         html += '<th class="left-head person-col" rowspan="3">Action By</th>';
+        html += '<th class="left-head checklist-col" rowspan="3">Action Items</th>';
+        html += '<th class="left-head remarks-col" rowspan="3">Remarks</th>';
         groupSpans(periods, 'label1').forEach(group => {
           html += `<th class="month-cell" colspan="${group.count}">${escapeHtml(group.label)}</th>`;
         });
@@ -1453,9 +2064,11 @@
           const lastActiveIndex = periods.map(period => overlaps(row.start, row.end, period.start, period.end)).lastIndexOf(true);
           html += `<tr class="${groupStart ? 'group-start' : ''} ${row.highlight ? 'highlight' : ''}">`;
           if (categorySpans.has(`category:${index}`)) html += `<td class="category-col inline-edit-cell" data-row-id="${escapeHtml(row.id)}" data-field="category" rowspan="${categorySpans.get(`category:${index}`)}" title="Double-click to edit Category">${escapeHtml(row.category)}</td>`;
-          if (itemSpans.has(`item:${index}`)) html += `<td class="item-col inline-edit-cell" data-row-id="${escapeHtml(row.id)}" data-field="item" rowspan="${itemSpans.get(`item:${index}`)}" title="Double-click to edit Item">${escapeHtml(row.item)}</td>`;
+          if (itemSpans.has(`itemSpanKey:${index}`)) html += `<td class="item-col inline-edit-cell" data-row-id="${escapeHtml(row.id)}" data-field="item" rowspan="${itemSpans.get(`itemSpanKey:${index}`)}" title="Double-click to edit Sub-Category">${escapeHtml(row.item)}</td>`;
           html += `<td class="action-col inline-edit-cell" data-row-id="${escapeHtml(row.id)}" data-field="action" title="Double-click to edit Action">${escapeHtml(row.action)}</td>`;
           html += `<td class="person-col inline-edit-cell" data-row-id="${escapeHtml(row.id)}" data-field="actionBy" title="Double-click to edit Action By">${escapeHtml(row.actionBy)}</td>`;
+          html += `<td class="checklist-col" data-row-id="${escapeHtml(row.id)}">${renderChecklistCell(row)}</td>`;
+          html += `<td class="remarks-col">${renderRemarksCell(row)}</td>`;
           periods.forEach((period, periodIndex) => {
             const inRange = overlaps(row.start, row.end, period.start, period.end);
             const isStart = periodIndex === firstActiveIndex;
@@ -1469,8 +2082,39 @@
         return html;
       }
 
+      function renderChecklistCell(row) {
+        const items = normalizeChecklist(row.checklist);
+        const doneCount = items.filter(item => item.done).length;
+        const percent = items.length ? Math.round((doneCount / items.length) * 100) : 0;
+        const progress = items.length ? `<div class="checklist-progress"><div class="progress-label">${percent}% complete (${doneCount}/${items.length})</div><div class="progress-track"><div class="progress-fill" style="width:${percent}%"></div></div></div>` : '';
+        const list = items.length ? items.map(item => {
+          const doneClass = item.done ? ' done' : '';
+          const checked = item.done ? ' checked' : '';
+          const title = item.remarks ? ` title="${escapeHtml(item.remarks)}"` : '';
+          return `<label class="check-item${doneClass}"${title}><input type="checkbox" class="checklist-toggle" data-row-id="${escapeHtml(row.id)}" data-item-id="${escapeHtml(item.id)}"${checked}><span>${escapeHtml(item.text)}</span></label>`;
+        }).join('') : '<div class="items-empty">No action items</div>';
+        return `<div class="checklist-list">${progress}${list}<button type="button" class="mini light edit-items-button" data-row-id="${escapeHtml(row.id)}">Edit Items</button></div>`;
+      }
+
+      function updateChecklistCell(rowId, previousScrollTop = 0) {
+        const row = findRowById(rowId);
+        if (!row) return;
+        const cell = document.querySelector(`.checklist-col[data-row-id="${cssEscape(rowId)}"]`);
+        if (!cell) return;
+        cell.innerHTML = renderChecklistCell(row);
+        const list = cell.querySelector('.checklist-list');
+        if (list) list.scrollTop = previousScrollTop;
+      }
+
+      function renderRemarksCell(row) {
+        const remarks = normalizeChecklist(row.checklist).filter(item => item.remarks).slice(0, 8);
+        if (!remarks.length) return '<div class="items-empty">No remarks</div>';
+        return `<div class="remarks-list">${remarks.map(item => `<div><strong>${escapeHtml(item.text)}:</strong> ${escapeHtml(item.remarks)}</div>`).join('')}</div>`;
+      }
+
       function openProjectModal() {
         setValue('projectNameInput', data.projectName);
+        setValue('projectCodeProjectInput', data.projectCode || getProjectCode());
         setValue('versionInput', data.version);
         setValue('lastUpdateInput', data.lastUpdate);
         setValue('projectStartInput', data.startDate);
@@ -1479,6 +2123,9 @@
         setValue('notesInput', data.notes);
         setValue('holidaysInput', data.holidays.join(', '));
         setValue('holidayProxyInput', data.holidayProxyUrl || '');
+        setValue('workColorInput', data.colors.work);
+        setValue('weekendColorInput', data.colors.weekend);
+        setValue('highlightColorInput', data.colors.highlight);
         setText('logoStatus', data.logoDataUrl ? 'Logo uploaded and will appear on client PDF.' : 'No logo uploaded.');
         safeClassAdd(byId('projectModal'), 'show');
       }
@@ -1508,13 +2155,15 @@
       function applyClientPdfPreset() {
         const days = Math.max(1, dayDiff(data.startDate, data.endDate) + 1);
         data.viewMode = days > 180 ? 'month' : days > 31 ? 'week' : 'day';
+        data.audienceMode = 'client';
         setValue('densityInput', 'normal');
         render();
-        window.alert('已切換到較適合客戶 PDF 的版面。長 programme 會自動改用 Week / Month View，列印時建議使用 A3 landscape。');
+        window.alert('已切換到較適合客戶 PDF 的版面，並隱藏 Action Items / Remarks。長 programme 會自動改用 Week / Month View，列印時建議使用 A3 landscape。');
       }
 
       function applyProjectEditor() {
         data.projectName = (byId('projectNameInput')?.value || '').trim() || 'Project Timeline';
+        data.projectCode = normalizeProjectCode(byId('projectCodeProjectInput')?.value || getProjectCode());
         data.version = (byId('versionInput')?.value || '').trim() || 'Version: 1.0';
         data.lastUpdate = (byId('lastUpdateInput')?.value || '').trim() || `Last update: ${formatDisplayDate(todayISO())}`;
         const start = byId('projectStartInput')?.value || '';
@@ -1525,10 +2174,15 @@
         data.summary = byId('summaryInput')?.value || '';
         data.notes = byId('notesInput')?.value || '';
         data.holidays = (byId('holidaysInput')?.value || '').split(',').map(value => value.trim()).filter(isValidDate);
-        data.holidayProxyUrl = (byId('holidayProxyInput')?.value || '').trim() || DEFAULT_HOLIDAY_PROXY_URL;
+        data.holidayProxyUrl = (byId('holidayProxyInput')?.value || '').trim();
+        data.colors = {
+          work: isHexColor(byId('workColorInput')?.value) ? byId('workColorInput').value : data.colors.work,
+          weekend: isHexColor(byId('weekendColorInput')?.value) ? byId('weekendColorInput').value : data.colors.weekend,
+          highlight: isHexColor(byId('highlightColorInput')?.value) ? byId('highlightColorInput').value : data.colors.highlight
+        };
         closeProjectModal();
         render();
-        autoUpdateHolidays('project-apply', true);
+        autoUpdateHolidays('project-editor', true);
       }
 
       function findRowById(rowId) {
@@ -1544,6 +2198,10 @@
           const rowId = cell.dataset.rowId;
           if (!rowId) return;
           if (cell.classList.contains('timeline-edit-cell')) {
+            if (event.shiftKey) {
+              openQuickRowModal(rowId, cell.dataset.periodStart, cell.dataset.periodEnd);
+              return;
+            }
             startTimelineInlineEdit(cell, rowId, cell.dataset.periodStart, cell.dataset.periodEnd);
             return;
           }
@@ -1563,6 +2221,29 @@
           if (!handle && !cell.classList.contains('workday')) return;
           event.preventDefault();
           startTimelineDrag(event, cell, handle ? handle.dataset.dragAction : 'move');
+        };
+      }
+
+      function bindProgrammeChecklist() {
+        const wrap = byId('programmeWrap');
+        if (!wrap) return;
+        wrap.onchange = event => {
+          const toggle = event.target.closest('.checklist-toggle');
+          if (!toggle) return;
+          const list = toggle.closest('.checklist-list');
+          const scrollTop = list ? list.scrollTop : 0;
+          const row = findRowById(toggle.dataset.rowId);
+          if (!row) return;
+          const item = normalizeChecklist(row.checklist).find(entry => entry.id === toggle.dataset.itemId);
+          if (!item) return;
+          row.checklist = normalizeChecklist(row.checklist).map(entry => entry.id === item.id ? { ...entry, done: toggle.checked } : entry);
+          saveData();
+          updateChecklistCell(row.id, scrollTop);
+        };
+        wrap.onclick = event => {
+          const button = event.target.closest('.edit-items-button');
+          if (!button) return;
+          openItemsModal(button.dataset.rowId);
         };
       }
 
@@ -1597,30 +2278,41 @@
         if (!targetCell || !targetCell.dataset.periodStart) return;
         if (targetCell.dataset.periodStart === dragState.lastTargetStart) return;
         dragState.lastTargetStart = targetCell.dataset.periodStart;
-        const row = findRowById(dragState.rowId);
-        if (!row) return;
-        const deltaDays = dayDiff(dragState.originPeriodStart, targetCell.dataset.periodStart);
-        if (dragState.action === 'move') {
-          row.start = addDays(dragState.originStart, deltaDays);
-          row.end = addDays(dragState.originEnd, deltaDays);
-        } else if (dragState.action === 'resize-left') {
-          row.start = targetCell.dataset.periodStart <= row.end ? targetCell.dataset.periodStart : row.end;
-        } else if (dragState.action === 'resize-right') {
-          row.end = targetCell.dataset.periodEnd >= row.start ? targetCell.dataset.periodEnd : row.start;
-        }
-        dragState.moved = true;
-        render();
-        const newCell = document.querySelector(`.timeline-edit-cell[data-row-id="${cssEscape(row.id)}"][data-period-start="${cssEscape(targetCell.dataset.periodStart)}"]`);
-        safeClassAdd(newCell, 'drag-preview');
+        dragState.pendingPeriodStart = targetCell.dataset.periodStart;
+        dragState.pendingPeriodEnd = targetCell.dataset.periodEnd;
+        if (dragRenderRequest) return;
+        dragRenderRequest = window.requestAnimationFrame(() => {
+          dragRenderRequest = null;
+          if (!dragState) return;
+          const row = findRowById(dragState.rowId);
+          if (!row) return;
+          const targetStart = dragState.pendingPeriodStart;
+          const targetEnd = dragState.pendingPeriodEnd;
+          const deltaDays = dayDiff(dragState.originPeriodStart, targetStart);
+          if (dragState.action === 'move') {
+            row.start = addDays(dragState.originStart, deltaDays);
+            row.end = addDays(dragState.originEnd, deltaDays);
+          } else if (dragState.action === 'resize-left') {
+            row.start = targetStart <= row.end ? targetStart : row.end;
+          } else if (dragState.action === 'resize-right') {
+            row.end = targetEnd >= row.start ? targetEnd : row.start;
+          }
+          dragState.moved = true;
+          render();
+          const newCell = document.querySelector(`.timeline-edit-cell[data-row-id="${cssEscape(row.id)}"][data-period-start="${cssEscape(targetStart)}"]`);
+          safeClassAdd(newCell, 'drag-preview');
+        });
       }
 
       function endTimelineDrag() {
+        if (dragRenderRequest) {
+          window.cancelAnimationFrame(dragRenderRequest);
+          dragRenderRequest = null;
+        }
         window.removeEventListener('pointermove', onTimelineDragMove);
         safeClassRemove(document.body, 'timeline-dragging');
-        const shouldCheckHolidays = Boolean(dragState && dragState.moved);
         dragState = null;
         render();
-        if (shouldCheckHolidays) autoUpdateHolidays('timeline-drag', false);
       }
 
       function cssEscape(value) {
@@ -1706,10 +2398,11 @@
         cell.classList.add('cell-editing');
         const editor = document.createElement('div');
         editor.className = 'timeline-inline-editor';
-        editor.innerHTML = `<span>Start</span><input type="date" value="${escapeHtml(row.start)}"><span>End</span><input type="date" value="${escapeHtml(row.end)}"><button type="button">Apply</button><button type="button" class="cancel-inline-btn">Cancel</button>`;
+        editor.innerHTML = `<span>Start</span><input type="date" value="${escapeHtml(row.start)}"><span>End</span><input type="date" value="${escapeHtml(row.end)}"><button type="button">Apply</button><button type="button" class="quick-inline-btn">Details</button><button type="button" class="cancel-inline-btn">Cancel</button>`;
         cell.appendChild(editor);
         const inputs = editor.querySelectorAll('input');
         const applyButton = editor.querySelector('button:not(.cancel-inline-btn)');
+        const quickButton = editor.querySelector('.quick-inline-btn');
         const cancelButton = editor.querySelector('.cancel-inline-btn');
         if (periodStart && !overlaps(row.start, row.end, periodStart, periodEnd || periodStart)) {
           inputs[0].value = periodStart;
@@ -1722,10 +2415,10 @@
           if (isValidDate(end)) row.end = end;
           if (row.end < row.start) [row.start, row.end] = [row.end, row.start];
           render();
-          autoUpdateHolidays('inline-date-edit', false);
         };
         const cancel = () => render();
         applyButton.addEventListener('click', apply);
+        quickButton.addEventListener('click', () => openQuickRowModal(rowId, periodStart, periodEnd || periodStart));
         cancelButton.addEventListener('click', cancel);
         editor.addEventListener('keydown', event => {
           if (event.key === 'Enter') {
@@ -1752,6 +2445,8 @@
         setValue('quickStartInput', row.start);
         setValue('quickEndInput', row.end);
         setValue('quickHighlightInput', row.highlight ? 'YES' : 'NO');
+        setValue('quickChecklistInput', checklistItemsText(row));
+        setValue('quickRemarksInput', checklistRemarksText(row));
         setText('quickRowHint', quickPeriod ? `Clicked: ${quickPeriod.start} to ${quickPeriod.end}` : '');
         safeClassAdd(byId('quickRowModal'), 'show');
       }
@@ -1773,10 +2468,10 @@
         row.start = isValidDate(start) ? start : row.start;
         row.end = isValidDate(end) ? end : row.end;
         if (row.end < row.start) [row.start, row.end] = [row.end, row.start];
+        row.checklist = checklistFromTextareas(byId('quickChecklistInput')?.value || '', byId('quickRemarksInput')?.value || '', row.checklist);
         row.highlight = (byId('quickHighlightInput')?.value || 'NO') === 'YES';
         closeQuickRowModal();
         render();
-        autoUpdateHolidays('quick-row-date-edit', false);
       }
 
       function deleteQuickRow() {
@@ -1794,6 +2489,67 @@
 
       function useClickedAsEnd() {
         if (quickPeriod) setValue('quickEndInput', quickPeriod.end);
+      }
+
+      function openItemsModal(rowId) {
+        const row = findRowById(rowId);
+        if (!row) return;
+        setValue('itemsRowId', row.id);
+        setText('itemsModalHint', `${row.category} / ${row.item}`);
+        editingItems = normalizeChecklist(row.checklist);
+        renderItemsEditor();
+        safeClassAdd(byId('itemsModal'), 'show');
+      }
+
+      function closeItemsModal() {
+        safeClassRemove(byId('itemsModal'), 'show');
+        editingItems = [];
+      }
+
+      function renderItemsEditor() {
+        const body = byId('itemsEditorBody');
+        if (!body) return;
+        body.innerHTML = editingItems.map((item, index) => `
+          <tr>
+            <td><input data-index="${index}" data-field="done" type="checkbox" ${item.done ? 'checked' : ''}></td>
+            <td><input data-index="${index}" data-field="text" value="${escapeHtml(item.text)}"></td>
+            <td><textarea class="item-remark-input" data-index="${index}" data-field="remarks">${escapeHtml(item.remarks)}</textarea></td>
+            <td><button class="mini danger" data-action="deleteItem" data-index="${index}">Delete</button></td>
+          </tr>`).join('');
+        body.querySelectorAll('input, textarea').forEach(input => {
+          input.addEventListener('input', updateEditingItemField);
+          input.addEventListener('change', updateEditingItemField);
+        });
+        body.querySelectorAll('button[data-action]').forEach(button => {
+          button.addEventListener('click', handleItemButton);
+        });
+      }
+
+      function updateEditingItemField(event) {
+        const index = Number(event.target.dataset.index);
+        const field = event.target.dataset.field;
+        if (!editingItems[index]) return;
+        editingItems[index][field] = field === 'done' ? event.target.checked : event.target.value;
+      }
+
+      function handleItemButton(event) {
+        const index = Number(event.currentTarget.dataset.index);
+        if (event.currentTarget.dataset.action === 'deleteItem') editingItems.splice(index, 1);
+        editingItems = editingItems.map((item, order) => ({ ...item, order }));
+        renderItemsEditor();
+      }
+
+      function addChecklistItem() {
+        editingItems.push({ id: uid('item'), text: '', remarks: '', done: false, order: editingItems.length });
+        renderItemsEditor();
+      }
+
+      function applyItemsEditor() {
+        const row = findRowById(byId('itemsRowId')?.value || '');
+        if (!row) return;
+        row.checklist = normalizeChecklist(editingItems);
+        closeItemsModal();
+        render();
       }
 
       function openRowsModal() {
@@ -1814,7 +2570,7 @@
             <td>${index + 1}</td>
             <td><input data-index="${index}" data-field="category" value="${escapeHtml(row.category)}"></td>
             <td><input data-index="${index}" data-field="item" value="${escapeHtml(row.item)}"></td>
-            <td><input data-index="${index}" data-field="action" value="${escapeHtml(row.action)}"></td>
+            <td><textarea data-index="${index}" data-field="action">${escapeHtml(row.action)}</textarea></td>
             <td><input data-index="${index}" data-field="actionBy" value="${escapeHtml(row.actionBy)}"></td>
             <td><input data-index="${index}" data-field="start" type="date" value="${escapeHtml(row.start)}"></td>
             <td><input data-index="${index}" data-field="end" type="date" value="${escapeHtml(row.end)}"></td>
@@ -1825,7 +2581,7 @@
               <button class="mini danger" data-action="delete" data-index="${index}">Delete</button>
             </td>
           </tr>`).join('');
-        body.querySelectorAll('input, select').forEach(input => {
+        body.querySelectorAll('input, select, textarea').forEach(input => {
           input.addEventListener('input', updateEditingRowField);
           input.addEventListener('change', updateEditingRowField);
         });
@@ -1874,11 +2630,9 @@
       }
 
       function applyRowsEditor() {
-        const previousKey = holidayYearKey();
         data.rows = editingRows.map((row, order) => normalizeRow({ ...row, order }, order, data.startDate));
         closeRowsModal();
         render();
-        if (previousKey !== holidayYearKey()) autoUpdateHolidays('rows-date-change', true);
       }
 
       function openDataModal() {
@@ -1914,8 +2668,9 @@
       }
 
       function exportCsv() {
-        const headers = ['Category', 'Item', 'Action', 'Action By', 'Start', 'End', 'Highlight'];
-        const rows = [headers].concat(data.rows.map(row => [row.category, row.item, row.action, row.actionBy, row.start, row.end, row.highlight ? 'YES' : 'NO']));
+        const includeChecklist = data.audienceMode !== 'client';
+        const headers = includeChecklist ? ['Category', 'Sub-Category', 'Action', 'Action By', 'Action Items', 'Remarks', 'Start', 'End', 'Highlight'] : ['Category', 'Sub-Category', 'Action', 'Action By', 'Start', 'End', 'Highlight'];
+        const rows = [headers].concat(data.rows.map(row => includeChecklist ? [row.category, row.item, row.action, row.actionBy, checklistItemsText(row), checklistRemarksText(row), row.start, row.end, row.highlight ? 'YES' : 'NO'] : [row.category, row.item, row.action, row.actionBy, row.start, row.end, row.highlight ? 'YES' : 'NO']));
         const csv = BOM + rows.map(row => row.map(csvEscape).join(',')).join(CR + LF);
         downloadBlob(csv, `${safeFileName(data.projectName)}-programme.csv`, 'text/csv;charset=utf-8');
       }
@@ -1938,14 +2693,17 @@
         const rows = data.rows.slice().sort((a, b) => a.order - b.order);
         const mode = getResolvedViewMode();
         const periods = buildPeriods(mode);
+        const includeChecklist = data.audienceMode !== 'client';
+        const leftHeaders = includeChecklist ? ['Category', 'Sub-Category', 'Action', 'Action By', 'Action Items', 'Remarks'] : ['Category', 'Sub-Category', 'Action', 'Action By'];
         const visualRows = rows.map(row => {
-          const left = [row.category, row.item, row.action, row.actionBy].map(value => excelCell(value, 'TextWrap')).join('');
+          const leftValues = includeChecklist ? [row.category, row.item, row.action, row.actionBy, checklistItemsText(row), checklistRemarksText(row)] : [row.category, row.item, row.action, row.actionBy];
+          const left = leftValues.map(value => excelCell(value, 'TextWrap')).join('');
           const timeline = periods.map(period => excelCell('', overlaps(row.start, row.end, period.start, period.end) ? 'Work' : period.blocked ? 'Weekend' : 'Normal')).join('');
           return `<Row>${left}${timeline}</Row>`;
         }).join('');
-        const header1 = ['Category', 'Item', 'Action', 'Action By'].map(value => excelCell(value, 'Header')).join('') + periods.map(period => excelCell(period.label1, 'Header')).join('');
-        const header2 = ['', '', '', ''].map(value => excelCell(value, 'Header')).join('') + periods.map(period => excelCell(period.label2, 'Header')).join('');
-        const header3 = ['', '', '', ''].map(value => excelCell(value, 'Header')).join('') + periods.map(period => excelCell(period.label3, period.blocked ? 'WeekendHeader' : 'Header')).join('');
+        const header1 = leftHeaders.map(value => excelCell(value, 'Header')).join('') + periods.map(period => excelCell(period.label1, 'Header')).join('');
+        const header2 = leftHeaders.map(() => excelCell('', 'Header')).join('') + periods.map(period => excelCell(period.label2, 'Header')).join('');
+        const header3 = leftHeaders.map(() => excelCell('', 'Header')).join('') + periods.map(period => excelCell(period.label3, period.blocked ? 'WeekendHeader' : 'Header')).join('');
         const workbook = `<?xml version="1.0"?>
 <?mso-application progid="Excel.Sheet"?>
 <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
@@ -1953,9 +2711,9 @@
 <Style ss:ID="Normal"><Alignment ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>
 <Style ss:ID="Header"><Font ss:Bold="1"/><Interior ss:Color="#F8FAFC" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>
 <Style ss:ID="TextWrap"><Alignment ss:Vertical="Center" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>
-<Style ss:ID="Work"><Interior ss:Color="#9AE6B4" ss:Pattern="Solid"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>
-<Style ss:ID="Weekend"><Interior ss:Color="#CFCFCF" ss:Pattern="Solid"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>
-<Style ss:ID="WeekendHeader"><Font ss:Bold="1"/><Interior ss:Color="#CFCFCF" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>
+<Style ss:ID="Work"><Interior ss:Color="${escapeXml(data.colors.work.toUpperCase())}" ss:Pattern="Solid"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>
+<Style ss:ID="Weekend"><Interior ss:Color="${escapeXml(data.colors.weekend.toUpperCase())}" ss:Pattern="Solid"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>
+<Style ss:ID="WeekendHeader"><Font ss:Bold="1"/><Interior ss:Color="${escapeXml(data.colors.weekend.toUpperCase())}" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>
 </Styles>
 <Worksheet ss:Name="Programme"><Table>
 <Row>${excelCell(data.projectName, 'Header')}</Row>
@@ -2029,16 +2787,16 @@ ${visualRows}
             };
             data.rows = rows.map((row, order) => normalizeRow({
               category: value(row, 'Category'),
-              item: value(row, 'Item'),
+              item: value(row, 'Sub-Category') || value(row, 'Item'),
               action: value(row, 'Action'),
               actionBy: value(row, 'Action By'),
+              checklist: checklistFromTextareas(value(row, 'Action Items'), value(row, 'Remarks')),
               start: value(row, 'Start'),
               end: value(row, 'End'),
               highlight: value(row, 'Highlight'),
               order
             }, order, data.startDate));
             render();
-            autoUpdateHolidays('csv-import', true);
           } catch (error) {
             alert('CSV 格式不正確，請用 Export CSV 的格式再匯入。');
           }
@@ -2101,6 +2859,8 @@ ${visualRows}
       }
 
       function init() {
+        uiState = loadUiState();
+        setToolbarHidden(uiState.toolbarHidden);
         deletedTemplateNames = loadDeletedTemplateNames();
         templates = loadTemplates();
         Object.keys(templates).forEach(name => {
@@ -2108,6 +2868,19 @@ ${visualRows}
         });
         populateTemplateSelect();
         data = loadData();
+        initFirebaseWhenReady();
+        bind('hideToolbarButton', 'click', () => setToolbarHidden(true));
+        bind('showToolbarButton', 'click', () => setToolbarHidden(false));
+        bind('cloudSignInButton', 'click', toggleCloudSignIn);
+        bind('cloudLoadButton', 'click', loadCloudProject);
+        bind('cloudSaveButton', 'click', saveCloudProjectNow);
+        bind('projectCodeInput', 'change', event => {
+          data.projectCode = normalizeProjectCode(event.target.value);
+          setValue('projectCodeInput', data.projectCode);
+          setValue('projectCodeProjectInput', data.projectCode);
+          saveData();
+          if (cloudUser && data.projectCode) subscribeCloudProject(data.projectCode);
+        });
         bind('editProjectButton', 'click', openProjectModal);
         bind('clientPdfButton', 'click', applyClientPdfPreset);
         bind('uploadLogoButton', 'click', () => byId('logoInput')?.click());
@@ -2135,28 +2908,24 @@ ${visualRows}
         bind('deleteQuickRowButton', 'click', deleteQuickRow);
         bind('useClickedAsStartButton', 'click', useClickedAsStart);
         bind('useClickedAsEndButton', 'click', useClickedAsEnd);
+        bind('addChecklistItemButton', 'click', addChecklistItem);
+        bind('cancelItemsButton', 'click', closeItemsModal);
+        bind('applyItemsButton', 'click', applyItemsEditor);
         bind('cancelEditButton', 'click', closeDataModal);
         bind('applyEditButton', 'click', applyDataEditor);
-        bind('startInput', 'change', event => {
-          const previousKey = holidayYearKey();
-          data.startDate = event.target.value;
-          render();
-          if (previousKey !== holidayYearKey()) autoUpdateHolidays('start-date-change', true);
-        });
-        bind('endInput', 'change', event => {
-          const previousKey = holidayYearKey();
-          data.endDate = event.target.value;
-          render();
-          if (previousKey !== holidayYearKey()) autoUpdateHolidays('end-date-change', true);
-        });
+        bind('startInput', 'change', event => { data.startDate = event.target.value; render(); autoUpdateHolidays('start-date', true); });
+        bind('endInput', 'change', event => { data.endDate = event.target.value; render(); autoUpdateHolidays('end-date', true); });
         bind('viewInput', 'change', event => { data.viewMode = event.target.value; render(); });
         bind('weekLabelInput', 'change', event => { data.weekLabelMode = event.target.value; render(); });
+        bind('audienceInput', 'change', event => { data.audienceMode = event.target.value; render(); });
         bind('densityInput', 'change', render);
         bind('applyTemplateButton', 'click', applyTemplate);
         bind('saveTemplateButton', 'click', saveCurrentAsTemplate);
         bind('deleteTemplateButton', 'click', deleteSelectedTemplate);
         bind('exportTemplatesButton', 'click', exportTemplates);
         bind('importTemplatesButton', 'click', () => byId('templateJsonInput')?.click());
+        bind('exportProjectButton', 'click', exportProject);
+        bind('importProjectButton', 'click', () => byId('projectJsonInput')?.click());
         bind('csvInput', 'change', event => {
           const file = event.target.files && event.target.files[0];
           if (file) importCsv(file);
@@ -2167,28 +2936,30 @@ ${visualRows}
           if (file) importTemplatesFromFile(file);
           event.target.value = '';
         });
-        bind('projectModal', 'click', event => {
-          if (event.target.id === 'projectModal') closeProjectModal();
-        });
-        bind('rowsModal', 'click', event => {
-          if (event.target.id === 'rowsModal') closeRowsModal();
+        bind('projectJsonInput', 'change', event => {
+          const file = event.target.files && event.target.files[0];
+          if (file) importProjectFromFile(file);
+          event.target.value = '';
         });
         bind('quickRowModal', 'click', event => {
           if (event.target.id === 'quickRowModal') closeQuickRowModal();
+        });
+        bind('itemsModal', 'click', event => {
+          if (event.target.id === 'itemsModal') closeItemsModal();
         });
         bind('dataModal', 'click', event => {
           if (event.target.id === 'dataModal') closeDataModal();
         });
         document.addEventListener('keydown', event => {
           if (event.key === 'Escape') {
-            closeProjectModal();
-            closeRowsModal();
             closeQuickRowModal();
+            closeItemsModal();
             closeDataModal();
           }
         });
         runTests();
         render();
+        autoUpdateHolidays('init');
       }
 
       if (document.readyState === 'loading') {
