@@ -1319,7 +1319,7 @@
               setCloudStatus(`Cloud: syncing ${code}`, 'success');
               loadCloudProject(code);
             } else {
-              setCloudStatus('Cloud: enter Project Code to sync', 'warning');
+              setCloudStatus('Cloud unlocked: choose a project from List or enter Project Code', 'success');
             }
           } else {
             if (cloudUnsubscribe) cloudUnsubscribe();
@@ -1349,10 +1349,6 @@
             if (password !== CLOUD_PASSWORD) {
               setCloudStatus('Cloud: wrong password', 'error');
               if (input) input.select();
-              return;
-            }
-            if (!getProjectCode()) {
-              setCloudStatus('Cloud: enter Project Code first', 'warning');
               return;
             }
             setCloudUnlocked(true);
