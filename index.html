@@ -789,6 +789,8 @@
         <div class="toolbar-group health-group" data-title="Edit and Save">
           <button id="editProjectButton">Edit Project</button>
           <button id="editRowsButton">Edit Rows</button>
+          <button class="light" id="addProjectButton" type="button">Add Project</button>
+          <button class="danger" id="deleteProjectButton" type="button">Delete Project</button>
           <span class="toolbar-break"></span>
           <button class="light" id="clientPdfButton">Client PDF Preset</button>
           <button id="printButton">Save PDF</button>
@@ -906,7 +908,7 @@
   </div>
   <div class="modal" id="newProjectModal">
     <div class="modal-card">
-      <h2>New Cloud Project</h2>
+      <h2>New Project</h2>
       <div class="row-editor-wrap">
         <table class="row-editor">
           <tbody>
@@ -1432,10 +1434,6 @@
       }
 
       function openNewProjectModal() {
-        if (!cloudUser || !isCloudUnlocked()) {
-          setProjectListStatus('Unlock cloud sync first', 'warning');
-          return;
-        }
         const start = data?.startDate || todayISO();
         const end = data?.endDate || addDays(start, 30);
         setValue('newProjectCodeInput', '');
@@ -1467,14 +1465,34 @@
         return base;
       }
 
-      async function createCloudProject(mode = 'blank') {
+      function applyLocalNewProject(projectData) {
+        if (cloudUnsubscribe) cloudUnsubscribe();
+        cloudUnsubscribe = null;
+        activeCloudProjectCode = '';
+        data = normalizeData(projectData);
+        resetProjectCodeInputs(data.projectCode);
+        suppressCloudSave = true;
+        render();
+        suppressCloudSave = false;
+        setCloudStatus('Local project created; cloud sync is locked', 'warning');
+      }
+
+      async function createProject(mode = 'blank') {
         const api = getFirebaseApi();
-        if (!api) return setProjectListStatus('Cloud: Firebase unavailable', 'error');
-        if (!cloudUser || !isCloudUnlocked()) return setProjectListStatus('Unlock cloud sync first', 'warning');
         const projectData = buildNewProjectData(mode);
         if (!projectData.projectCode || projectData.projectCode.length < 3) {
-          setProjectListStatus('New project needs a Project Code with at least 3 characters', 'warning');
+          const message = 'New project needs a Project Code with at least 3 characters';
+          setProjectListStatus(message, 'warning');
+          setCloudStatus(message, 'warning');
           byId('newProjectCodeInput')?.focus();
+          return;
+        }
+        const cloudMode = Boolean(api && cloudUser && isCloudUnlocked());
+        if (!cloudMode) {
+          const ok = window.confirm('Cloud sync is locked. Create this as a local project only?');
+          if (!ok) return;
+          closeNewProjectModal();
+          applyLocalNewProject(projectData);
           return;
         }
         setProjectListStatus(`Creating ${projectData.projectCode}...`, 'loading');
@@ -1529,6 +1547,33 @@
         } catch (error) {
           setProjectListStatus(`Delete failed: ${error.code || error.message}`, 'error');
         }
+      }
+
+      function deleteLocalProjectOnly(projectCode) {
+        const label = projectCode || data?.projectName || 'current project';
+        const typed = window.prompt(`Cloud sync is locked. Type DELETE to remove the current local project from this browser.`);
+        if (typed !== 'DELETE') {
+          setCloudStatus('Local delete cancelled', 'warning');
+          return;
+        }
+        if (cloudUnsubscribe) cloudUnsubscribe();
+        cloudUnsubscribe = null;
+        activeCloudProjectCode = '';
+        data = normalizeData({ ...defaultData, projectCode: '', projectName: 'Project Timeline', rows: [] });
+        resetProjectCodeInputs('');
+        suppressCloudSave = true;
+        render();
+        suppressCloudSave = false;
+        setCloudStatus(`Local project deleted: ${label}`, 'warning');
+      }
+
+      function deleteCurrentProject() {
+        const currentCode = activeCloudProjectCode || getProjectCode();
+        if (cloudUser && isCloudUnlocked() && currentCode) {
+          deleteCloudProject(currentCode);
+          return;
+        }
+        deleteLocalProjectOnly(currentCode);
       }
 
       function resetProjectCodeInputs(code = data?.projectCode || activeCloudProjectCode || '') {
@@ -3251,8 +3296,9 @@ ${visualRows}
         console.assert(typeof applyClientPdfPreset === 'function', 'client PDF preset should exist');
         console.assert(typeof updateHongKongHolidays === 'function', 'HK holiday updater should exist');
         console.assert(typeof setHolidayStatus === 'function', 'holiday status setter should exist');
-        console.assert(typeof createCloudProject === 'function', 'cloud project creator should exist');
+        console.assert(typeof createProject === 'function', 'project creator should exist');
         console.assert(typeof deleteCloudProject === 'function', 'cloud project deleter should exist');
+        console.assert(typeof deleteCurrentProject === 'function', 'current project delete handler should exist');
         console.assert(hasAllRequiredElements() === true, 'required DOM elements should exist');
       }
 
@@ -3274,6 +3320,8 @@ ${visualRows}
           if (event.key === 'Enter') toggleCloudSignIn();
         });
         bind('projectListButton', 'click', openProjectListModal);
+        bind('addProjectButton', 'click', openNewProjectModal);
+        bind('deleteProjectButton', 'click', deleteCurrentProject);
         bind('newProjectButton', 'click', openNewProjectModal);
         bind('refreshProjectListButton', 'click', refreshProjectList);
         bind('closeProjectListButton', 'click', closeProjectListModal);
@@ -3284,8 +3332,8 @@ ${visualRows}
           if (deleteButton) deleteCloudProject(deleteButton.dataset.code || '');
         });
         bind('cancelNewProjectButton', 'click', closeNewProjectModal);
-        bind('createBlankProjectButton', 'click', () => createCloudProject('blank'));
-        bind('createFromCurrentButton', 'click', () => createCloudProject('current'));
+        bind('createBlankProjectButton', 'click', () => createProject('blank'));
+        bind('createFromCurrentButton', 'click', () => createProject('current'));
         bind('projectListModal', 'click', event => {
           if (event.target.id === 'projectListModal') closeProjectListModal();
         });
