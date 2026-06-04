@@ -830,6 +830,20 @@
       </div>
     </div>
   </div>
+  <div class="modal" id="projectCodeModal">
+    <div class="modal-card">
+      <h2>Project Code Changed</h2>
+      <p style="margin-top:0;color:#475569;line-height:1.5">
+        Current cloud project: <strong id="currentCloudProjectText"></strong><br>
+        New project code: <strong id="targetCloudProjectText"></strong>
+      </p>
+      <div class="editor-actions">
+        <button id="loadProjectCodeButton" type="button">Load This Code</button>
+        <button class="secondary" id="saveAsProjectCodeButton" type="button">Save Current Data As This Code</button>
+        <button class="light" id="cancelProjectCodeButton" type="button">Cancel</button>
+      </div>
+    </div>
+  </div>
   <div class="modal" id="rowsModal">
     <div class="modal-card">
       <h2>Edit Rows</h2>
@@ -988,6 +1002,8 @@
       let cloudUnsubscribe = null;
       let cloudSaveTimer = null;
       let suppressCloudSave = false;
+      let activeCloudProjectCode = '';
+      let pendingProjectCode = '';
       let templates = {};
       let deletedTemplateNames = new Set();
       let data;
@@ -1199,13 +1215,14 @@
             const code = getProjectCode();
             if (code) {
               setCloudStatus(`Cloud: syncing ${code}`, 'success');
-              loadCloudProject();
+              loadCloudProject(code);
             } else {
               setCloudStatus('Cloud: enter Project Code to sync', 'warning');
             }
           } else {
             if (cloudUnsubscribe) cloudUnsubscribe();
             cloudUnsubscribe = null;
+            activeCloudProjectCode = '';
             setCloudUnlocked(false);
             if (cloudUser) api.signOut(api.auth).catch(() => {});
             setCloudStatus('Cloud: enter password to sync', 'warning');
@@ -1221,6 +1238,7 @@
             setCloudUnlocked(false);
             if (cloudUnsubscribe) cloudUnsubscribe();
             cloudUnsubscribe = null;
+            activeCloudProjectCode = '';
             await api.signOut(api.auth);
             setCloudStatus('Cloud: locked', 'warning');
           } else {
@@ -1250,11 +1268,78 @@
         return api.doc(api.db, 'programmeProjects', projectCode);
       }
 
-      async function loadCloudProject() {
+      function resetProjectCodeInputs(code = data?.projectCode || activeCloudProjectCode || '') {
+        const normalized = normalizeProjectCode(code);
+        if (data) data.projectCode = normalized;
+        setValue('projectCodeInput', normalized);
+        setValue('projectCodeProjectInput', normalized);
+      }
+
+      function closeProjectCodeModal() {
+        pendingProjectCode = '';
+        safeClassRemove(byId('projectCodeModal'), 'show');
+      }
+
+      function openProjectCodeModal(targetCode) {
+        pendingProjectCode = normalizeProjectCode(targetCode);
+        setText('currentCloudProjectText', activeCloudProjectCode || data?.projectCode || '(none)');
+        setText('targetCloudProjectText', pendingProjectCode || '(none)');
+        safeClassAdd(byId('projectCodeModal'), 'show');
+      }
+
+      function handleProjectCodeChange(targetCode, options = {}) {
+        const code = normalizeProjectCode(targetCode);
+        if (!code) {
+          resetProjectCodeInputs(activeCloudProjectCode || data?.projectCode || '');
+          setCloudStatus('Cloud: enter Project Code first', 'warning');
+          return;
+        }
+        const currentCode = activeCloudProjectCode || normalizeProjectCode(data?.projectCode || '');
+        if (!cloudUser || !isCloudUnlocked()) {
+          resetProjectCodeInputs(code);
+          saveData();
+          return;
+        }
+        if (!currentCode || code === currentCode) {
+          resetProjectCodeInputs(code);
+          if (options.saveWhenSame) {
+            saveData();
+            queueCloudSave();
+          } else {
+            loadCloudProject(code);
+          }
+          return;
+        }
+        setValue('projectCodeInput', code);
+        setValue('projectCodeProjectInput', code);
+        openProjectCodeModal(code);
+      }
+
+      function loadPendingProjectCode() {
+        const code = pendingProjectCode;
+        closeProjectCodeModal();
+        resetProjectCodeInputs(code);
+        loadCloudProject(code);
+      }
+
+      function saveAsPendingProjectCode() {
+        const code = pendingProjectCode;
+        closeProjectCodeModal();
+        resetProjectCodeInputs(code);
+        saveData();
+        saveCloudProjectNow(code);
+      }
+
+      function cancelPendingProjectCode() {
+        closeProjectCodeModal();
+        resetProjectCodeInputs(activeCloudProjectCode || data?.projectCode || '');
+      }
+
+      async function loadCloudProject(projectCode = getProjectCode()) {
         const api = getFirebaseApi();
         if (!api) return setCloudStatus('Cloud: Firebase unavailable', 'error');
         if (!cloudUser || !isCloudUnlocked()) return setCloudStatus('Cloud: unlock sync first', 'warning');
-        const code = getProjectCode();
+        const code = normalizeProjectCode(projectCode);
         if (!code || code.length < 3) return setCloudStatus('Cloud: enter Project Code first', 'warning');
         setCloudStatus(`Cloud: loading ${code}...`, 'loading');
         try {
@@ -1264,7 +1349,7 @@
             setValue('projectCodeInput', code);
             setValue('projectCodeProjectInput', code);
             subscribeCloudProject(code);
-            await saveCloudProjectNow();
+            await saveCloudProjectNow(code);
             return;
           }
           const payload = snap.data();
@@ -1282,11 +1367,11 @@
         }
       }
 
-      async function saveCloudProjectNow() {
+      async function saveCloudProjectNow(projectCode = activeCloudProjectCode || getProjectCode()) {
         const api = getFirebaseApi();
         if (!api) return setCloudStatus('Cloud: Firebase unavailable', 'error');
         if (!cloudUser || !isCloudUnlocked()) return setCloudStatus('Cloud: unlock sync first', 'warning');
-        const code = getProjectCode();
+        const code = normalizeProjectCode(projectCode);
         if (!code || code.length < 3) return setCloudStatus('Cloud: enter Project Code first', 'warning');
         data.projectCode = code;
         setValue('projectCodeInput', code);
@@ -1306,15 +1391,16 @@
       }
 
       function queueCloudSave() {
-        if (suppressCloudSave || !cloudUser || !isCloudUnlocked() || !getProjectCode()) return;
+        if (suppressCloudSave || !cloudUser || !isCloudUnlocked() || !(activeCloudProjectCode || getProjectCode())) return;
         window.clearTimeout(cloudSaveTimer);
-        cloudSaveTimer = window.setTimeout(saveCloudProjectNow, 900);
+        cloudSaveTimer = window.setTimeout(() => saveCloudProjectNow(activeCloudProjectCode || getProjectCode()), 900);
       }
 
       function subscribeCloudProject(projectCode) {
         const api = getFirebaseApi();
         if (!api || !cloudUser || !isCloudUnlocked() || !projectCode) return;
         if (cloudUnsubscribe) cloudUnsubscribe();
+        activeCloudProjectCode = normalizeProjectCode(projectCode);
         cloudUnsubscribe = api.onSnapshot(cloudDocRef(projectCode), snap => {
           if (!snap.exists()) return;
           const payload = snap.data();
@@ -2207,7 +2293,7 @@
 
       function applyProjectEditor() {
         data.projectName = (byId('projectNameInput')?.value || '').trim() || 'Project Timeline';
-        data.projectCode = normalizeProjectCode(byId('projectCodeProjectInput')?.value || getProjectCode());
+        const requestedProjectCode = normalizeProjectCode(byId('projectCodeProjectInput')?.value || getProjectCode());
         data.version = (byId('versionInput')?.value || '').trim() || 'Version: 1.0';
         data.lastUpdate = (byId('lastUpdateInput')?.value || '').trim() || `Last update: ${formatDisplayDate(todayISO())}`;
         const start = byId('projectStartInput')?.value || '';
@@ -2225,8 +2311,11 @@
           highlight: isHexColor(byId('highlightColorInput')?.value) ? byId('highlightColorInput').value : data.colors.highlight
         };
         closeProjectModal();
+        suppressCloudSave = true;
         render();
-        autoUpdateHolidays('project-editor', true);
+        suppressCloudSave = false;
+        handleProjectCodeChange(requestedProjectCode, { saveWhenSame: true });
+        if (!pendingProjectCode) autoUpdateHolidays('project-editor', true);
       }
 
       function findRowById(rowId) {
@@ -2920,11 +3009,7 @@ ${visualRows}
           if (event.key === 'Enter') toggleCloudSignIn();
         });
         bind('projectCodeInput', 'change', event => {
-          data.projectCode = normalizeProjectCode(event.target.value);
-          setValue('projectCodeInput', data.projectCode);
-          setValue('projectCodeProjectInput', data.projectCode);
-          saveData();
-          if (cloudUser && isCloudUnlocked() && data.projectCode) loadCloudProject();
+          handleProjectCodeChange(event.target.value);
         });
         bind('editProjectButton', 'click', openProjectModal);
         bind('clientPdfButton', 'click', applyClientPdfPreset);
@@ -2937,6 +3022,9 @@ ${visualRows}
         });
         bind('cancelProjectButton', 'click', closeProjectModal);
         bind('applyProjectButton', 'click', applyProjectEditor);
+        bind('loadProjectCodeButton', 'click', loadPendingProjectCode);
+        bind('saveAsProjectCodeButton', 'click', saveAsPendingProjectCode);
+        bind('cancelProjectCodeButton', 'click', cancelPendingProjectCode);
         bind('editRowsButton', 'click', openRowsModal);
         bind('addRowButton', 'click', addRow);
         bind('duplicateLastRowButton', 'click', duplicateLastRow);
