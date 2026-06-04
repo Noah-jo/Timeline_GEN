@@ -891,15 +891,36 @@
               <th style="width:180px">Project Code</th>
               <th>Project Name</th>
               <th style="width:210px">Time Period</th>
-              <th style="width:90px">Action</th>
+              <th style="width:150px">Action</th>
             </tr>
           </thead>
           <tbody id="projectListBody"></tbody>
         </table>
       </div>
       <div class="modal-actions">
+        <button class="secondary" id="newProjectButton" type="button">New Project</button>
         <button class="light" id="refreshProjectListButton" type="button">Refresh</button>
         <button id="closeProjectListButton" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+  <div class="modal" id="newProjectModal">
+    <div class="modal-card">
+      <h2>New Cloud Project</h2>
+      <div class="row-editor-wrap">
+        <table class="row-editor">
+          <tbody>
+            <tr><th style="width:180px">Project Code</th><td><input id="newProjectCodeInput"></td></tr>
+            <tr><th>Project Name</th><td><input id="newProjectNameInput"></td></tr>
+            <tr><th>Start Date</th><td><input id="newProjectStartInput" type="date"></td></tr>
+            <tr><th>End Date</th><td><input id="newProjectEndInput" type="date"></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-actions">
+        <button class="light" id="cancelNewProjectButton" type="button">Cancel</button>
+        <button class="secondary" id="createFromCurrentButton" type="button">Create From Current</button>
+        <button id="createBlankProjectButton" type="button">Create Blank Project</button>
       </div>
     </div>
   </div>
@@ -1005,7 +1026,7 @@
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
     import { getAuth, onAuthStateChanged, signInAnonymously, signOut } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
-    import { collection, doc, getDoc, getDocs, getFirestore, onSnapshot, serverTimestamp, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
+    import { collection, deleteDoc, doc, getDoc, getDocs, getFirestore, onSnapshot, serverTimestamp, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
 
     const firebaseConfig = {
       apiKey: 'AIzaSyA60JS9Pj3WiJ--5KEPXT76e96JATM5TpI',
@@ -1024,6 +1045,7 @@
       signInAnonymously,
       signOut,
       collection,
+      deleteDoc,
       doc,
       getDoc,
       getDocs,
@@ -1352,7 +1374,10 @@
             <td><strong>${escapeHtml(project.code)}</strong></td>
             <td>${escapeHtml(project.name || 'Untitled Project')}</td>
             <td>${escapeHtml(project.period || '')}</td>
-            <td><button class="mini project-list-load-button" type="button" data-code="${escapeHtml(project.code)}">Load</button></td>
+            <td>
+              <button class="mini project-list-load-button" type="button" data-code="${escapeHtml(project.code)}">Load</button>
+              <button class="mini danger project-list-delete-button" type="button" data-code="${escapeHtml(project.code)}">Delete</button>
+            </td>
           </tr>
         `).join('');
       }
@@ -1400,6 +1425,110 @@
         closeProjectListModal();
         resetProjectCodeInputs(projectCode);
         loadCloudProject(projectCode);
+      }
+
+      function closeNewProjectModal() {
+        safeClassRemove(byId('newProjectModal'), 'show');
+      }
+
+      function openNewProjectModal() {
+        if (!cloudUser || !isCloudUnlocked()) {
+          setProjectListStatus('Unlock cloud sync first', 'warning');
+          return;
+        }
+        const start = data?.startDate || todayISO();
+        const end = data?.endDate || addDays(start, 30);
+        setValue('newProjectCodeInput', '');
+        setValue('newProjectNameInput', '');
+        setValue('newProjectStartInput', start);
+        setValue('newProjectEndInput', end);
+        safeClassAdd(byId('newProjectModal'), 'show');
+      }
+
+      function buildNewProjectData(mode) {
+        const code = normalizeProjectCode(byId('newProjectCodeInput')?.value || '');
+        const name = (byId('newProjectNameInput')?.value || '').trim() || 'Project Timeline';
+        const start = isValidDate(byId('newProjectStartInput')?.value) ? byId('newProjectStartInput').value : todayISO();
+        const endInput = byId('newProjectEndInput')?.value || '';
+        const end = isValidDate(endInput) ? endInput : addDays(start, 30);
+        const base = mode === 'current' ? normalizeData(data) : normalizeData({ ...defaultData, rows: [] });
+        base.projectCode = code;
+        base.projectName = name;
+        base.startDate = start <= end ? start : end;
+        base.endDate = end >= start ? end : start;
+        base.lastUpdate = `Last update: ${formatDisplayDate(todayISO())}`;
+        if (mode !== 'current') {
+          base.summary = '';
+          base.notes = '';
+          base.holidays = [];
+          base.govHolidays = [];
+          base.holidaySourceYears = [];
+        }
+        return base;
+      }
+
+      async function createCloudProject(mode = 'blank') {
+        const api = getFirebaseApi();
+        if (!api) return setProjectListStatus('Cloud: Firebase unavailable', 'error');
+        if (!cloudUser || !isCloudUnlocked()) return setProjectListStatus('Unlock cloud sync first', 'warning');
+        const projectData = buildNewProjectData(mode);
+        if (!projectData.projectCode || projectData.projectCode.length < 3) {
+          setProjectListStatus('New project needs a Project Code with at least 3 characters', 'warning');
+          byId('newProjectCodeInput')?.focus();
+          return;
+        }
+        setProjectListStatus(`Creating ${projectData.projectCode}...`, 'loading');
+        try {
+          const ref = cloudDocRef(projectData.projectCode);
+          const existing = await api.getDoc(ref);
+          if (existing.exists()) {
+            setProjectListStatus(`Project ${projectData.projectCode} already exists`, 'error');
+            return;
+          }
+          await api.setDoc(ref, {
+            data: normalizeData(projectData),
+            updatedAt: api.serverTimestamp(),
+            updatedBy: 'team',
+            projectCode: projectData.projectCode
+          }, { merge: false });
+          closeNewProjectModal();
+          closeProjectListModal();
+          data = normalizeData(projectData);
+          resetProjectCodeInputs(projectData.projectCode);
+          suppressCloudSave = true;
+          render();
+          suppressCloudSave = false;
+          subscribeCloudProject(projectData.projectCode);
+          setCloudStatus(`Cloud: created ${projectData.projectCode}`, 'success');
+        } catch (error) {
+          setProjectListStatus(`Create failed: ${error.code || error.message}`, 'error');
+        }
+      }
+
+      async function deleteCloudProject(code) {
+        const api = getFirebaseApi();
+        const projectCode = normalizeProjectCode(code);
+        if (!api) return setProjectListStatus('Cloud: Firebase unavailable', 'error');
+        if (!cloudUser || !isCloudUnlocked()) return setProjectListStatus('Unlock cloud sync first', 'warning');
+        if (!projectCode) return;
+        const typed = window.prompt(`Type ${projectCode} to delete this cloud project.`);
+        if (typed !== projectCode) {
+          setProjectListStatus('Delete cancelled', 'warning');
+          return;
+        }
+        setProjectListStatus(`Deleting ${projectCode}...`, 'loading');
+        try {
+          await api.deleteDoc(cloudDocRef(projectCode));
+          if (activeCloudProjectCode === projectCode) {
+            if (cloudUnsubscribe) cloudUnsubscribe();
+            cloudUnsubscribe = null;
+            activeCloudProjectCode = '';
+            setCloudStatus(`Cloud: deleted ${projectCode}; current screen is local only`, 'warning');
+          }
+          await refreshProjectList();
+        } catch (error) {
+          setProjectListStatus(`Delete failed: ${error.code || error.message}`, 'error');
+        }
       }
 
       function resetProjectCodeInputs(code = data?.projectCode || activeCloudProjectCode || '') {
@@ -3122,6 +3251,8 @@ ${visualRows}
         console.assert(typeof applyClientPdfPreset === 'function', 'client PDF preset should exist');
         console.assert(typeof updateHongKongHolidays === 'function', 'HK holiday updater should exist');
         console.assert(typeof setHolidayStatus === 'function', 'holiday status setter should exist');
+        console.assert(typeof createCloudProject === 'function', 'cloud project creator should exist');
+        console.assert(typeof deleteCloudProject === 'function', 'cloud project deleter should exist');
         console.assert(hasAllRequiredElements() === true, 'required DOM elements should exist');
       }
 
@@ -3143,11 +3274,23 @@ ${visualRows}
           if (event.key === 'Enter') toggleCloudSignIn();
         });
         bind('projectListButton', 'click', openProjectListModal);
+        bind('newProjectButton', 'click', openNewProjectModal);
         bind('refreshProjectListButton', 'click', refreshProjectList);
         bind('closeProjectListButton', 'click', closeProjectListModal);
         bind('projectListBody', 'click', event => {
-          const button = event.target.closest('.project-list-load-button');
-          if (button) loadProjectFromList(button.dataset.code || '');
+          const loadButton = event.target.closest('.project-list-load-button');
+          const deleteButton = event.target.closest('.project-list-delete-button');
+          if (loadButton) loadProjectFromList(loadButton.dataset.code || '');
+          if (deleteButton) deleteCloudProject(deleteButton.dataset.code || '');
+        });
+        bind('cancelNewProjectButton', 'click', closeNewProjectModal);
+        bind('createBlankProjectButton', 'click', () => createCloudProject('blank'));
+        bind('createFromCurrentButton', 'click', () => createCloudProject('current'));
+        bind('projectListModal', 'click', event => {
+          if (event.target.id === 'projectListModal') closeProjectListModal();
+        });
+        bind('newProjectModal', 'click', event => {
+          if (event.target.id === 'newProjectModal') closeNewProjectModal();
         });
         bind('projectCodeInput', 'change', event => {
           handleProjectCodeChange(event.target.value);
