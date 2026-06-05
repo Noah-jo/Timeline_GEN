@@ -436,6 +436,24 @@
       padding-left: 8px;
       border-left: 2px solid #dbeafe;
     }
+    .check-parent-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 5px;
+      align-items: start;
+    }
+    .subcheck-toggle-button {
+      min-width: 58px;
+      padding: 3px 6px;
+      border-radius: 5px;
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      color: #334155;
+      font-size: 10px;
+      line-height: 1.2;
+      text-align: center;
+      white-space: nowrap;
+    }
     .subcheck-item {
       display: grid;
       grid-template-columns: 14px 1fr;
@@ -1115,7 +1133,7 @@
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
     import { getAuth, onAuthStateChanged, signInAnonymously, signOut } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
-    import { collection, doc, getDoc, getDocs, getFirestore, onSnapshot, serverTimestamp, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
+    import { collection, doc, getDoc, getDocs, getFirestore, onSnapshot, runTransaction, serverTimestamp, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
 
     const firebaseConfig = {
       apiKey: 'AIzaSyA60JS9Pj3WiJ--5KEPXT76e96JATM5TpI',
@@ -1138,6 +1156,7 @@
       getDoc,
       getDocs,
       onSnapshot,
+      runTransaction,
       serverTimestamp,
       setDoc
     };
@@ -1151,6 +1170,7 @@
       const DELETED_TEMPLATE_KEY = 'noah_master_programme_deleted_templates_v1';
       const UI_KEY = 'noah_master_programme_ui_v1';
       const CLOUD_UNLOCK_KEY = 'noah_master_programme_cloud_unlocked_v1';
+      const CLOUD_CLIENT_KEY = 'noah_master_programme_cloud_client_v1';
       const CLOUD_PASSWORD = '36961500';
       const DEFAULT_HOLIDAY_PROXY_URL = 'https://holidays.napjoc.workers.dev/';
       const LEGACY_KEYS = ['noah_master_programme_display_v4', 'noah_master_programme_display_v3', 'noah_master_programme_display_v2', 'noah_master_programme_display_v1'];
@@ -1175,6 +1195,12 @@
       let suppressCloudSave = false;
       let activeCloudProjectCode = '';
       let pendingProjectCode = '';
+      let cloudClientId = '';
+      let cloudRevision = 0;
+      let cloudBaseJson = '';
+      let cloudConflictPending = false;
+      let cloudConflictPromptOpen = false;
+      let expandedSubitems = new Set();
       let templates = {};
       let deletedTemplateNames = new Set();
       let data;
@@ -1349,6 +1375,36 @@
         if (!element) return;
         element.textContent = message;
         element.className = `status-pill ${type}`.trim();
+      }
+
+      function getCloudClientId() {
+        try {
+          const saved = localStorage.getItem(CLOUD_CLIENT_KEY);
+          if (saved) return saved;
+          const created = `device-${uid('').replace(/^_/, '')}`;
+          localStorage.setItem(CLOUD_CLIENT_KEY, created);
+          return created;
+        } catch (error) {
+          return `device-${uid('').replace(/^_/, '')}`;
+        }
+      }
+
+      function cloudDisplayName() {
+        return cloudClientId ? cloudClientId.slice(-8) : 'team';
+      }
+
+      function cloudDataJson(projectData = data, projectCode = activeCloudProjectCode || getProjectCode()) {
+        return JSON.stringify(normalizeData({ ...projectData, projectCode: normalizeProjectCode(projectCode || projectData?.projectCode || '') }));
+      }
+
+      function setCloudBaseFromPayload(payload, projectCode) {
+        cloudRevision = Number(payload?.revision || 0);
+        cloudBaseJson = payload?.data ? cloudDataJson(payload.data, projectCode) : '';
+        cloudConflictPending = false;
+      }
+
+      function hasOpenEditorModal() {
+        return ['projectModal', 'rowsModal', 'itemsModal', 'dataModal', 'quickRowModal', 'newProjectModal'].some(id => byId(id)?.classList.contains('show'));
       }
 
       function isCloudUnlocked() {
@@ -1565,6 +1621,9 @@
         if (cloudUnsubscribe) cloudUnsubscribe();
         cloudUnsubscribe = null;
         activeCloudProjectCode = '';
+        cloudRevision = 0;
+        cloudBaseJson = '';
+        cloudConflictPending = false;
         data = normalizeData(projectData);
         resetProjectCodeInputs(data.projectCode);
         suppressCloudSave = true;
@@ -1608,8 +1667,10 @@
           }
           await api.setDoc(ref, {
             data: normalizeData(projectData),
+            revision: 1,
             updatedAt: api.serverTimestamp(),
-            updatedBy: 'team',
+            updatedBy: cloudDisplayName(),
+            updatedByClientId: cloudClientId,
             projectCode: projectData.projectCode
           }, { merge: false });
           closeNewProjectModal();
@@ -1619,6 +1680,7 @@
           suppressCloudSave = true;
           render();
           suppressCloudSave = false;
+          setCloudBaseFromPayload({ data: projectData, revision: 1 }, projectData.projectCode);
           subscribeCloudProject(projectData.projectCode);
           setCloudStatus(`Cloud: created ${projectData.projectCode}`, 'success');
         } catch (error) {
@@ -1668,6 +1730,9 @@
         if (cloudUnsubscribe) cloudUnsubscribe();
         cloudUnsubscribe = null;
         activeCloudProjectCode = '';
+        cloudRevision = 0;
+        cloudBaseJson = '';
+        cloudConflictPending = false;
         data = normalizeData({ ...defaultData, projectCode: '', projectName: 'Project Timeline', rows: [] });
         resetProjectCodeInputs('');
         suppressCloudSave = true;
@@ -1762,6 +1827,9 @@
           const snap = await api.getDoc(cloudDocRef(code));
           if (!snap.exists()) {
             data.projectCode = code;
+            cloudRevision = 0;
+            cloudBaseJson = '';
+            cloudConflictPending = false;
             setValue('projectCodeInput', code);
             setValue('projectCodeProjectInput', code);
             subscribeCloudProject(code);
@@ -1780,6 +1848,7 @@
           if (!payload || !payload.data || !Array.isArray(payload.data.rows)) throw new Error('Bad cloud project data');
           suppressCloudSave = true;
           data = normalizeData({ ...payload.data, projectCode: code });
+          setCloudBaseFromPayload(payload, code);
           setValue('projectCodeInput', code);
           render();
           suppressCloudSave = false;
@@ -1801,8 +1870,36 @@
         setValue('projectCodeInput', code);
         setValue('projectCodeProjectInput', code);
         try {
-          const existing = await api.getDoc(cloudDocRef(code));
-          if (existing.exists() && existing.data()?.deleted === true) {
+          const ref = cloudDocRef(code);
+          const nextData = normalizeData(data);
+          const nextJson = cloudDataJson(nextData, code);
+          const savedRevision = await api.runTransaction(api.db, async transaction => {
+            const existing = await transaction.get(ref);
+            const payload = existing.exists() ? existing.data() : null;
+            if (payload?.deleted === true) throw new Error('deleted-project');
+            const remoteRevision = Number(payload?.revision || 0);
+            const remoteJson = payload?.data ? cloudDataJson(payload.data, code) : '';
+            if (remoteRevision > cloudRevision && remoteJson && remoteJson !== cloudBaseJson) {
+              throw new Error('cloud-conflict');
+            }
+            const nextRevision = remoteRevision + 1;
+            transaction.set(ref, {
+              data: nextData,
+              revision: nextRevision,
+              updatedAt: api.serverTimestamp(),
+              updatedBy: cloudDisplayName(),
+              updatedByClientId: cloudClientId,
+              projectCode: code
+            }, { merge: true });
+            return nextRevision;
+          });
+          cloudRevision = savedRevision;
+          cloudBaseJson = nextJson;
+          cloudConflictPending = false;
+          setCloudStatus(`Cloud: saved ${code} (v${cloudRevision})`, 'success');
+          subscribeCloudProject(code);
+        } catch (error) {
+          if (error.message === 'deleted-project') {
             window.clearTimeout(cloudSaveTimer);
             if (cloudUnsubscribe) cloudUnsubscribe();
             cloudUnsubscribe = null;
@@ -1810,15 +1907,21 @@
             setCloudStatus(`Cloud: project ${code} was deleted; save stopped`, 'warning');
             return;
           }
-          await api.setDoc(cloudDocRef(code), {
-            data: normalizeData(data),
-            updatedAt: api.serverTimestamp(),
-            updatedBy: 'team',
-            projectCode: code
-          }, { merge: true });
-          setCloudStatus(`Cloud: saved ${code}`, 'success');
-          subscribeCloudProject(code);
-        } catch (error) {
+          if (error.message === 'cloud-conflict') {
+            cloudConflictPending = true;
+            setCloudStatus('Cloud conflict: teammate saved newer data. Load latest before saving.', 'warning');
+            if (cloudConflictPromptOpen) return;
+            cloudConflictPromptOpen = true;
+            const loadLatest = window.confirm('Cloud has newer data from a teammate. Press OK to load the latest cloud version. Press Cancel to keep your local screen and export it first if needed.');
+            if (loadLatest) {
+              loadCloudProject(code).finally(() => {
+                cloudConflictPromptOpen = false;
+              });
+            } else {
+              cloudConflictPromptOpen = false;
+            }
+            return;
+          }
           setCloudStatus(`Cloud save failed: ${error.code || error.message}`, 'error');
         }
       }
@@ -1826,6 +1929,11 @@
       function queueCloudSave() {
         if (suppressCloudSave || !cloudUser || !isCloudUnlocked() || !(activeCloudProjectCode || getProjectCode())) return;
         window.clearTimeout(cloudSaveTimer);
+        if (cloudConflictPending) {
+          if (cloudConflictPromptOpen) return;
+          saveCloudProjectNow(activeCloudProjectCode || getProjectCode());
+          return;
+        }
         cloudSaveTimer = window.setTimeout(() => saveCloudProjectNow(activeCloudProjectCode || getProjectCode()), 900);
       }
 
@@ -1848,9 +1956,20 @@
           if (!payload || !payload.data || !Array.isArray(payload.data.rows)) return;
           const incoming = JSON.stringify(normalizeData({ ...payload.data, projectCode }));
           const current = JSON.stringify(normalizeData(data));
-          if (incoming === current) return;
+          const incomingRevision = Number(payload.revision || 0);
+          if (incoming === current) {
+            setCloudBaseFromPayload(payload, projectCode);
+            return;
+          }
+          if (payload.updatedByClientId !== cloudClientId && (cloudConflictPending || hasOpenEditorModal())) {
+            cloudConflictPending = true;
+            cloudRevision = Math.max(cloudRevision, incomingRevision - 1);
+            setCloudStatus('Cloud changed by teammate while you are editing. Apply/cancel, then load latest before saving.', 'warning');
+            return;
+          }
           suppressCloudSave = true;
           data = normalizeData({ ...payload.data, projectCode });
+          setCloudBaseFromPayload(payload, projectCode);
           setValue('projectCodeInput', projectCode);
           render();
           suppressCloudSave = false;
@@ -2746,12 +2865,17 @@
           const checked = itemDone ? ' checked' : '';
           const title = item.remarks ? ` title="${escapeHtml(item.remarks)}"` : '';
           const subitems = normalizeSubChecklist(item.subitems);
-          const sublist = subitems.length ? `<div class="subcheck-list">${subitems.map(subitem => {
+          const subKey = `${row.id}:${item.id}`;
+          const subExpanded = expandedSubitems.has(subKey);
+          const subDoneCount = subitems.filter(subitem => subitem.done).length;
+          const subButtonText = `${subExpanded ? '▼' : '◀'} (${subDoneCount}/${subitems.length})`;
+          const subButton = subitems.length ? `<button type="button" class="subcheck-toggle-button" data-row-id="${escapeHtml(row.id)}" data-item-id="${escapeHtml(item.id)}" title="${subExpanded ? 'Hide sub checklist' : 'Show sub checklist'}">${escapeHtml(subButtonText)}</button>` : '';
+          const sublist = subitems.length && subExpanded ? `<div class="subcheck-list">${subitems.map(subitem => {
             const subDoneClass = subitem.done ? ' done' : '';
             const subChecked = subitem.done ? ' checked' : '';
             return `<label class="subcheck-item${subDoneClass}"><input type="checkbox" class="subchecklist-toggle" data-row-id="${escapeHtml(row.id)}" data-item-id="${escapeHtml(item.id)}" data-subitem-id="${escapeHtml(subitem.id)}"${subChecked}><span>${escapeHtml(subitem.text)}</span></label>`;
           }).join('')}</div>` : '';
-          return `<div><label class="check-item${doneClass}"${title}><input type="checkbox" class="checklist-toggle" data-row-id="${escapeHtml(row.id)}" data-item-id="${escapeHtml(item.id)}"${checked}><span>${escapeHtml(item.text)}</span></label>${sublist}</div>`;
+          return `<div><div class="check-parent-row"><label class="check-item${doneClass}"${title}><input type="checkbox" class="checklist-toggle" data-row-id="${escapeHtml(row.id)}" data-item-id="${escapeHtml(item.id)}"${checked}><span>${escapeHtml(item.text)}</span></label>${subButton}</div>${sublist}</div>`;
         }).join('') : '<div class="items-empty">No action items</div>';
         return `<div class="checklist-list">${progress}${list}<button type="button" class="mini light edit-items-button" data-row-id="${escapeHtml(row.id)}">Edit Items</button></div>`;
       }
@@ -2943,6 +3067,16 @@
           updateChecklistCell(row.id, scrollTop);
         };
         wrap.onclick = event => {
+          const subButton = event.target.closest('.subcheck-toggle-button');
+          if (subButton) {
+            const list = subButton.closest('.checklist-list');
+            const scrollTop = list ? list.scrollTop : 0;
+            const key = `${subButton.dataset.rowId}:${subButton.dataset.itemId}`;
+            if (expandedSubitems.has(key)) expandedSubitems.delete(key);
+            else expandedSubitems.add(key);
+            updateChecklistCell(subButton.dataset.rowId, scrollTop);
+            return;
+          }
           const button = event.target.closest('.edit-items-button');
           if (!button) return;
           openItemsModal(button.dataset.rowId);
@@ -3608,6 +3742,7 @@ ${visualRows}
       }
 
       function init() {
+        cloudClientId = getCloudClientId();
         uiState = loadUiState();
         setToolbarHidden(uiState.toolbarHidden);
         setFreezeColumns(uiState.freezeColumns);
