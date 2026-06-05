@@ -402,9 +402,11 @@
       top: 0;
       z-index: 1;
       display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
       gap: 3px;
       padding: 2px 0 5px;
       background: white;
+      align-items: center;
     }
     tr.highlight .checklist-progress { background: var(--highlight); }
     .progress-label {
@@ -413,6 +415,7 @@
       font-size: 10px;
     }
     .progress-track {
+      grid-column: 1 / -1;
       height: 5px;
       border-radius: 999px;
       background: #e2e8f0;
@@ -437,30 +440,52 @@
       border-left: 2px solid #dbeafe;
     }
     .check-parent-row {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 5px;
+      display: flex;
+      gap: 4px;
       align-items: start;
+      min-width: 0;
     }
     .subcheck-toggle-button {
-      min-width: 58px;
-      padding: 3px 6px;
-      border-radius: 5px;
-      border: 1px solid #cbd5e1;
-      background: #f8fafc;
-      color: #334155;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 2px;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      color: #475569;
       font-size: 10px;
+      font-weight: 700;
       line-height: 1.2;
       text-align: center;
       white-space: nowrap;
     }
+    .subcheck-toggle-button:hover {
+      color: #0f766e;
+      text-decoration: underline;
+    }
     .subcheck-item {
       display: grid;
-      grid-template-columns: 14px 1fr;
-      gap: 5px;
-      align-items: start;
+      grid-template-columns: 18px minmax(0, 1fr);
+      gap: 4px;
+      align-items: center;
       color: #475569;
-      font-size: 10px;
+      font-size: 10.5px;
+      line-height: 18px;
+      min-height: 18px;
+    }
+    .subcheck-item input {
+      width: 13px;
+      height: 13px;
+      margin: 0;
+      align-self: center;
+    }
+    .subcheck-item span {
+      display: inline-flex;
+      align-items: center;
+      min-width: 0;
+      min-height: 18px;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
     .subcheck-item.done span,
     .check-item.done span {
@@ -2858,7 +2883,9 @@
         const items = normalizeChecklist(row.checklist);
         const doneCount = items.filter(isChecklistItemDone).length;
         const percent = items.length ? Math.round((doneCount / items.length) * 100) : 0;
-        const progress = items.length ? `<div class="checklist-progress"><div class="progress-label">${percent}% complete (${doneCount}/${items.length})</div><div class="progress-track"><div class="progress-fill" style="width:${percent}%"></div></div></div>` : '';
+        const progressLabel = items.length ? `${percent}% complete (${doneCount}/${items.length})` : 'No action items';
+        const progressTrack = items.length ? `<div class="progress-track"><div class="progress-fill" style="width:${percent}%"></div></div>` : '';
+        const progress = `<div class="checklist-progress"><div class="progress-label">${escapeHtml(progressLabel)}</div><button type="button" class="mini light edit-items-button" data-row-id="${escapeHtml(row.id)}">Edit Items</button>${progressTrack}</div>`;
         const list = items.length ? items.map(item => {
           const itemDone = isChecklistItemDone(item);
           const doneClass = itemDone ? ' done' : '';
@@ -2868,7 +2895,7 @@
           const subKey = `${row.id}:${item.id}`;
           const subExpanded = expandedSubitems.has(subKey);
           const subDoneCount = subitems.filter(subitem => subitem.done).length;
-          const subButtonText = `${subExpanded ? '▼' : '◀'} (${subDoneCount}/${subitems.length})`;
+          const subButtonText = `${subExpanded ? '▾' : '▸'} (${subDoneCount}/${subitems.length})`;
           const subButton = subitems.length ? `<button type="button" class="subcheck-toggle-button" data-row-id="${escapeHtml(row.id)}" data-item-id="${escapeHtml(item.id)}" title="${subExpanded ? 'Hide sub checklist' : 'Show sub checklist'}">${escapeHtml(subButtonText)}</button>` : '';
           const sublist = subitems.length && subExpanded ? `<div class="subcheck-list">${subitems.map(subitem => {
             const subDoneClass = subitem.done ? ' done' : '';
@@ -2877,7 +2904,7 @@
           }).join('')}</div>` : '';
           return `<div><div class="check-parent-row"><label class="check-item${doneClass}"${title}><input type="checkbox" class="checklist-toggle" data-row-id="${escapeHtml(row.id)}" data-item-id="${escapeHtml(item.id)}"${checked}><span>${escapeHtml(item.text)}</span></label>${subButton}</div>${sublist}</div>`;
         }).join('') : '<div class="items-empty">No action items</div>';
-        return `<div class="checklist-list">${progress}${list}<button type="button" class="mini light edit-items-button" data-row-id="${escapeHtml(row.id)}">Edit Items</button></div>`;
+        return `<div class="checklist-list">${progress}${list}</div>`;
       }
 
       function updateChecklistCell(rowId, previousScrollTop = 0) {
