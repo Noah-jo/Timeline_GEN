@@ -429,6 +429,46 @@
       gap: 5px;
       align-items: start;
     }
+    .subcheck-list {
+      display: grid;
+      gap: 3px;
+      margin: 2px 0 3px 19px;
+      padding-left: 8px;
+      border-left: 2px solid #dbeafe;
+    }
+    .subcheck-item {
+      display: grid;
+      grid-template-columns: 14px 1fr;
+      gap: 5px;
+      align-items: start;
+      color: #475569;
+      font-size: 10px;
+    }
+    .subcheck-item.done span,
+    .check-item.done span {
+      color: #64748b;
+      text-decoration: line-through;
+    }
+    .subitems-editor {
+      display: grid;
+      gap: 6px;
+      margin-top: 6px;
+      padding: 8px;
+      border: 1px solid #dbeafe;
+      border-radius: 8px;
+      background: #f8fafc;
+    }
+    .subitem-editor-row {
+      display: grid;
+      grid-template-columns: 24px minmax(160px, 1fr) auto;
+      gap: 6px;
+      align-items: center;
+    }
+    .date-pair {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(140px, 1fr));
+      gap: 8px;
+    }
     .check-item input {
       width: 12px;
       height: 12px;
@@ -829,7 +869,7 @@
         <div class="toolbar-group health-group" data-title="Edit and Save">
           <button id="editProjectButton">Edit Project</button>
           <button id="editRowsButton">Edit Rows</button>
-          <button class="light" id="addProjectButton" type="button">Add Project</button>
+          <button class="light" id="addProjectButton" type="button">New Project</button>
           <button class="danger" id="deleteProjectButton" type="button">Delete Project</button>
           <span class="toolbar-break"></span>
           <button class="light" id="clientPdfButton">Client PDF Preset</button>
@@ -857,6 +897,8 @@
         <div class="project-title">
           <strong id="projectName"></strong>
           <div id="versionText"></div>
+          <div id="ownerText"></div>
+          <div id="eventPeriodText"></div>
           <div id="dateRangeText"></div>
         </div>
         <div class="project-meta">
@@ -882,8 +924,10 @@
           <tbody>
             <tr><th style="width:180px">Project Name</th><td><input id="projectNameInput"></td></tr>
             <tr><th>Project Code</th><td><input id="projectCodeProjectInput" placeholder="Same code used for cloud sync"></td></tr>
+            <tr><th>Responsible Person</th><td><input id="projectOwnerInput" required placeholder="Required"></td></tr>
+            <tr><th>Event Period</th><td><div class="date-pair"><input id="eventStartInput" type="date"><input id="eventEndInput" type="date"></div></td></tr>
             <tr><th>Version</th><td><input id="versionInput"></td></tr>
-            <tr><th>Last Update</th><td><input id="lastUpdateInput"></td></tr>
+            <tr><th>Last Update</th><td><input id="lastUpdateInput" readonly><div style="margin-top:6px;color:#64748b">Automatically updated after edits.</div></td></tr>
             <tr><th>Display Start Date</th><td><input id="projectStartInput" type="date"></td></tr>
             <tr><th>Display End Date</th><td><input id="projectEndInput" type="date"></td></tr>
             <tr><th>Client Summary</th><td><textarea id="summaryInput" style="min-height:80px"></textarea></td></tr>
@@ -954,8 +998,10 @@
           <tbody>
             <tr><th style="width:180px">Project Code</th><td><input id="newProjectCodeInput"></td></tr>
             <tr><th>Project Name</th><td><input id="newProjectNameInput"></td></tr>
+            <tr><th>Responsible Person</th><td><input id="newProjectOwnerInput" required placeholder="Required"></td></tr>
             <tr><th>Start Date</th><td><input id="newProjectStartInput" type="date"></td></tr>
             <tr><th>End Date</th><td><input id="newProjectEndInput" type="date"></td></tr>
+            <tr><th>Event Period</th><td><div class="date-pair"><input id="newEventStartInput" type="date"><input id="newEventEndInput" type="date"></div></td></tr>
           </tbody>
         </table>
       </div>
@@ -1041,6 +1087,7 @@
             <tr>
               <th style="width:60px">Done</th>
               <th>Action Item</th>
+              <th style="width:280px">Sub Checklist</th>
               <th>Remarks</th>
               <th style="width:85px">Action</th>
             </tr>
@@ -1112,7 +1159,7 @@
       const DQ = String.fromCharCode(34);
       const BOM = String.fromCharCode(65279);
       const BS = String.fromCharCode(92);
-      const REQUIRED_IDS = ['app', 'projectName', 'versionText', 'dateRangeText', 'lastUpdateText', 'viewText', 'clientSummary', 'notesText', 'startInput', 'endInput', 'viewInput', 'weekLabelInput', 'densityInput', 'freezeColumnsInput', 'programmeWrap', 'companyLogo', 'holidayStatus', 'saveStatus', 'projectCodeInput', 'cloudPasswordInput', 'cloudStatus'];
+      const REQUIRED_IDS = ['app', 'projectName', 'versionText', 'ownerText', 'eventPeriodText', 'dateRangeText', 'lastUpdateText', 'viewText', 'clientSummary', 'notesText', 'startInput', 'endInput', 'viewInput', 'weekLabelInput', 'densityInput', 'freezeColumnsInput', 'programmeWrap', 'companyLogo', 'holidayStatus', 'saveStatus', 'projectCodeInput', 'cloudPasswordInput', 'cloudStatus'];
       let editingRows = [];
       let editingItems = [];
       let quickPeriod = null;
@@ -1177,6 +1224,9 @@
         projectName: 'Project AFCD_SQ_314_24',
         version: 'Version: 2.0',
         lastUpdate: 'Last update: 25 SEP 2025',
+        projectOwner: 'Luxe',
+        eventStartDate: '2025-10-16',
+        eventEndDate: '2025-11-05',
         startDate: '2025-09-26',
         endDate: '2025-11-18',
         viewMode: 'auto',
@@ -1474,23 +1524,33 @@
         const end = data?.endDate || addDays(start, 30);
         setValue('newProjectCodeInput', '');
         setValue('newProjectNameInput', '');
+        setValue('newProjectOwnerInput', data?.projectOwner || '');
         setValue('newProjectStartInput', start);
         setValue('newProjectEndInput', end);
+        setValue('newEventStartInput', data?.eventStartDate || start);
+        setValue('newEventEndInput', data?.eventEndDate || start);
         safeClassAdd(byId('newProjectModal'), 'show');
       }
 
       function buildNewProjectData(mode) {
         const code = normalizeProjectCode(byId('newProjectCodeInput')?.value || '');
         const name = (byId('newProjectNameInput')?.value || '').trim() || 'Project Timeline';
+        const owner = (byId('newProjectOwnerInput')?.value || '').trim();
         const start = isValidDate(byId('newProjectStartInput')?.value) ? byId('newProjectStartInput').value : todayISO();
         const endInput = byId('newProjectEndInput')?.value || '';
         const end = isValidDate(endInput) ? endInput : addDays(start, 30);
+        const eventStart = isValidDate(byId('newEventStartInput')?.value) ? byId('newEventStartInput').value : '';
+        const eventEndInput = byId('newEventEndInput')?.value || '';
+        const eventEnd = isValidDate(eventEndInput) ? eventEndInput : eventStart;
         const base = mode === 'current' ? normalizeData(data) : normalizeData({ ...defaultData, rows: [] });
         base.projectCode = code;
         base.projectName = name;
+        base.projectOwner = owner;
         base.startDate = start <= end ? start : end;
         base.endDate = end >= start ? end : start;
-        base.lastUpdate = `Last update: ${formatDisplayDate(todayISO())}`;
+        base.eventStartDate = eventStart && eventEnd && eventStart <= eventEnd ? eventStart : eventEnd || eventStart;
+        base.eventEndDate = eventStart && eventEnd && eventEnd >= eventStart ? eventEnd : eventStart || eventEnd;
+        base.lastUpdate = `Last update: ${formatDisplayDateTime()}`;
         if (mode !== 'current') {
           base.summary = '';
           base.notes = '';
@@ -1521,6 +1581,13 @@
           setProjectListStatus(message, 'warning');
           setCloudStatus(message, 'warning');
           byId('newProjectCodeInput')?.focus();
+          return;
+        }
+        if (!projectData.projectOwner) {
+          const message = 'New project needs a Responsible Person';
+          setProjectListStatus(message, 'warning');
+          setCloudStatus(message, 'warning');
+          byId('newProjectOwnerInput')?.focus();
           return;
         }
         const cloudMode = Boolean(api && cloudUser && isCloudUnlocked());
@@ -1982,9 +2049,10 @@
             const parsed = JSON.parse(reader.result);
             const source = parsed && parsed.data && typeof parsed.data === 'object' ? parsed.data : parsed;
             if (!source || typeof source !== 'object' || !Array.isArray(source.rows)) throw new Error('bad project file');
-            if (data.rows.length && !window.confirm('Import Project JSON 會取代目前 project data。是否繼續？')) return;
-            data = normalizeData(source);
-            render();
+          if (data.rows.length && !window.confirm('Import Project JSON 會取代目前 project data。是否繼續？')) return;
+          data = normalizeData(source);
+          touchLastUpdate();
+          render();
             alert('Project JSON 已匯入。');
           } catch (error) {
             alert('Project JSON 格式不正確，請使用 Export Project JSON 產生的檔案。');
@@ -2017,6 +2085,9 @@
           projectCode: normalizeProjectCode(source.projectCode || source.code || ''),
           version: String(source.version || 'Version: 1.0'),
           lastUpdate: String(source.lastUpdate || `Last update: ${formatDisplayDate(todayISO())}`),
+          projectOwner: String(source.projectOwner || source.owner || source.responsiblePerson || ''),
+          eventStartDate: isValidDate(source.eventStartDate) ? source.eventStartDate : '',
+          eventEndDate: isValidDate(source.eventEndDate) ? source.eventEndDate : '',
           startDate: startDate <= endDate ? startDate : endDate,
           endDate: endDate >= startDate ? endDate : startDate,
           viewMode: ['auto', 'day', 'week', 'month'].includes(source.viewMode) ? source.viewMode : 'auto',
@@ -2039,6 +2110,9 @@
           rows: []
         };
         output.rows = Array.isArray(source.rows) ? source.rows.map((row, index) => normalizeRow(row, index, output.startDate)) : [];
+        if (output.eventStartDate && output.eventEndDate && output.eventEndDate < output.eventStartDate) {
+          [output.eventStartDate, output.eventEndDate] = [output.eventEndDate, output.eventStartDate];
+        }
         output.rows.forEach(row => {
           if (row.end < row.start) [row.start, row.end] = [row.end, row.start];
         });
@@ -2105,7 +2179,7 @@
         if (!Array.isArray(items)) return [];
         return items.map((item, index) => {
           if (typeof item === 'string') {
-            return { id: uid('item'), text: item, remarks: '', done: false, order: index };
+            return { id: uid('item'), text: item, remarks: '', done: false, subitems: [], order: index };
           }
           const source = item && typeof item === 'object' ? item : {};
           return {
@@ -2113,13 +2187,50 @@
             text: String(source.text || source.item || source.action || ''),
             remarks: String(source.remarks || source.remark || source.note || ''),
             done: source.done === true || String(source.done || '').toUpperCase() === 'YES',
+            subitems: normalizeSubChecklist(source.subitems || source.children || source.checklist),
             order: Number.isFinite(Number(source.order)) ? Number(source.order) : index
           };
         }).filter(item => item.text || item.remarks).sort((a, b) => a.order - b.order).map((item, order) => ({ ...item, order }));
       }
 
+      function normalizeSubChecklist(items) {
+        if (!Array.isArray(items)) return [];
+        return items.map((item, index) => {
+          if (typeof item === 'string') return { id: uid('subitem'), text: item, done: false, order: index };
+          const source = item && typeof item === 'object' ? item : {};
+          return {
+            id: String(source.id || uid('subitem')),
+            text: String(source.text || source.item || source.action || ''),
+            done: source.done === true || String(source.done || '').toUpperCase() === 'YES',
+            order: Number.isFinite(Number(source.order)) ? Number(source.order) : index
+          };
+        }).filter(item => item.text).sort((a, b) => a.order - b.order).map((item, order) => ({ ...item, order }));
+      }
+
+      function normalizeSubChecklistForEditor(items) {
+        if (!Array.isArray(items)) return [];
+        return items.map((item, index) => {
+          if (typeof item === 'string') return { id: uid('subitem'), text: item, done: false, order: index };
+          const source = item && typeof item === 'object' ? item : {};
+          return {
+            id: String(source.id || uid('subitem')),
+            text: String(source.text || source.item || source.action || ''),
+            done: source.done === true || String(source.done || '').toUpperCase() === 'YES',
+            order: Number.isFinite(Number(source.order)) ? Number(source.order) : index
+          };
+        }).sort((a, b) => a.order - b.order).map((item, order) => ({ ...item, order }));
+      }
+
+      function isChecklistItemDone(item) {
+        const subitems = normalizeSubChecklist(item.subitems);
+        return subitems.length ? subitems.every(subitem => subitem.done) : item.done === true;
+      }
+
       function checklistItemsText(row) {
-        return normalizeChecklist(row.checklist).map(item => item.text).join(LF);
+        return normalizeChecklist(row.checklist).map(item => {
+          const subitems = normalizeSubChecklist(item.subitems);
+          return [item.text].concat(subitems.map(subitem => `  - ${subitem.done ? '[x]' : '[ ]'} ${subitem.text}`)).join(LF);
+        }).join(LF);
       }
 
       function checklistRemarksText(row) {
@@ -2136,6 +2247,7 @@
             text: text.trim(),
             remarks: String(remarks[index] || '').trim(),
             done: old.done === true,
+            subitems: normalizeSubChecklist(old.subitems),
             order: index
           };
         }).filter(item => item.text || item.remarks);
@@ -2185,6 +2297,22 @@
         const date = parseDate(iso);
         const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
         return `${String(date.getDate()).padStart(2, '0')} ${months[date.getMonth()]} ${date.getFullYear()}`;
+      }
+
+      function formatDisplayDateTime(date = new Date()) {
+        const iso = toISO(date);
+        return `${formatDisplayDate(iso)} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+      }
+
+      function touchLastUpdate() {
+        if (data) data.lastUpdate = `Last update: ${formatDisplayDateTime()}`;
+      }
+
+      function formatOptionalDateRange(start, end, emptyText = '') {
+        if (isValidDate(start) && isValidDate(end)) return `${formatDisplayDate(start)} - ${formatDisplayDate(end)}`;
+        if (isValidDate(start)) return formatDisplayDate(start);
+        if (isValidDate(end)) return formatDisplayDate(end);
+        return emptyText;
       }
 
       function monthLabel(iso) {
@@ -2354,8 +2482,9 @@
             if (!silent) alert('未能在 GovHK 年份頁面找到此年份範圍的香港公眾假期。可能政府尚未公布，或瀏覽器阻擋跨站讀取。');
             return false;
           }
-          applyFetchedGovHolidays(filtered, result.availableYears);
-          if (result.missingYears.length) {
+        applyFetchedGovHolidays(filtered, result.availableYears);
+        touchLastUpdate();
+        if (result.missingYears.length) {
             setHolidayStatus(`HK Holidays: partial success from GovHK. Applied ${filtered.length}; missing ${result.missingYears.join(', ')}`, 'warning');
           } else {
             setHolidayStatus(`HK Holidays: success from GovHK. Applied ${filtered.length}. Years: ${result.availableYears.join(', ')}`, 'success');
@@ -2486,6 +2615,7 @@
         });
         data.endDate = data.rows.reduce((max, row) => row.end > max ? row.end : max, baseDate);
         data.viewMode = 'auto';
+        touchLastUpdate();
         render();
         autoUpdateHolidays('template', true);
       }
@@ -2536,8 +2666,10 @@
         if (logoElement) logoElement.src = data.logoDataUrl || '';
         safeClassToggle(document.body, 'has-logo', Boolean(data.logoDataUrl));
         setText('versionText', data.version);
+        setText('ownerText', data.projectOwner ? `Owner: ${data.projectOwner}` : 'Owner: Not set');
+        setText('eventPeriodText', `Event Period: ${formatOptionalDateRange(data.eventStartDate, data.eventEndDate, 'Not set')}`);
         setText('lastUpdateText', data.lastUpdate);
-        setText('dateRangeText', `${formatDisplayDate(data.startDate)} - ${formatDisplayDate(data.endDate)}`);
+        setText('dateRangeText', `Project Period: ${formatDisplayDate(data.startDate)} - ${formatDisplayDate(data.endDate)}`);
         setText('viewText', `View: ${mode.toUpperCase()} / ${data.audienceMode === 'client' ? 'CLIENT' : 'INTERNAL'}`);
         setHolidayStatus(data.holidayStatusText || 'HK Holidays: not updated', data.holidayStatusType || '');
         setText('clientSummary', data.summary);
@@ -2605,14 +2737,21 @@
 
       function renderChecklistCell(row) {
         const items = normalizeChecklist(row.checklist);
-        const doneCount = items.filter(item => item.done).length;
+        const doneCount = items.filter(isChecklistItemDone).length;
         const percent = items.length ? Math.round((doneCount / items.length) * 100) : 0;
         const progress = items.length ? `<div class="checklist-progress"><div class="progress-label">${percent}% complete (${doneCount}/${items.length})</div><div class="progress-track"><div class="progress-fill" style="width:${percent}%"></div></div></div>` : '';
         const list = items.length ? items.map(item => {
-          const doneClass = item.done ? ' done' : '';
-          const checked = item.done ? ' checked' : '';
+          const itemDone = isChecklistItemDone(item);
+          const doneClass = itemDone ? ' done' : '';
+          const checked = itemDone ? ' checked' : '';
           const title = item.remarks ? ` title="${escapeHtml(item.remarks)}"` : '';
-          return `<label class="check-item${doneClass}"${title}><input type="checkbox" class="checklist-toggle" data-row-id="${escapeHtml(row.id)}" data-item-id="${escapeHtml(item.id)}"${checked}><span>${escapeHtml(item.text)}</span></label>`;
+          const subitems = normalizeSubChecklist(item.subitems);
+          const sublist = subitems.length ? `<div class="subcheck-list">${subitems.map(subitem => {
+            const subDoneClass = subitem.done ? ' done' : '';
+            const subChecked = subitem.done ? ' checked' : '';
+            return `<label class="subcheck-item${subDoneClass}"><input type="checkbox" class="subchecklist-toggle" data-row-id="${escapeHtml(row.id)}" data-item-id="${escapeHtml(item.id)}" data-subitem-id="${escapeHtml(subitem.id)}"${subChecked}><span>${escapeHtml(subitem.text)}</span></label>`;
+          }).join('')}</div>` : '';
+          return `<div><label class="check-item${doneClass}"${title}><input type="checkbox" class="checklist-toggle" data-row-id="${escapeHtml(row.id)}" data-item-id="${escapeHtml(item.id)}"${checked}><span>${escapeHtml(item.text)}</span></label>${sublist}</div>`;
         }).join('') : '<div class="items-empty">No action items</div>';
         return `<div class="checklist-list">${progress}${list}<button type="button" class="mini light edit-items-button" data-row-id="${escapeHtml(row.id)}">Edit Items</button></div>`;
       }
@@ -2636,6 +2775,9 @@
       function openProjectModal() {
         setValue('projectNameInput', data.projectName);
         setValue('projectCodeProjectInput', data.projectCode || getProjectCode());
+        setValue('projectOwnerInput', data.projectOwner || '');
+        setValue('eventStartInput', data.eventStartDate || '');
+        setValue('eventEndInput', data.eventEndDate || '');
         setValue('versionInput', data.version);
         setValue('lastUpdateInput', data.lastUpdate);
         setValue('projectStartInput', data.startDate);
@@ -2662,6 +2804,7 @@
         reader.onload = () => {
           data.logoDataUrl = String(reader.result || '');
           setText('logoStatus', 'Logo uploaded and will appear on client PDF.');
+          touchLastUpdate();
           render();
         };
         reader.readAsDataURL(file);
@@ -2670,6 +2813,7 @@
       function removeLogo() {
         data.logoDataUrl = '';
         setText('logoStatus', 'No logo uploaded.');
+        touchLastUpdate();
         render();
       }
 
@@ -2678,15 +2822,27 @@
         data.viewMode = days > 180 ? 'month' : days > 31 ? 'week' : 'day';
         data.audienceMode = 'client';
         setValue('densityInput', 'normal');
+        touchLastUpdate();
         render();
         window.alert('已切換到較適合客戶 PDF 的版面，並隱藏 Action Items / Remarks。長 programme 會自動改用 Week / Month View，列印時建議使用 A3 landscape。');
       }
 
       function applyProjectEditor() {
+        const owner = (byId('projectOwnerInput')?.value || '').trim();
+        if (!owner) {
+          alert('Responsible Person is required.');
+          byId('projectOwnerInput')?.focus();
+          return;
+        }
         data.projectName = (byId('projectNameInput')?.value || '').trim() || 'Project Timeline';
         const requestedProjectCode = normalizeProjectCode(byId('projectCodeProjectInput')?.value || getProjectCode());
+        data.projectOwner = owner;
+        const eventStart = byId('eventStartInput')?.value || '';
+        const eventEnd = byId('eventEndInput')?.value || '';
+        data.eventStartDate = isValidDate(eventStart) ? eventStart : '';
+        data.eventEndDate = isValidDate(eventEnd) ? eventEnd : data.eventStartDate;
+        if (data.eventStartDate && data.eventEndDate && data.eventEndDate < data.eventStartDate) [data.eventStartDate, data.eventEndDate] = [data.eventEndDate, data.eventStartDate];
         data.version = (byId('versionInput')?.value || '').trim() || 'Version: 1.0';
-        data.lastUpdate = (byId('lastUpdateInput')?.value || '').trim() || `Last update: ${formatDisplayDate(todayISO())}`;
         const start = byId('projectStartInput')?.value || '';
         const end = byId('projectEndInput')?.value || '';
         if (isValidDate(start)) data.startDate = start;
@@ -2701,6 +2857,7 @@
           weekend: isHexColor(byId('weekendColorInput')?.value) ? byId('weekendColorInput').value : data.colors.weekend,
           highlight: isHexColor(byId('highlightColorInput')?.value) ? byId('highlightColorInput').value : data.colors.highlight
         };
+        touchLastUpdate();
         closeProjectModal();
         suppressCloudSave = true;
         render();
@@ -2752,6 +2909,22 @@
         const wrap = byId('programmeWrap');
         if (!wrap) return;
         wrap.onchange = event => {
+          const subToggle = event.target.closest('.subchecklist-toggle');
+          if (subToggle) {
+            const list = subToggle.closest('.checklist-list');
+            const scrollTop = list ? list.scrollTop : 0;
+            const row = findRowById(subToggle.dataset.rowId);
+            if (!row) return;
+            row.checklist = normalizeChecklist(row.checklist).map(entry => {
+              if (entry.id !== subToggle.dataset.itemId) return entry;
+              const subitems = normalizeSubChecklist(entry.subitems).map(subitem => subitem.id === subToggle.dataset.subitemId ? { ...subitem, done: subToggle.checked } : subitem);
+              return { ...entry, subitems, done: subitems.length ? subitems.every(subitem => subitem.done) : entry.done };
+            });
+            touchLastUpdate();
+            saveData();
+            updateChecklistCell(row.id, scrollTop);
+            return;
+          }
           const toggle = event.target.closest('.checklist-toggle');
           if (!toggle) return;
           const list = toggle.closest('.checklist-list');
@@ -2760,7 +2933,12 @@
           if (!row) return;
           const item = normalizeChecklist(row.checklist).find(entry => entry.id === toggle.dataset.itemId);
           if (!item) return;
-          row.checklist = normalizeChecklist(row.checklist).map(entry => entry.id === item.id ? { ...entry, done: toggle.checked } : entry);
+          row.checklist = normalizeChecklist(row.checklist).map(entry => {
+            if (entry.id !== item.id) return entry;
+            const subitems = normalizeSubChecklist(entry.subitems).map(subitem => ({ ...subitem, done: toggle.checked }));
+            return { ...entry, done: toggle.checked, subitems };
+          });
+          touchLastUpdate();
           saveData();
           updateChecklistCell(row.id, scrollTop);
         };
@@ -2835,6 +3013,7 @@
         }
         window.removeEventListener('pointermove', onTimelineDragMove);
         safeClassRemove(document.body, 'timeline-dragging');
+        if (dragState?.moved) touchLastUpdate();
         dragState = null;
         render();
       }
@@ -2912,6 +3091,7 @@
         } else {
           row[field] = nextValue;
         }
+        touchLastUpdate();
         render();
       }
 
@@ -2994,6 +3174,7 @@
         if (row.end < row.start) [row.start, row.end] = [row.end, row.start];
         row.checklist = checklistFromTextareas(byId('quickChecklistInput')?.value || '', byId('quickRemarksInput')?.value || '', row.checklist);
         row.highlight = (byId('quickHighlightInput')?.value || 'NO') === 'YES';
+        touchLastUpdate();
         closeQuickRowModal();
         render();
       }
@@ -3003,6 +3184,7 @@
         if (!rowId) return;
         if (!window.confirm('Delete this row?')) return;
         data.rows = data.rows.filter(row => row.id !== rowId).map((row, order) => ({ ...row, order }));
+        touchLastUpdate();
         closeQuickRowModal();
         render();
       }
@@ -3035,8 +3217,19 @@
         if (!body) return;
         body.innerHTML = editingItems.map((item, index) => `
           <tr>
-            <td><input data-index="${index}" data-field="done" type="checkbox" ${item.done ? 'checked' : ''}></td>
+            <td><input data-index="${index}" data-field="done" type="checkbox" ${isChecklistItemDone(item) ? 'checked' : ''}></td>
             <td><input data-index="${index}" data-field="text" value="${escapeHtml(item.text)}"></td>
+            <td>
+              <div class="subitems-editor">
+                ${normalizeSubChecklistForEditor(item.subitems).map((subitem, subIndex) => `
+                  <div class="subitem-editor-row">
+                    <input data-index="${index}" data-sub-index="${subIndex}" data-field="subDone" type="checkbox" ${subitem.done ? 'checked' : ''}>
+                    <input data-index="${index}" data-sub-index="${subIndex}" data-field="subText" value="${escapeHtml(subitem.text)}">
+                    <button class="mini danger" data-action="deleteSubitem" data-index="${index}" data-sub-index="${subIndex}">Delete</button>
+                  </div>`).join('')}
+                <button class="mini light" data-action="addSubitem" data-index="${index}">Add Sub-item</button>
+              </div>
+            </td>
             <td><textarea class="item-remark-input" data-index="${index}" data-field="remarks">${escapeHtml(item.remarks)}</textarea></td>
             <td><button class="mini danger" data-action="deleteItem" data-index="${index}">Delete</button></td>
           </tr>`).join('');
@@ -3044,27 +3237,52 @@
           input.addEventListener('input', updateEditingItemField);
           input.addEventListener('change', updateEditingItemField);
         });
-        body.querySelectorAll('button[data-action]').forEach(button => {
-          button.addEventListener('click', handleItemButton);
-        });
+        body.onclick = event => {
+          const button = event.target.closest('button[data-action]');
+          if (!button || !body.contains(button)) return;
+          handleItemButton({ currentTarget: button });
+        };
       }
 
       function updateEditingItemField(event) {
         const index = Number(event.target.dataset.index);
         const field = event.target.dataset.field;
         if (!editingItems[index]) return;
+        if (field === 'subDone' || field === 'subText') {
+          const subIndex = Number(event.target.dataset.subIndex);
+          const subitems = normalizeSubChecklistForEditor(editingItems[index].subitems);
+          if (!subitems[subIndex]) return;
+          subitems[subIndex] = field === 'subDone' ? { ...subitems[subIndex], done: event.target.checked } : { ...subitems[subIndex], text: event.target.value };
+          editingItems[index].subitems = subitems;
+          editingItems[index].done = subitems.length ? subitems.every(subitem => subitem.done) : editingItems[index].done === true;
+          return;
+        }
         editingItems[index][field] = field === 'done' ? event.target.checked : event.target.value;
+        if (field === 'done') {
+          editingItems[index].subitems = normalizeSubChecklistForEditor(editingItems[index].subitems).map(subitem => ({ ...subitem, done: event.target.checked }));
+          renderItemsEditor();
+        }
       }
 
       function handleItemButton(event) {
         const index = Number(event.currentTarget.dataset.index);
-        if (event.currentTarget.dataset.action === 'deleteItem') editingItems.splice(index, 1);
+        const action = event.currentTarget.dataset.action;
+        if (action === 'deleteItem') editingItems.splice(index, 1);
+        if (action === 'addSubitem' && editingItems[index]) {
+          const subitems = normalizeSubChecklistForEditor(editingItems[index].subitems);
+          subitems.push({ id: uid('subitem'), text: '', done: false, order: subitems.length });
+          editingItems[index].subitems = subitems;
+        }
+        if (action === 'deleteSubitem' && editingItems[index]) {
+          const subIndex = Number(event.currentTarget.dataset.subIndex);
+          editingItems[index].subitems = normalizeSubChecklistForEditor(editingItems[index].subitems).filter((subitem, candidateIndex) => candidateIndex !== subIndex).map((subitem, order) => ({ ...subitem, order }));
+        }
         editingItems = editingItems.map((item, order) => ({ ...item, order }));
         renderItemsEditor();
       }
 
       function addChecklistItem() {
-        editingItems.push({ id: uid('item'), text: '', remarks: '', done: false, order: editingItems.length });
+        editingItems.push({ id: uid('item'), text: '', remarks: '', done: false, subitems: [], order: editingItems.length });
         renderItemsEditor();
       }
 
@@ -3072,6 +3290,7 @@
         const row = findRowById(byId('itemsRowId')?.value || '');
         if (!row) return;
         row.checklist = normalizeChecklist(editingItems);
+        touchLastUpdate();
         closeItemsModal();
         render();
       }
@@ -3155,6 +3374,7 @@
 
       function applyRowsEditor() {
         data.rows = editingRows.map((row, order) => normalizeRow({ ...row, order }, order, data.startDate));
+        touchLastUpdate();
         closeRowsModal();
         render();
       }
@@ -3171,6 +3391,7 @@
       function applyDataEditor() {
         try {
           data = normalizeData(JSON.parse(byId('dataEditor')?.value || '{}'));
+          touchLastUpdate();
           closeDataModal();
           render();
         } catch (error) {
@@ -3241,7 +3462,7 @@
 </Styles>
 <Worksheet ss:Name="Programme"><Table>
 <Row>${excelCell(data.projectName, 'Header')}</Row>
-<Row>${excelCell(data.version)}${excelCell(data.lastUpdate)}${excelCell(`${data.startDate} to ${data.endDate}`)}</Row>
+<Row>${excelCell(data.version)}${excelCell(data.lastUpdate)}${excelCell(`Owner: ${data.projectOwner || ''}`)}${excelCell(`Event: ${formatOptionalDateRange(data.eventStartDate, data.eventEndDate, '')}`)}${excelCell(`Project: ${data.startDate} to ${data.endDate}`)}</Row>
 <Row></Row>
 <Row>${header1}</Row>
 <Row>${header2}</Row>
@@ -3320,6 +3541,7 @@ ${visualRows}
               highlight: value(row, 'Highlight'),
               order
             }, order, data.startDate));
+            touchLastUpdate();
             render();
           } catch (error) {
             alert('CSV 格式不正確，請用 Export CSV 的格式再匯入。');
@@ -3462,11 +3684,11 @@ ${visualRows}
         bind('applyItemsButton', 'click', applyItemsEditor);
         bind('cancelEditButton', 'click', closeDataModal);
         bind('applyEditButton', 'click', applyDataEditor);
-        bind('startInput', 'change', event => { data.startDate = event.target.value; render(); autoUpdateHolidays('start-date', true); });
-        bind('endInput', 'change', event => { data.endDate = event.target.value; render(); autoUpdateHolidays('end-date', true); });
-        bind('viewInput', 'change', event => { data.viewMode = event.target.value; render(); });
-        bind('weekLabelInput', 'change', event => { data.weekLabelMode = event.target.value; render(); });
-        bind('audienceInput', 'change', event => { data.audienceMode = event.target.value; render(); });
+        bind('startInput', 'change', event => { data.startDate = event.target.value; touchLastUpdate(); render(); autoUpdateHolidays('start-date', true); });
+        bind('endInput', 'change', event => { data.endDate = event.target.value; touchLastUpdate(); render(); autoUpdateHolidays('end-date', true); });
+        bind('viewInput', 'change', event => { data.viewMode = event.target.value; touchLastUpdate(); render(); });
+        bind('weekLabelInput', 'change', event => { data.weekLabelMode = event.target.value; touchLastUpdate(); render(); });
+        bind('audienceInput', 'change', event => { data.audienceMode = event.target.value; touchLastUpdate(); render(); });
         bind('densityInput', 'change', render);
         bind('freezeColumnsInput', 'change', event => setFreezeColumns(event.target.value));
         bind('applyTemplateButton', 'click', applyTemplate);
