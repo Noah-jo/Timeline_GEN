@@ -377,6 +377,30 @@
     .programme tbody td.remarks-col {
       right: auto;
     }
+    body[class*="freeze-cols-"] .programme :is(.category-col, .item-col, .action-col, .person-col, .checklist-col, .remarks-col) {
+      position: static;
+      left: auto;
+    }
+    body.freeze-cols-1 .programme [data-left-index="0"],
+    body.freeze-cols-2 .programme :is([data-left-index="0"], [data-left-index="1"]),
+    body.freeze-cols-3 .programme :is([data-left-index="0"], [data-left-index="1"], [data-left-index="2"]),
+    body.freeze-cols-4 .programme :is([data-left-index="0"], [data-left-index="1"], [data-left-index="2"], [data-left-index="3"]),
+    body.freeze-cols-5 .programme :is([data-left-index="0"], [data-left-index="1"], [data-left-index="2"], [data-left-index="3"], [data-left-index="4"]),
+    body.freeze-cols-6 .programme :is([data-left-index="0"], [data-left-index="1"], [data-left-index="2"], [data-left-index="3"], [data-left-index="4"], [data-left-index="5"]) {
+      position: sticky;
+      left: var(--freeze-left-dynamic);
+      z-index: 10;
+      background: white;
+    }
+    body.freeze-cols-1 .programme thead [data-left-index="0"],
+    body.freeze-cols-2 .programme thead :is([data-left-index="0"], [data-left-index="1"]),
+    body.freeze-cols-3 .programme thead :is([data-left-index="0"], [data-left-index="1"], [data-left-index="2"]),
+    body.freeze-cols-4 .programme thead :is([data-left-index="0"], [data-left-index="1"], [data-left-index="2"], [data-left-index="3"]),
+    body.freeze-cols-5 .programme thead :is([data-left-index="0"], [data-left-index="1"], [data-left-index="2"], [data-left-index="3"], [data-left-index="4"]),
+    body.freeze-cols-6 .programme thead :is([data-left-index="0"], [data-left-index="1"], [data-left-index="2"], [data-left-index="3"], [data-left-index="4"], [data-left-index="5"]) {
+      z-index: 30;
+      background: #f8fafc;
+    }
     .checklist-list, .remarks-list {
       display: grid;
       gap: 4px;
@@ -395,6 +419,25 @@
     }
     .remarks-list {
       align-content: start;
+    }
+    .remarks-list.expanded {
+      max-height: none;
+      overflow-y: visible;
+    }
+    .remarks-progress-spacer {
+      min-height: 31px;
+    }
+    .checklist-entry,
+    .remarks-entry {
+      min-height: 15px;
+    }
+    .remarks-entry {
+      padding-left: 4px;
+      border-left: 2px solid #cbd5e1;
+      color: #475569;
+    }
+    .remarks-entry.empty {
+      border-left-color: transparent;
     }
     .project-code-control {
       display: grid;
@@ -562,11 +605,6 @@
     .check-item.done span {
       color: #64748b;
       text-decoration: line-through;
-    }
-    .remarks-list div {
-      padding-left: 4px;
-      border-left: 2px solid #cbd5e1;
-      color: #475569;
     }
     .items-empty {
       color: #94a3b8;
@@ -1015,6 +1053,7 @@
             <tr><th>Responsible Person</th><td><input id="projectOwnerInput" required placeholder="Required"></td></tr>
             <tr><th>Responsible Person Display Title</th><td><input id="projectOwnerTitleInput" placeholder="Example: Project Lead. Leave blank to show name only."></td></tr>
             <tr><th>Action By Column Title</th><td><input id="actionByLabelInput" placeholder="Example: PIC or Responsible Team"></td></tr>
+            <tr><th>Action By Column Position</th><td><select id="actionByPositionInput"><option value="afterAction">After Action</option><option value="afterItems">After Action Items</option><option value="afterRemarks">After Remarks</option></select></td></tr>
             <tr><th>Event Period</th><td><div class="date-pair"><input id="eventStartInput" type="date"><input id="eventEndInput" type="date"></div></td></tr>
             <tr><th>Version</th><td><input id="versionInput"></td></tr>
             <tr><th>Last Update</th><td><input id="lastUpdateInput" readonly><div style="margin-top:6px;color:#64748b">Automatically updated after edits.</div></td></tr>
@@ -1332,6 +1371,7 @@
         projectOwner: 'Luxe',
         projectOwnerTitle: '',
         actionByLabel: 'Action By',
+        actionByPosition: 'afterAction',
         eventStartDate: '2025-10-16',
         eventEndDate: '2025-11-05',
         startDate: '2025-09-26',
@@ -2339,6 +2379,7 @@
           projectOwner: String(source.projectOwner || source.owner || source.responsiblePerson || ''),
           projectOwnerTitle: String(source.projectOwnerTitle || source.ownerTitle || ''),
           actionByLabel: String(source.actionByLabel || 'Action By').trim() || 'Action By',
+          actionByPosition: ['afterAction', 'afterItems', 'afterRemarks'].includes(source.actionByPosition) ? source.actionByPosition : 'afterAction',
           eventStartDate: isValidDate(source.eventStartDate) ? source.eventStartDate : '',
           eventEndDate: isValidDate(source.eventEndDate) ? source.eventEndDate : '',
           startDate: startDate <= endDate ? startDate : endDate,
@@ -2428,6 +2469,11 @@
         return normalizeProjectCode(byId('projectCodeInput')?.value || data?.projectCode || '');
       }
 
+      function cleanRemark(value) {
+        const text = String(value || '').replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
+        return /\S/.test(text) ? text : '';
+      }
+
       function normalizeChecklist(items) {
         if (!Array.isArray(items)) return [];
         return items.map((item, index) => {
@@ -2438,12 +2484,12 @@
           return {
             id: String(source.id || uid('item')),
             text: String(source.text || source.item || source.action || ''),
-            remarks: String(source.remarks || source.remark || source.note || ''),
+            remarks: cleanRemark(source.remarks || source.remark || source.note || ''),
             done: source.done === true || String(source.done || '').toUpperCase() === 'YES',
             subitems: normalizeSubChecklist(source.subitems || source.children || source.checklist),
             order: Number.isFinite(Number(source.order)) ? Number(source.order) : index
           };
-        }).filter(item => item.text || item.remarks).sort((a, b) => a.order - b.order).map((item, order) => ({ ...item, order }));
+        }).filter(item => item.text || cleanRemark(item.remarks)).sort((a, b) => a.order - b.order).map((item, order) => ({ ...item, order }));
       }
 
       function normalizeSubChecklist(items) {
@@ -2487,7 +2533,7 @@
       }
 
       function checklistRemarksText(row) {
-        return normalizeChecklist(row.checklist).map(item => item.remarks).join(LF);
+        return normalizeChecklist(row.checklist).map(item => cleanRemark(item.remarks)).join(LF);
       }
 
       function checklistFromTextareas(itemsText, remarksText, existing = []) {
@@ -2498,12 +2544,12 @@
           return {
             id: old.id || uid('item'),
             text: text.trim(),
-            remarks: String(remarks[index] || '').trim(),
+            remarks: cleanRemark(remarks[index] || ''),
             done: old.done === true,
             subitems: normalizeSubChecklist(old.subitems),
             order: index
           };
-        }).filter(item => item.text || item.remarks);
+        }).filter(item => item.text || cleanRemark(item.remarks));
       }
 
       function isValidDate(value) {
@@ -2937,25 +2983,58 @@
         setText('rowsActionByHeader', data.actionByLabel);
         setText('quickActionByLabel', data.actionByLabel);
         setText('actionByHelpLabel', data.actionByLabel);
-        setText('freezeActionByOption', `Freeze: ${data.actionByLabel}`);
+        populateFreezeColumnOptions();
         safeClassToggle(byId('app'), 'compact', byId('densityInput') ? byId('densityInput').value === 'compact' : true);
         setHtml('programmeWrap', buildTable(rows, periods, mode));
         bindProgrammeDoubleClick();
         bindProgrammeDrag();
         bindProgrammeChecklist();
+        window.requestAnimationFrame(() => alignAllChecklistRemarks());
+      }
+
+      function getLeftColumnKeys() {
+        if (data.actionByPosition === 'afterItems') return ['category', 'item', 'action', 'checklist', 'person', 'remarks'];
+        if (data.actionByPosition === 'afterRemarks') return ['category', 'item', 'action', 'checklist', 'remarks', 'person'];
+        return ['category', 'item', 'action', 'person', 'checklist', 'remarks'];
+      }
+
+      function populateFreezeColumnOptions() {
+        const select = byId('freezeColumnsInput');
+        if (!select) return;
+        const current = String(uiState.freezeColumns);
+        const labels = getLeftColumnKeys().map(key => leftColumnMeta(key).label);
+        select.innerHTML = '<option value="0">Freeze: None</option>' + labels.map((label, index) => `<option value="${index + 1}">Freeze through: ${escapeHtml(label)}</option>`).join('');
+        select.value = current;
+      }
+
+      function leftColumnMeta(key) {
+        return {
+          category: { label: 'Category', className: 'category-col', width: 'var(--category-w)' },
+          item: { label: 'Sub-Category', className: 'item-col', width: 'var(--item-w)' },
+          action: { label: 'Action', className: 'action-col', width: 'var(--action-w)' },
+          person: { label: data.actionByLabel, className: 'person-col', width: 'var(--person-w)' },
+          checklist: { label: 'Action Items', className: 'checklist-col', width: 'var(--checklist-w)' },
+          remarks: { label: 'Remarks', className: 'remarks-col', width: 'var(--remarks-w)' }
+        }[key];
+      }
+
+      function leftColumnAttrs(keys, key) {
+        const index = keys.indexOf(key);
+        const preceding = keys.slice(0, index).map(candidate => leftColumnMeta(candidate).width);
+        const left = preceding.length ? `calc(${preceding.join(' + ')})` : '0px';
+        return `data-left-index="${index}" style="--freeze-left-dynamic:${left}"`;
       }
 
       function buildTable(rows, periods, mode) {
         const categorySpans = calculateSpans(rows, 'category');
         const spanRows = rows.map(row => ({ ...row, itemSpanKey: `${row.category}|${row.item}` }));
         const itemSpans = calculateSpans(spanRows, 'itemSpanKey');
+        const leftKeys = getLeftColumnKeys();
         let html = '<table class="programme"><thead><tr>';
-        html += '<th class="left-head category-col" rowspan="3">Category</th>';
-        html += '<th class="left-head item-col" rowspan="3">Sub-Category</th>';
-        html += '<th class="left-head action-col" rowspan="3">Action</th>';
-        html += `<th class="left-head person-col" rowspan="3">${escapeHtml(data.actionByLabel)}</th>`;
-        html += '<th class="left-head checklist-col" rowspan="3">Action Items</th>';
-        html += '<th class="left-head remarks-col" rowspan="3">Remarks</th>';
+        leftKeys.forEach(key => {
+          const meta = leftColumnMeta(key);
+          html += `<th class="left-head ${meta.className}" rowspan="3" ${leftColumnAttrs(leftKeys, key)}>${escapeHtml(meta.label)}</th>`;
+        });
         groupSpans(periods, 'label1').forEach(group => {
           html += `<th class="month-cell" colspan="${group.count}">${escapeHtml(group.label)}</th>`;
         });
@@ -2974,12 +3053,15 @@
           const firstActiveIndex = periods.findIndex(period => overlaps(row.start, row.end, period.start, period.end));
           const lastActiveIndex = periods.map(period => overlaps(row.start, row.end, period.start, period.end)).lastIndexOf(true);
           html += `<tr class="${groupStart ? 'group-start' : ''} ${row.highlight ? 'highlight' : ''}">`;
-          if (categorySpans.has(`category:${index}`)) html += `<td class="category-col inline-edit-cell" data-row-id="${escapeHtml(row.id)}" data-field="category" rowspan="${categorySpans.get(`category:${index}`)}" title="Double-click to edit Category">${escapeHtml(row.category)}</td>`;
-          if (itemSpans.has(`itemSpanKey:${index}`)) html += `<td class="item-col inline-edit-cell" data-row-id="${escapeHtml(row.id)}" data-field="item" rowspan="${itemSpans.get(`itemSpanKey:${index}`)}" title="Double-click to edit Sub-Category">${escapeHtml(row.item)}</td>`;
-          html += `<td class="action-col inline-edit-cell" data-row-id="${escapeHtml(row.id)}" data-field="action" title="Double-click to edit Action">${escapeHtml(row.action)}</td>`;
-          html += `<td class="person-col inline-edit-cell" data-row-id="${escapeHtml(row.id)}" data-field="actionBy" title="Double-click to edit ${escapeHtml(data.actionByLabel)}">${escapeHtml(row.actionBy)}</td>`;
-          html += `<td class="checklist-col" data-row-id="${escapeHtml(row.id)}">${renderChecklistCell(row)}</td>`;
-          html += `<td class="remarks-col">${renderRemarksCell(row)}</td>`;
+          leftKeys.forEach(key => {
+            const attrs = leftColumnAttrs(leftKeys, key);
+            if (key === 'category' && categorySpans.has(`category:${index}`)) html += `<td class="category-col inline-edit-cell" ${attrs} data-row-id="${escapeHtml(row.id)}" data-field="category" rowspan="${categorySpans.get(`category:${index}`)}" title="Double-click to edit Category">${escapeHtml(row.category)}</td>`;
+            if (key === 'item' && itemSpans.has(`itemSpanKey:${index}`)) html += `<td class="item-col inline-edit-cell" ${attrs} data-row-id="${escapeHtml(row.id)}" data-field="item" rowspan="${itemSpans.get(`itemSpanKey:${index}`)}" title="Double-click to edit Sub-Category">${escapeHtml(row.item)}</td>`;
+            if (key === 'action') html += `<td class="action-col inline-edit-cell" ${attrs} data-row-id="${escapeHtml(row.id)}" data-field="action" title="Double-click to edit Action">${escapeHtml(row.action)}</td>`;
+            if (key === 'person') html += `<td class="person-col inline-edit-cell" ${attrs} data-row-id="${escapeHtml(row.id)}" data-field="actionBy" title="Double-click to edit ${escapeHtml(data.actionByLabel)}">${escapeHtml(row.actionBy)}</td>`;
+            if (key === 'checklist') html += `<td class="checklist-col" ${attrs} data-row-id="${escapeHtml(row.id)}">${renderChecklistCell(row)}</td>`;
+            if (key === 'remarks') html += `<td class="remarks-col" ${attrs} data-row-id="${escapeHtml(row.id)}">${renderRemarksCell(row)}</td>`;
+          });
           periods.forEach((period, periodIndex) => {
             const inRange = overlaps(row.start, row.end, period.start, period.end);
             const isStart = periodIndex === firstActiveIndex;
@@ -3018,7 +3100,7 @@
             const subChecked = subitem.done ? ' checked' : '';
             return `<label class="subcheck-item${subDoneClass}"><input type="checkbox" class="subchecklist-toggle" data-row-id="${escapeHtml(row.id)}" data-item-id="${escapeHtml(item.id)}" data-subitem-id="${escapeHtml(subitem.id)}"${subChecked}><span>${escapeHtml(subitem.text)}</span></label>`;
           }).join('')}</div>` : '';
-          return `<div><div class="check-parent-row"><label class="check-item${doneClass}"${title}><input type="checkbox" class="checklist-toggle" data-row-id="${escapeHtml(row.id)}" data-item-id="${escapeHtml(item.id)}"${checked}><span>${escapeHtml(item.text)}</span></label>${subButton}</div>${sublist}</div>`;
+          return `<div class="checklist-entry" data-item-id="${escapeHtml(item.id)}"><div class="check-parent-row"><label class="check-item${doneClass}"${title}><input type="checkbox" class="checklist-toggle" data-row-id="${escapeHtml(row.id)}" data-item-id="${escapeHtml(item.id)}"${checked}><span>${escapeHtml(item.text)}</span></label>${subButton}</div>${sublist}</div>`;
         }).join('') : '<div class="items-empty">No action items</div>';
         return `<div class="checklist-list${rowExpanded ? ' expanded' : ''}">${progress}${list}</div>`;
       }
@@ -3031,12 +3113,72 @@
         cell.innerHTML = renderChecklistCell(row);
         const list = cell.querySelector('.checklist-list');
         if (list) list.scrollTop = previousScrollTop;
+        const remarksCell = document.querySelector(`.remarks-col[data-row-id="${cssEscape(rowId)}"]`);
+        if (remarksCell) remarksCell.innerHTML = renderRemarksCell(row);
+        window.requestAnimationFrame(() => {
+          alignChecklistRemarks(rowId);
+          bindChecklistRemarkScroll(rowId);
+        });
       }
 
       function renderRemarksCell(row) {
-        const remarks = normalizeChecklist(row.checklist).filter(item => item.remarks);
-        if (!remarks.length) return '<div class="items-empty">No remarks</div>';
-        return `<div class="remarks-list">${remarks.map(item => `<div><strong>${escapeHtml(item.text)}:</strong> ${escapeHtml(item.remarks)}</div>`).join('')}</div>`;
+        const items = normalizeChecklist(row.checklist);
+        const rowExpanded = expandedChecklistRows.has(row.id);
+        const hasRemarks = items.some(item => cleanRemark(item.remarks));
+        if (!items.length) return '<div class="items-empty">No remarks</div>';
+        const entries = items.map((item, index) => {
+          const remark = cleanRemark(item.remarks);
+          const content = remark ? `<strong>${escapeHtml(item.text)}:</strong> ${escapeHtml(remark)}` : (!hasRemarks && index === 0 ? '<span class="items-empty">No remarks</span>' : '');
+          return `<div class="remarks-entry${remark ? '' : ' empty'}" data-item-id="${escapeHtml(item.id)}">${content}</div>`;
+        }).join('');
+        return `<div class="remarks-list${rowExpanded ? ' expanded' : ''}"><div class="remarks-progress-spacer"></div>${entries}</div>`;
+      }
+
+      function alignChecklistRemarks(rowId) {
+        const checklistCell = document.querySelector(`.checklist-col[data-row-id="${cssEscape(rowId)}"]`);
+        const remarksCell = document.querySelector(`.remarks-col[data-row-id="${cssEscape(rowId)}"]`);
+        if (!checklistCell || !remarksCell) return;
+        const progress = checklistCell.querySelector('.checklist-progress');
+        const spacer = remarksCell.querySelector('.remarks-progress-spacer');
+        if (progress && spacer) spacer.style.height = `${progress.getBoundingClientRect().height}px`;
+        checklistCell.querySelectorAll('.checklist-entry').forEach(checkEntry => {
+          const itemId = checkEntry.dataset.itemId;
+          const remarkEntry = remarksCell.querySelector(`.remarks-entry[data-item-id="${cssEscape(itemId)}"]`);
+          if (!remarkEntry) return;
+          checkEntry.style.minHeight = '';
+          remarkEntry.style.minHeight = '';
+          const height = Math.max(checkEntry.getBoundingClientRect().height, remarkEntry.getBoundingClientRect().height);
+          checkEntry.style.minHeight = `${height}px`;
+          remarkEntry.style.minHeight = `${height}px`;
+        });
+      }
+
+      function bindChecklistRemarkScroll(rowId) {
+        const checklist = document.querySelector(`.checklist-col[data-row-id="${cssEscape(rowId)}"] .checklist-list`);
+        const remarks = document.querySelector(`.remarks-col[data-row-id="${cssEscape(rowId)}"] .remarks-list`);
+        if (!checklist || !remarks || checklist.dataset.scrollBound === '1') return;
+        checklist.dataset.scrollBound = '1';
+        remarks.dataset.scrollBound = '1';
+        let syncing = false;
+        checklist.addEventListener('scroll', () => {
+          if (syncing) return;
+          syncing = true;
+          remarks.scrollTop = checklist.scrollTop;
+          syncing = false;
+        });
+        remarks.addEventListener('scroll', () => {
+          if (syncing) return;
+          syncing = true;
+          checklist.scrollTop = remarks.scrollTop;
+          syncing = false;
+        });
+      }
+
+      function alignAllChecklistRemarks() {
+        document.querySelectorAll('.checklist-col[data-row-id]').forEach(cell => {
+          alignChecklistRemarks(cell.dataset.rowId);
+          bindChecklistRemarkScroll(cell.dataset.rowId);
+        });
       }
 
       function openProjectModal() {
@@ -3045,6 +3187,7 @@
         setValue('projectOwnerInput', data.projectOwner || '');
         setValue('projectOwnerTitleInput', data.projectOwnerTitle || '');
         setValue('actionByLabelInput', data.actionByLabel || 'Action By');
+        setValue('actionByPositionInput', data.actionByPosition || 'afterAction');
         setValue('eventStartInput', data.eventStartDate || '');
         setValue('eventEndInput', data.eventEndDate || '');
         setValue('versionInput', data.version);
@@ -3108,6 +3251,7 @@
         data.projectOwner = owner;
         data.projectOwnerTitle = (byId('projectOwnerTitleInput')?.value || '').trim();
         data.actionByLabel = (byId('actionByLabelInput')?.value || '').trim() || 'Action By';
+        data.actionByPosition = ['afterAction', 'afterItems', 'afterRemarks'].includes(byId('actionByPositionInput')?.value) ? byId('actionByPositionInput').value : 'afterAction';
         const eventStart = byId('eventStartInput')?.value || '';
         const eventEnd = byId('eventEndInput')?.value || '';
         data.eventStartDate = isValidDate(eventStart) ? eventStart : '';
@@ -3556,7 +3700,11 @@
       function handleItemButton(event) {
         const index = Number(event.currentTarget.dataset.index);
         const action = event.currentTarget.dataset.action;
-        if (action === 'deleteItem') editingItems.splice(index, 1);
+        if (action === 'deleteItem') {
+          const itemName = editingItems[index]?.text || `Item ${index + 1}`;
+          if (!window.confirm(`Delete action item "${itemName}"?`)) return;
+          editingItems.splice(index, 1);
+        }
         if (action === 'addSubitem' && editingItems[index]) {
           const subitems = normalizeSubChecklistForEditor(editingItems[index].subitems);
           subitems.push({ id: uid('subitem'), text: '', done: false, order: subitems.length });
@@ -3701,10 +3849,21 @@
         return text || 'programme';
       }
 
+      function exportColumnValue(row, key) {
+        if (key === 'category') return row.category;
+        if (key === 'item') return row.item;
+        if (key === 'action') return row.action;
+        if (key === 'person') return row.actionBy;
+        if (key === 'checklist') return checklistItemsText(row);
+        if (key === 'remarks') return checklistRemarksText(row);
+        return '';
+      }
+
       function exportCsv() {
         const includeChecklist = data.audienceMode !== 'client';
-        const headers = includeChecklist ? ['Category', 'Sub-Category', 'Action', data.actionByLabel, 'Action Items', 'Remarks', 'Start', 'End', 'Highlight'] : ['Category', 'Sub-Category', 'Action', data.actionByLabel, 'Start', 'End', 'Highlight'];
-        const rows = [headers].concat(data.rows.map(row => includeChecklist ? [row.category, row.item, row.action, row.actionBy, checklistItemsText(row), checklistRemarksText(row), row.start, row.end, row.highlight ? 'YES' : 'NO'] : [row.category, row.item, row.action, row.actionBy, row.start, row.end, row.highlight ? 'YES' : 'NO']));
+        const keys = getLeftColumnKeys().filter(key => includeChecklist || !['checklist', 'remarks'].includes(key));
+        const headers = keys.map(key => leftColumnMeta(key).label).concat(['Start', 'End', 'Highlight']);
+        const rows = [headers].concat(data.rows.map(row => keys.map(key => exportColumnValue(row, key)).concat([row.start, row.end, row.highlight ? 'YES' : 'NO'])));
         const csv = BOM + rows.map(row => row.map(csvEscape).join(',')).join(CR + LF);
         downloadBlob(csv, `${safeFileName(data.projectName)}-programme.csv`, 'text/csv;charset=utf-8');
       }
@@ -3728,9 +3887,10 @@
         const mode = getResolvedViewMode();
         const periods = buildPeriods(mode);
         const includeChecklist = data.audienceMode !== 'client';
-        const leftHeaders = includeChecklist ? ['Category', 'Sub-Category', 'Action', data.actionByLabel, 'Action Items', 'Remarks'] : ['Category', 'Sub-Category', 'Action', data.actionByLabel];
+        const exportKeys = getLeftColumnKeys().filter(key => includeChecklist || !['checklist', 'remarks'].includes(key));
+        const leftHeaders = exportKeys.map(key => leftColumnMeta(key).label);
         const visualRows = rows.map(row => {
-          const leftValues = includeChecklist ? [row.category, row.item, row.action, row.actionBy, checklistItemsText(row), checklistRemarksText(row)] : [row.category, row.item, row.action, row.actionBy];
+          const leftValues = exportKeys.map(key => exportColumnValue(row, key));
           const left = leftValues.map(value => excelCell(value, 'TextWrap')).join('');
           const timeline = periods.map(period => excelCell('', overlaps(row.start, row.end, period.start, period.end) ? 'Work' : period.blocked ? 'Weekend' : 'Normal')).join('');
           return `<Row>${left}${timeline}</Row>`;
