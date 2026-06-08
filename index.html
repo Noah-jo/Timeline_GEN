@@ -663,9 +663,11 @@
     .programme tr.group-start td, .programme tr.group-start th { box-shadow: inset -1px -1px 0 var(--line), inset 0 2px 0 var(--line); }
     .programme tr.highlight td.category-col, .programme tr.highlight td.item-col, .programme tr.highlight td.action-col, .programme tr.highlight td.person-col, .programme tr.highlight td.checklist-col, .programme tr.highlight td.remarks-col { background: var(--highlight); }
     body.client-view .app {
+      --person-w: 0px;
       --checklist-w: 0px;
       --remarks-w: 0px;
     }
+    body.client-view .person-col,
     body.client-view .checklist-col,
     body.client-view .remarks-col {
       display: none !important;
@@ -4011,7 +4013,7 @@
 
       function exportCsv() {
         const includeChecklist = data.audienceMode !== 'client';
-        const keys = getLeftColumnKeys().filter(key => includeChecklist || !['checklist', 'remarks'].includes(key));
+        const keys = getLeftColumnKeys().filter(key => includeChecklist || !['person', 'checklist', 'remarks'].includes(key));
         const headers = keys.map(key => leftColumnMeta(key).label).concat(['Start', 'End', 'Highlight']);
         const rows = [headers].concat(data.rows.map(row => keys.map(key => exportColumnValue(row, key)).concat([row.start, row.end, row.highlight ? 'YES' : 'NO'])));
         const csv = BOM + rows.map(row => row.map(csvEscape).join(',')).join(CR + LF);
@@ -4037,7 +4039,7 @@
         const mode = getResolvedViewMode();
         const periods = buildPeriods(mode);
         const includeChecklist = data.audienceMode !== 'client';
-        const exportKeys = getLeftColumnKeys().filter(key => includeChecklist || !['checklist', 'remarks'].includes(key));
+        const exportKeys = getLeftColumnKeys().filter(key => includeChecklist || !['person', 'checklist', 'remarks'].includes(key));
         const leftHeaders = exportKeys.map(key => leftColumnMeta(key).label);
         const visualRows = rows.map(row => {
           const leftValues = exportKeys.map(key => exportColumnValue(row, key));
