@@ -504,12 +504,6 @@
       color: #0f766e;
       text-decoration: underline;
     }
-    .subcheck-toggle-button:disabled {
-      color: #64748b;
-      cursor: default;
-      opacity: 1;
-      text-decoration: none;
-    }
     .subcheck-item {
       display: grid;
       grid-template-columns: 18px minmax(0, 1fr);
@@ -2948,7 +2942,7 @@
         const rowExpanded = expandedChecklistRows.has(row.id);
         const progressLabel = items.length ? `${percent}% complete (${doneCount}/${items.length})` : 'No action items';
         const progressTrack = items.length ? `<div class="progress-track"><div class="progress-fill" style="width:${percent}%"></div></div>` : '';
-        const expandControl = items.length ? `<button type="button" class="row-expand-toggle${rowExpanded ? ' expanded' : ''}" data-row-id="${escapeHtml(row.id)}" title="${rowExpanded ? 'Collapse action items' : 'Expand all action items and sub items'}" aria-label="${rowExpanded ? 'Collapse action items' : 'Expand all action items and sub items'}"></button>` : '<span class="row-expand-spacer"></span>';
+        const expandControl = items.length ? `<button type="button" class="row-expand-toggle${rowExpanded ? ' expanded' : ''}" data-row-id="${escapeHtml(row.id)}" title="${rowExpanded ? 'Use fixed action item height' : 'Auto-fit height to visible action items'}" aria-label="${rowExpanded ? 'Use fixed action item height' : 'Auto-fit height to visible action items'}"></button>` : '<span class="row-expand-spacer"></span>';
         const progress = `<div class="checklist-progress">${expandControl}<div class="progress-label">${escapeHtml(progressLabel)}</div><button type="button" class="mini light edit-items-button" data-row-id="${escapeHtml(row.id)}">Edit Items</button>${progressTrack}</div>`;
         const list = items.length ? items.map(item => {
           const itemDone = isChecklistItemDone(item);
@@ -2957,10 +2951,10 @@
           const title = item.remarks ? ` title="${escapeHtml(item.remarks)}"` : '';
           const subitems = normalizeSubChecklist(item.subitems);
           const subKey = `${row.id}:${item.id}`;
-          const subExpanded = rowExpanded || expandedSubitems.has(subKey);
+          const subExpanded = expandedSubitems.has(subKey);
           const subDoneCount = subitems.filter(subitem => subitem.done).length;
           const subButtonText = `${subExpanded ? '▾' : '▸'} (${subDoneCount}/${subitems.length})`;
-          const subButton = subitems.length ? `<button type="button" class="subcheck-toggle-button" data-row-id="${escapeHtml(row.id)}" data-item-id="${escapeHtml(item.id)}" title="${rowExpanded ? 'All sub items are shown by row expansion' : subExpanded ? 'Hide sub checklist' : 'Show sub checklist'}"${rowExpanded ? ' disabled' : ''}>${escapeHtml(subButtonText)}</button>` : '';
+          const subButton = subitems.length ? `<button type="button" class="subcheck-toggle-button" data-row-id="${escapeHtml(row.id)}" data-item-id="${escapeHtml(item.id)}" title="${subExpanded ? 'Hide sub checklist' : 'Show sub checklist'}">${escapeHtml(subButtonText)}</button>` : '';
           const sublist = subitems.length && subExpanded ? `<div class="subcheck-list">${subitems.map(subitem => {
             const subDoneClass = subitem.done ? ' done' : '';
             const subChecked = subitem.done ? ' checked' : '';
