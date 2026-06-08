@@ -951,6 +951,7 @@
         <div class="toolbar-group" data-title="Cloud Sync">
           <input id="cloudPasswordInput" type="password" inputmode="numeric" placeholder="Sync password">
           <button id="cloudSignInButton" type="button">Unlock Sync</button>
+          <button class="secondary" id="cloudSyncButton" type="button" disabled>Sync Cloud</button>
           <span id="cloudStatus" class="status-pill">Cloud: not connected</span>
         </div>
         <div class="toolbar-group health-group" data-title="Edit and Save">
@@ -1041,30 +1042,16 @@
       </div>
     </div>
   </div>
-  <div class="modal" id="projectCodeModal">
-    <div class="modal-card">
-      <h2>Project Code Changed</h2>
-      <p style="margin-top:0;color:#475569;line-height:1.5">
-        Current cloud project: <strong id="currentCloudProjectText"></strong><br>
-        New project code: <strong id="targetCloudProjectText"></strong>
-      </p>
-      <div class="editor-actions">
-        <button id="loadProjectCodeButton" type="button">Load This Code</button>
-        <button class="secondary" id="saveAsProjectCodeButton" type="button">Save Current Data As This Code</button>
-        <button class="light" id="cancelProjectCodeButton" type="button">Cancel</button>
-      </div>
-    </div>
-  </div>
   <div class="modal" id="cloudUnlockChoiceModal">
     <div class="modal-card">
-      <h2>Cloud Project Already Exists</h2>
+      <h2>Start Cloud Sync</h2>
       <p style="margin-top:0;color:#475569;line-height:1.5">
-        Cloud sync is unlocked. A cloud project already uses code <strong id="cloudUnlockProjectCodeText"></strong>.<br>
-        Your current local screen has not been changed. Choose what to do next.
+        Local and cloud data differ for project <strong id="cloudUnlockProjectCodeText"></strong>.<br>
+        Choose which version should be used before Auto Sync starts.
       </p>
       <div class="editor-actions">
-        <button id="loadCloudAfterUnlockButton" type="button">Load Cloud Version</button>
-        <button class="secondary" id="keepLocalAfterUnlockButton" type="button">Keep Local Version and Sync</button>
+        <button id="loadCloudAfterUnlockButton" type="button">Load Cloud and Start Sync</button>
+        <button class="secondary" id="keepLocalAfterUnlockButton" type="button">Keep Local and Start Sync</button>
         <button class="light" id="cancelCloudAfterUnlockButton" type="button">Cancel</button>
       </div>
       <div style="margin-top:8px;color:#b91c1c;line-height:1.45">
@@ -1254,6 +1241,8 @@
     (() => {
       'use strict';
       const STORE_KEY = 'noah_master_programme_display_v5';
+      const LOCAL_PROJECT_PREFIX = 'noah_master_programme_local_project_v1:';
+      const LOCAL_SYNC_META_KEY = 'noah_master_programme_local_sync_meta_v1';
       const TEMPLATE_KEY = 'noah_master_programme_templates_v1';
       const DELETED_TEMPLATE_KEY = 'noah_master_programme_deleted_templates_v1';
       const UI_KEY = 'noah_master_programme_ui_v1';
@@ -1282,13 +1271,11 @@
       let cloudSaveTimer = null;
       let suppressCloudSave = false;
       let activeCloudProjectCode = '';
-      let pendingProjectCode = '';
       let cloudClientId = '';
       let cloudRevision = 0;
       let cloudBaseJson = '';
       let cloudConflictPending = false;
       let cloudConflictPromptOpen = false;
-      let cloudUnlockChoiceRequested = false;
       let pendingUnlockCloudCode = '';
       let pendingUnlockCloudPayload = null;
       let expandedSubitems = new Set();
@@ -1523,6 +1510,15 @@
           input.disabled = unlocked;
           if (unlocked) input.value = '';
         }
+        updateCloudSyncButton();
+      }
+
+      function updateCloudSyncButton() {
+        const button = byId('cloudSyncButton');
+        if (!button) return;
+        button.disabled = !cloudUser || !isCloudUnlocked();
+        button.textContent = activeCloudProjectCode ? 'Stop Sync' : 'Sync Cloud';
+        button.className = activeCloudProjectCode ? 'danger' : 'secondary';
       }
 
       function getFirebaseApi() {
@@ -1543,16 +1539,11 @@
           cloudUser = user || null;
           if (cloudUser && isCloudUnlocked()) {
             setCloudUnlocked(true);
-            setCloudStatus('Cloud unlocked: local project unchanged', 'success');
-            if (cloudUnlockChoiceRequested) {
-              cloudUnlockChoiceRequested = false;
-              offerCloudChoiceForCurrentCode();
-            }
+            setCloudStatus('Cloud unlocked: List and Sync Cloud available. Local only.', 'success');
           } else {
             if (cloudUnsubscribe) cloudUnsubscribe();
             cloudUnsubscribe = null;
             activeCloudProjectCode = '';
-            cloudUnlockChoiceRequested = false;
             closeCloudUnlockChoiceModal();
             setCloudUnlocked(false);
             if (cloudUser) api.signOut(api.auth).catch(() => {});
@@ -1581,12 +1572,10 @@
               return;
             }
             setCloudUnlocked(true);
-            cloudUnlockChoiceRequested = true;
             setCloudStatus('Cloud: connecting...', 'loading');
             await api.signInAnonymously(api.auth);
           }
         } catch (error) {
-          cloudUnlockChoiceRequested = false;
           setCloudUnlocked(false);
           setCloudStatus(`Cloud sync failed: ${error.code || error.message}`, 'error');
         }
@@ -1598,37 +1587,53 @@
         safeClassRemove(byId('cloudUnlockChoiceModal'), 'show');
       }
 
-      async function offerCloudChoiceForCurrentCode() {
+      async function prepareCloudSync() {
         const api = getFirebaseApi();
         const code = normalizeProjectCode(getProjectCode());
         if (!api || !cloudUser || !isCloudUnlocked()) return;
         if (!code || code.length < 3) {
-          setCloudStatus('Cloud unlocked: choose a project from List or enter Project Code', 'success');
+          setCloudStatus('Cloud sync needs a Project Code', 'warning');
           return;
         }
-        setCloudStatus(`Cloud unlocked: checking ${code}...`, 'loading');
+        setCloudStatus(`Cloud: comparing local and cloud ${code}...`, 'loading');
         try {
           const snap = await api.getDoc(cloudDocRef(code));
           if (!snap.exists() || snap.data()?.deleted === true) {
-            setCloudStatus(`Cloud unlocked: no cloud project loaded for ${code}`, 'success');
+            if (!window.confirm(`Cloud project ${code} does not exist. Create it from the current local project and start Auto Sync?`)) {
+              setCloudStatus(`Cloud unlocked: ${code} remains local only`, 'success');
+              return;
+            }
+            cloudRevision = 0;
+            cloudBaseJson = '';
+            cloudConflictPending = false;
+            await saveCloudProjectNow(code);
             return;
           }
           const payload = snap.data();
           if (!payload?.data || !Array.isArray(payload.data.rows)) throw new Error('Bad cloud project data');
+          const remoteJson = cloudDataJson(payload.data, code);
+          const localJson = cloudDataJson(data, code);
+          if (remoteJson === localJson) {
+            setCloudBaseFromPayload(payload, code);
+            subscribeCloudProject(code);
+            setCloudStatus(`Auto Sync active: ${code}`, 'success');
+            updateCloudSyncButton();
+            return;
+          }
           pendingUnlockCloudCode = code;
           pendingUnlockCloudPayload = payload;
           setText('cloudUnlockProjectCodeText', code);
           safeClassAdd(byId('cloudUnlockChoiceModal'), 'show');
-          setCloudStatus(`Cloud unlocked: choose how to handle ${code}`, 'warning');
+          setCloudStatus(`Sync paused: choose local or cloud version for ${code}`, 'warning');
         } catch (error) {
-          setCloudStatus(`Cloud check failed: ${error.code || error.message}`, 'error');
+          setCloudStatus(`Cloud compare failed: ${error.code || error.message}`, 'error');
         }
       }
 
       function loadCloudVersionAfterUnlock() {
         const code = pendingUnlockCloudCode;
         closeCloudUnlockChoiceModal();
-        if (code) loadCloudProject(code);
+        if (code) loadCloudProject(code, { startSync: true });
       }
 
       async function keepLocalVersionAfterUnlock() {
@@ -1646,7 +1651,28 @@
       function cancelCloudChoiceAfterUnlock() {
         const code = pendingUnlockCloudCode;
         closeCloudUnlockChoiceModal();
-        setCloudStatus(`Cloud unlocked: local project unchanged${code ? ` (${code} not loaded or syncing)` : ''}`, 'success');
+        setCloudStatus(`Cloud unlocked: local only${code ? ` (${code} not syncing)` : ''}`, 'success');
+      }
+
+      function stopCloudSync() {
+        stopCloudSyncSilently();
+        setCloudStatus('Cloud unlocked: Auto Sync stopped. Local only.', 'success');
+      }
+
+      function stopCloudSyncSilently() {
+        window.clearTimeout(cloudSaveTimer);
+        if (cloudUnsubscribe) cloudUnsubscribe();
+        cloudUnsubscribe = null;
+        activeCloudProjectCode = '';
+        cloudRevision = 0;
+        cloudBaseJson = '';
+        cloudConflictPending = false;
+        updateCloudSyncButton();
+      }
+
+      function toggleExplicitCloudSync() {
+        if (activeCloudProjectCode) stopCloudSync();
+        else prepareCloudSync();
       }
 
       function cloudDocRef(projectCode) {
@@ -1719,9 +1745,12 @@
       function loadProjectFromList(code) {
         const projectCode = normalizeProjectCode(code);
         if (!projectCode) return;
+        const currentCode = normalizeProjectCode(data?.projectCode || '');
+        if (currentCode === projectCode && !window.confirm(`Replace the current local ${projectCode} with the latest cloud snapshot? Auto Sync will remain off.`)) return;
         closeProjectListModal();
-        resetProjectCodeInputs(projectCode);
-        loadCloudProject(projectCode);
+        stopCloudSyncSilently();
+        saveData();
+        loadCloudProject(projectCode, { startSync: false });
       }
 
       function closeNewProjectModal() {
@@ -1777,6 +1806,7 @@
         cloudRevision = 0;
         cloudBaseJson = '';
         cloudConflictPending = false;
+        updateCloudSyncButton();
         data = normalizeData(projectData);
         resetProjectCodeInputs(data.projectCode);
         suppressCloudSave = true;
@@ -1786,7 +1816,6 @@
       }
 
       async function createProject(mode = 'blank') {
-        const api = getFirebaseApi();
         const projectData = buildNewProjectData(mode);
         if (!projectData.projectCode || projectData.projectCode.length < 3) {
           const message = 'New project needs a Project Code with at least 3 characters';
@@ -1802,43 +1831,10 @@
           byId('newProjectOwnerInput')?.focus();
           return;
         }
-        const cloudMode = Boolean(api && cloudUser && isCloudUnlocked());
-        if (!cloudMode) {
-          const ok = window.confirm('Cloud sync is locked. Create this as a local project only?');
-          if (!ok) return;
-          closeNewProjectModal();
-          applyLocalNewProject(projectData);
-          return;
-        }
-        setProjectListStatus(`Creating ${projectData.projectCode}...`, 'loading');
-        try {
-          const ref = cloudDocRef(projectData.projectCode);
-          const existing = await api.getDoc(ref);
-          if (existing.exists() && existing.data()?.deleted !== true) {
-            setProjectListStatus(`Project ${projectData.projectCode} already exists`, 'error');
-            return;
-          }
-          await api.setDoc(ref, {
-            data: normalizeData(projectData),
-            revision: 1,
-            updatedAt: api.serverTimestamp(),
-            updatedBy: cloudDisplayName(),
-            updatedByClientId: cloudClientId,
-            projectCode: projectData.projectCode
-          }, { merge: false });
-          closeNewProjectModal();
-          closeProjectListModal();
-          data = normalizeData(projectData);
-          resetProjectCodeInputs(projectData.projectCode);
-          suppressCloudSave = true;
-          render();
-          suppressCloudSave = false;
-          setCloudBaseFromPayload({ data: projectData, revision: 1 }, projectData.projectCode);
-          subscribeCloudProject(projectData.projectCode);
-          setCloudStatus(`Cloud: created ${projectData.projectCode}`, 'success');
-        } catch (error) {
-          setProjectListStatus(`Create failed: ${error.code || error.message}`, 'error');
-        }
+        closeNewProjectModal();
+        closeProjectListModal();
+        applyLocalNewProject(projectData);
+        setCloudStatus(isCloudUnlocked() ? 'Cloud unlocked: new project is local only. Press Sync Cloud to upload.' : 'Local project created; cloud sync is locked', 'success');
       }
 
       async function deleteCloudProject(code) {
@@ -1865,6 +1861,7 @@
             if (cloudUnsubscribe) cloudUnsubscribe();
             cloudUnsubscribe = null;
             activeCloudProjectCode = '';
+            updateCloudSyncButton();
             setCloudStatus(`Cloud: deleted ${projectCode}; current screen is local only`, 'warning');
           }
           await refreshProjectList();
@@ -1880,12 +1877,17 @@
           setCloudStatus('Local delete cancelled', 'warning');
           return;
         }
+        const localKey = localProjectStorageKey(projectCode);
+        if (localKey) {
+          try { localStorage.removeItem(localKey); } catch (error) {}
+        }
         if (cloudUnsubscribe) cloudUnsubscribe();
         cloudUnsubscribe = null;
         activeCloudProjectCode = '';
         cloudRevision = 0;
         cloudBaseJson = '';
         cloudConflictPending = false;
+        updateCloudSyncButton();
         data = normalizeData({ ...defaultData, projectCode: '', projectName: 'Project Timeline', rows: [] });
         resetProjectCodeInputs('');
         suppressCloudSave = true;
@@ -1909,18 +1911,6 @@
         setValue('projectCodeProjectInput', normalized);
       }
 
-      function closeProjectCodeModal() {
-        pendingProjectCode = '';
-        safeClassRemove(byId('projectCodeModal'), 'show');
-      }
-
-      function openProjectCodeModal(targetCode) {
-        pendingProjectCode = normalizeProjectCode(targetCode);
-        setText('currentCloudProjectText', activeCloudProjectCode || data?.projectCode || '(none)');
-        setText('targetCloudProjectText', pendingProjectCode || '(none)');
-        safeClassAdd(byId('projectCodeModal'), 'show');
-      }
-
       function handleProjectCodeChange(targetCode, options = {}) {
         const code = normalizeProjectCode(targetCode);
         if (!code) {
@@ -1928,48 +1918,13 @@
           setCloudStatus('Cloud: enter Project Code first', 'warning');
           return;
         }
-        const currentCode = activeCloudProjectCode || normalizeProjectCode(data?.projectCode || '');
-        if (!cloudUser || !isCloudUnlocked()) {
-          resetProjectCodeInputs(code);
-          saveData();
-          return;
-        }
-        if (!currentCode || code === currentCode) {
-          resetProjectCodeInputs(code);
-          if (options.saveWhenSame) {
-            saveData();
-            queueCloudSave();
-          } else {
-            loadCloudProject(code);
-          }
-          return;
-        }
-        setValue('projectCodeInput', code);
-        setValue('projectCodeProjectInput', code);
-        openProjectCodeModal(code);
-      }
-
-      function loadPendingProjectCode() {
-        const code = pendingProjectCode;
-        closeProjectCodeModal();
-        resetProjectCodeInputs(code);
-        loadCloudProject(code);
-      }
-
-      function saveAsPendingProjectCode() {
-        const code = pendingProjectCode;
-        closeProjectCodeModal();
+        if (activeCloudProjectCode && code !== activeCloudProjectCode) stopCloudSyncSilently();
         resetProjectCodeInputs(code);
         saveData();
-        saveCloudProjectNow(code);
+        if (cloudUser && isCloudUnlocked()) setCloudStatus(`Cloud unlocked: ${code} is local only. Press Sync Cloud to compare and sync.`, 'success');
       }
 
-      function cancelPendingProjectCode() {
-        closeProjectCodeModal();
-        resetProjectCodeInputs(activeCloudProjectCode || data?.projectCode || '');
-      }
-
-      async function loadCloudProject(projectCode = getProjectCode()) {
+      async function loadCloudProject(projectCode = getProjectCode(), options = {}) {
         const api = getFirebaseApi();
         if (!api) return setCloudStatus('Cloud: Firebase unavailable', 'error');
         if (!cloudUser || !isCloudUnlocked()) return setCloudStatus('Cloud: unlock sync first', 'warning');
@@ -1979,14 +1934,7 @@
         try {
           const snap = await api.getDoc(cloudDocRef(code));
           if (!snap.exists()) {
-            data.projectCode = code;
-            cloudRevision = 0;
-            cloudBaseJson = '';
-            cloudConflictPending = false;
-            setValue('projectCodeInput', code);
-            setValue('projectCodeProjectInput', code);
-            subscribeCloudProject(code);
-            await saveCloudProjectNow(code);
+            setCloudStatus(`Cloud project ${code} does not exist`, 'warning');
             return;
           }
           const payload = snap.data();
@@ -2005,8 +1953,15 @@
           setValue('projectCodeInput', code);
           render();
           suppressCloudSave = false;
-          subscribeCloudProject(code);
-          setCloudStatus(`Cloud: loaded ${code}`, 'success');
+          saveLocalSyncMeta(code, payload);
+          saveData();
+          if (options.startSync) {
+            subscribeCloudProject(code);
+            setCloudStatus(`Auto Sync active: ${code}`, 'success');
+          } else {
+            stopCloudSyncSilently();
+            setCloudStatus(`Cloud: loaded ${code} as local only`, 'success');
+          }
         } catch (error) {
           suppressCloudSave = false;
           setCloudStatus(`Cloud load failed: ${error.code || error.message}`, 'error');
@@ -2067,7 +2022,7 @@
             cloudConflictPromptOpen = true;
             const loadLatest = window.confirm('Cloud has newer data from a teammate. Press OK to load the latest cloud version. Press Cancel to keep your local screen and export it first if needed.');
             if (loadLatest) {
-              loadCloudProject(code).finally(() => {
+              loadCloudProject(code, { startSync: true }).finally(() => {
                 cloudConflictPromptOpen = false;
               });
             } else {
@@ -2095,6 +2050,7 @@
         if (!api || !cloudUser || !isCloudUnlocked() || !projectCode) return;
         if (cloudUnsubscribe) cloudUnsubscribe();
         activeCloudProjectCode = normalizeProjectCode(projectCode);
+        updateCloudSyncButton();
         cloudUnsubscribe = api.onSnapshot(cloudDocRef(projectCode), snap => {
           if (!snap.exists()) return;
           const payload = snap.data();
@@ -2103,6 +2059,7 @@
             if (cloudUnsubscribe) cloudUnsubscribe();
             cloudUnsubscribe = null;
             activeCloudProjectCode = '';
+            updateCloudSyncButton();
             setCloudStatus(`Cloud: project ${projectCode} was deleted; current screen is local only`, 'warning');
             return;
           }
@@ -2289,11 +2246,33 @@
         return normalizeData(defaultData);
       }
 
+      function localProjectStorageKey(projectCode) {
+        const code = normalizeProjectCode(projectCode);
+        return code ? `${LOCAL_PROJECT_PREFIX}${encodeURIComponent(code)}` : '';
+      }
+
+      function saveLocalSyncMeta(projectCode, payload) {
+        const code = normalizeProjectCode(projectCode);
+        if (!code) return;
+        try {
+          const all = JSON.parse(localStorage.getItem(LOCAL_SYNC_META_KEY) || '{}');
+          all[code] = {
+            revision: Number(payload?.revision || 0),
+            cloudJson: payload?.data ? cloudDataJson(payload.data, code) : '',
+            downloadedAt: new Date().toISOString()
+          };
+          localStorage.setItem(LOCAL_SYNC_META_KEY, JSON.stringify(all));
+        } catch (error) {}
+      }
+
       function saveData() {
         try {
-          localStorage.setItem(STORE_KEY, JSON.stringify(data));
+          const serialized = JSON.stringify(data);
+          localStorage.setItem(STORE_KEY, serialized);
+          const projectKey = localProjectStorageKey(data?.projectCode);
+          if (projectKey) localStorage.setItem(projectKey, serialized);
           lastSaveError = false;
-          setSaveStatus(`Saved locally ${new Date().toLocaleTimeString()}`, 'success');
+          setSaveStatus(`Saved locally${data?.projectCode ? `: ${data.projectCode}` : ''} ${new Date().toLocaleTimeString()}`, 'success');
           queueCloudSave();
           return true;
         } catch (error) {
@@ -3155,7 +3134,7 @@
         render();
         suppressCloudSave = false;
         handleProjectCodeChange(requestedProjectCode, { saveWhenSame: true });
-        if (!pendingProjectCode) autoUpdateHolidays('project-editor', true);
+        autoUpdateHolidays('project-editor', true);
       }
 
       function findRowById(rowId) {
@@ -3933,6 +3912,7 @@ ${visualRows}
         bind('hideToolbarButton', 'click', () => setToolbarHidden(true));
         bind('showToolbarButton', 'click', () => setToolbarHidden(false));
         bind('cloudSignInButton', 'click', toggleCloudSignIn);
+        bind('cloudSyncButton', 'click', toggleExplicitCloudSync);
         bind('cloudPasswordInput', 'keydown', event => {
           if (event.key === 'Enter') toggleCloudSignIn();
         });
@@ -3974,9 +3954,6 @@ ${visualRows}
         });
         bind('cancelProjectButton', 'click', closeProjectModal);
         bind('applyProjectButton', 'click', applyProjectEditor);
-        bind('loadProjectCodeButton', 'click', loadPendingProjectCode);
-        bind('saveAsProjectCodeButton', 'click', saveAsPendingProjectCode);
-        bind('cancelProjectCodeButton', 'click', cancelPendingProjectCode);
         bind('editRowsButton', 'click', openRowsModal);
         bind('addRowButton', 'click', addRow);
         bind('duplicateLastRowButton', 'click', duplicateLastRow);
