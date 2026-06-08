@@ -287,14 +287,45 @@
       height: var(--header-h);
       text-align: center;
       font-weight: 700;
-      position: sticky;
-      top: 0;
+      position: static;
+      top: auto;
       z-index: 20;
       background: #f8fafc;
     }
-    .programme thead tr:nth-child(2) th { top: var(--header-h); z-index: 21; }
-    .programme thead tr:nth-child(3) th { top: calc(var(--header-h) * 2); z-index: 22; }
-    .left-head { text-align: left; background: #f8fafc; }
+    .programme thead tr:nth-child(2) th,
+    .programme thead tr:nth-child(3) th { top: auto; }
+    .left-head {
+      position: relative;
+      text-align: left;
+      background: #f8fafc;
+    }
+    .column-resize-handle {
+      position: absolute;
+      top: 0;
+      right: -4px;
+      width: 9px;
+      height: 100%;
+      cursor: col-resize;
+      z-index: 45;
+      touch-action: none;
+    }
+    .column-resize-handle::after {
+      content: "";
+      position: absolute;
+      top: 20%;
+      bottom: 20%;
+      left: 4px;
+      width: 1px;
+      background: transparent;
+    }
+    .left-head:hover .column-resize-handle::after,
+    body.column-resizing .column-resize-handle::after {
+      background: #0f766e;
+    }
+    body.column-resizing {
+      cursor: col-resize;
+      user-select: none;
+    }
     .category-col {
       width: var(--category-w);
       min-width: var(--category-w);
@@ -346,8 +377,8 @@
     .programme thead th.person-col,
     .programme thead th.checklist-col,
     .programme thead th.remarks-col {
-      position: sticky;
-      top: 0;
+      position: relative;
+      top: auto;
       left: auto;
       right: auto;
       z-index: 23;
@@ -856,6 +887,20 @@
     .row-editor textarea[data-field="action"] {
       min-width: 360px;
     }
+    .item-order-controls {
+      display: grid;
+      grid-template-columns: repeat(2, 30px);
+      gap: 5px;
+      justify-content: center;
+      margin-bottom: 6px;
+    }
+    .item-order-controls button {
+      width: 30px;
+      height: 28px;
+      padding: 0;
+      font-size: 15px;
+      line-height: 1;
+    }
     .editor-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
     .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
     .project-list-table {
@@ -898,7 +943,15 @@
     @media print {
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
       body { background: white; font-size: 9.5px; }
-      .app { padding: 0; }
+      .app {
+        padding: 0;
+        --category-w: 100px !important;
+        --item-w: 130px !important;
+        --action-w: 240px !important;
+        --person-w: 95px !important;
+        --checklist-w: 180px !important;
+        --remarks-w: 200px !important;
+      }
       .toolbar, .modal { display: none !important; }
       .sheet { box-shadow: none; border-radius: 0; }
       .sheet-head { padding: 0 0 4mm; border: 0; }
@@ -1052,8 +1105,8 @@
             <tr><th>Project Code</th><td><input id="projectCodeProjectInput" placeholder="Same code used for cloud sync"></td></tr>
             <tr><th>Responsible Person</th><td><input id="projectOwnerInput" required placeholder="Required"></td></tr>
             <tr><th>Responsible Person Display Title</th><td><input id="projectOwnerTitleInput" placeholder="Example: Project Lead. Leave blank to show name only."></td></tr>
-            <tr><th>Action By Column Title</th><td><input id="actionByLabelInput" placeholder="Example: PIC or Responsible Team"></td></tr>
-            <tr><th>Action By Column Position</th><td><select id="actionByPositionInput"><option value="afterAction">After Action</option><option value="afterItems">After Action Items</option><option value="afterRemarks">After Remarks</option></select></td></tr>
+            <tr><th>Free Column Title</th><td><input id="actionByLabelInput" placeholder="Example: Action By, PIC or Responsible Team"></td></tr>
+            <tr><th>Free Column Position</th><td><select id="actionByPositionInput"><option value="afterAction">After Action</option><option value="afterItems">After Action Items</option><option value="afterRemarks">After Remarks</option></select></td></tr>
             <tr><th>Event Period</th><td><div class="date-pair"><input id="eventStartInput" type="date"><input id="eventEndInput" type="date"></div></td></tr>
             <tr><th>Version</th><td><input id="versionInput"></td></tr>
             <tr><th>Last Update</th><td><input id="lastUpdateInput" readonly><div style="margin-top:6px;color:#64748b">Automatically updated after edits.</div></td></tr>
@@ -1221,7 +1274,7 @@
               <th>Action Item</th>
               <th style="width:280px">Sub Checklist</th>
               <th>Remarks</th>
-              <th style="width:85px">Action</th>
+              <th style="width:110px">Order / Action</th>
             </tr>
           </thead>
           <tbody id="itemsEditorBody"></tbody>
@@ -1295,6 +1348,15 @@
       const DQ = String.fromCharCode(34);
       const BOM = String.fromCharCode(65279);
       const BS = String.fromCharCode(92);
+      const COLUMN_WIDTH_DEFAULTS = { category: 130, item: 170, action: 330, person: 120, checklist: 230, remarks: 260 };
+      const COLUMN_WIDTH_LIMITS = {
+        category: [90, 300],
+        item: [110, 420],
+        action: [180, 700],
+        person: [90, 360],
+        checklist: [160, 520],
+        remarks: [160, 600]
+      };
       const REQUIRED_IDS = ['app', 'projectName', 'versionText', 'ownerText', 'eventPeriodText', 'dateRangeText', 'lastUpdateText', 'viewText', 'clientSummary', 'notesText', 'startInput', 'endInput', 'viewInput', 'weekLabelInput', 'densityInput', 'freezeColumnsInput', 'programmeWrap', 'companyLogo', 'holidayStatus', 'saveStatus', 'projectCodeInput', 'cloudPasswordInput', 'cloudStatus'];
       let editingRows = [];
       let editingItems = [];
@@ -1303,7 +1365,7 @@
       let dragRenderRequest = null;
       let lastAutoHolidayFetchKey = '';
       let lastSaveError = false;
-      let uiState = { toolbarHidden: false, freezeColumns: 4 };
+      let uiState = { toolbarHidden: false, freezeColumns: 4, columnWidths: {} };
       let firebaseApi = null;
       let cloudUser = null;
       let cloudUnsubscribe = null;
@@ -2136,11 +2198,12 @@
             const freezeColumns = Number(saved.freezeColumns);
             return {
               toolbarHidden: saved.toolbarHidden === true,
-              freezeColumns: Number.isInteger(freezeColumns) && freezeColumns >= 0 && freezeColumns <= 6 ? freezeColumns : 4
+              freezeColumns: Number.isInteger(freezeColumns) && freezeColumns >= 0 && freezeColumns <= 6 ? freezeColumns : 4,
+              columnWidths: normalizeColumnWidths(saved.columnWidths)
             };
           }
         } catch (error) {}
-        return { toolbarHidden: false, freezeColumns: 4 };
+        return { toolbarHidden: false, freezeColumns: 4, columnWidths: {} };
       }
 
       function saveUiState() {
@@ -2163,6 +2226,43 @@
           safeClassToggle(document.body, `freeze-cols-${index}`, index === freezeColumns);
         }
         setValue('freezeColumnsInput', String(freezeColumns));
+        saveUiState();
+      }
+
+      function normalizeColumnWidths(source) {
+        if (!source || typeof source !== 'object') return {};
+        return Object.keys(COLUMN_WIDTH_DEFAULTS).reduce((result, key) => {
+          const width = Number(source[key]);
+          const [min, max] = COLUMN_WIDTH_LIMITS[key];
+          if (Number.isFinite(width)) result[key] = Math.round(Math.min(max, Math.max(min, width)));
+          return result;
+        }, {});
+      }
+
+      function applyWorkspaceColumnWidths() {
+        const app = byId('app');
+        if (!app) return;
+        Object.keys(COLUMN_WIDTH_DEFAULTS).forEach(key => {
+          const width = uiState.columnWidths?.[key];
+          const variable = `--${key === 'item' ? 'item' : key === 'person' ? 'person' : key}-w`;
+          if (Number.isFinite(width)) app.style.setProperty(variable, `${width}px`);
+          else app.style.removeProperty(variable);
+        });
+      }
+
+      function setWorkspaceColumnWidth(key, width, save = false) {
+        if (!COLUMN_WIDTH_DEFAULTS[key]) return;
+        const [min, max] = COLUMN_WIDTH_LIMITS[key];
+        uiState.columnWidths = uiState.columnWidths || {};
+        uiState.columnWidths[key] = Math.round(Math.min(max, Math.max(min, Number(width) || COLUMN_WIDTH_DEFAULTS[key])));
+        applyWorkspaceColumnWidths();
+        if (save) saveUiState();
+      }
+
+      function resetWorkspaceColumnWidth(key) {
+        if (!COLUMN_WIDTH_DEFAULTS[key]) return;
+        delete uiState.columnWidths[key];
+        applyWorkspaceColumnWidths();
         saveUiState();
       }
 
@@ -2985,10 +3085,12 @@
         setText('actionByHelpLabel', data.actionByLabel);
         populateFreezeColumnOptions();
         safeClassToggle(byId('app'), 'compact', byId('densityInput') ? byId('densityInput').value === 'compact' : true);
+        applyWorkspaceColumnWidths();
         setHtml('programmeWrap', buildTable(rows, periods, mode));
         bindProgrammeDoubleClick();
         bindProgrammeDrag();
         bindProgrammeChecklist();
+        bindColumnResize();
         window.requestAnimationFrame(() => alignAllChecklistRemarks());
       }
 
@@ -3033,7 +3135,7 @@
         let html = '<table class="programme"><thead><tr>';
         leftKeys.forEach(key => {
           const meta = leftColumnMeta(key);
-          html += `<th class="left-head ${meta.className}" rowspan="3" ${leftColumnAttrs(leftKeys, key)}>${escapeHtml(meta.label)}</th>`;
+          html += `<th class="left-head ${meta.className}" rowspan="3" data-column-key="${key}" ${leftColumnAttrs(leftKeys, key)}>${escapeHtml(meta.label)}<span class="column-resize-handle" data-column-key="${key}" title="Drag to resize. Double-click to reset." aria-label="Resize ${escapeHtml(meta.label)} column"></span></th>`;
         });
         groupSpans(periods, 'label1').forEach(group => {
           html += `<th class="month-cell" colspan="${group.count}">${escapeHtml(group.label)}</th>`;
@@ -3382,6 +3484,38 @@
         };
       }
 
+      function bindColumnResize() {
+        const wrap = byId('programmeWrap');
+        if (!wrap) return;
+        wrap.querySelectorAll('.column-resize-handle').forEach(handle => {
+          handle.onpointerdown = event => {
+            const key = handle.dataset.columnKey;
+            const header = handle.closest('.left-head');
+            if (!key || !header) return;
+            event.preventDefault();
+            event.stopPropagation();
+            const startX = event.clientX;
+            const startWidth = header.getBoundingClientRect().width;
+            safeClassAdd(document.body, 'column-resizing');
+            const move = moveEvent => {
+              setWorkspaceColumnWidth(key, startWidth + moveEvent.clientX - startX);
+            };
+            const end = () => {
+              safeClassRemove(document.body, 'column-resizing');
+              window.removeEventListener('pointermove', move);
+              saveUiState();
+            };
+            window.addEventListener('pointermove', move);
+            window.addEventListener('pointerup', end, { once: true });
+          };
+          handle.ondblclick = event => {
+            event.preventDefault();
+            event.stopPropagation();
+            resetWorkspaceColumnWidth(handle.dataset.columnKey);
+          };
+        });
+      }
+
       function startTimelineDrag(event, cell, action) {
         const row = findRowById(cell.dataset.rowId);
         if (!row) return;
@@ -3648,6 +3782,8 @@
       function renderItemsEditor() {
         const body = byId('itemsEditorBody');
         if (!body) return;
+        const wrap = body.closest('.row-editor-wrap');
+        const previousScrollTop = wrap ? wrap.scrollTop : 0;
         body.innerHTML = editingItems.map((item, index) => `
           <tr>
             <td><input data-index="${index}" data-field="done" type="checkbox" ${isChecklistItemDone(item) ? 'checked' : ''}></td>
@@ -3664,8 +3800,15 @@
               </div>
             </td>
             <td><textarea class="item-remark-input" data-index="${index}" data-field="remarks">${escapeHtml(item.remarks)}</textarea></td>
-            <td><button class="mini danger" data-action="deleteItem" data-index="${index}">Delete</button></td>
+            <td>
+              <div class="item-order-controls">
+                <button class="mini light" data-action="moveItemUp" data-index="${index}" title="Move item up" aria-label="Move item up" ${index === 0 ? 'disabled' : ''}>↑</button>
+                <button class="mini light" data-action="moveItemDown" data-index="${index}" title="Move item down" aria-label="Move item down" ${index === editingItems.length - 1 ? 'disabled' : ''}>↓</button>
+              </div>
+              <button class="mini danger" data-action="deleteItem" data-index="${index}">Delete</button>
+            </td>
           </tr>`).join('');
+        if (wrap) wrap.scrollTop = previousScrollTop;
         body.querySelectorAll('input, textarea').forEach(input => {
           input.addEventListener('input', updateEditingItemField);
           input.addEventListener('change', updateEditingItemField);
@@ -3700,6 +3843,13 @@
       function handleItemButton(event) {
         const index = Number(event.currentTarget.dataset.index);
         const action = event.currentTarget.dataset.action;
+        if ((action === 'moveItemUp' || action === 'moveItemDown') && editingItems[index]) {
+          const targetIndex = action === 'moveItemUp' ? index - 1 : index + 1;
+          if (targetIndex >= 0 && targetIndex < editingItems.length) {
+            const [movedItem] = editingItems.splice(index, 1);
+            editingItems.splice(targetIndex, 0, movedItem);
+          }
+        }
         if (action === 'deleteItem') {
           const itemName = editingItems[index]?.text || `Item ${index + 1}`;
           if (!window.confirm(`Delete action item "${itemName}"?`)) return;
