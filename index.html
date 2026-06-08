@@ -302,8 +302,8 @@
     .column-resize-handle {
       position: absolute;
       top: 0;
-      right: -4px;
-      width: 9px;
+      right: -6px;
+      width: 13px;
       height: 100%;
       cursor: col-resize;
       z-index: 45;
@@ -312,15 +312,18 @@
     .column-resize-handle::after {
       content: "";
       position: absolute;
-      top: 20%;
-      bottom: 20%;
-      left: 4px;
-      width: 1px;
-      background: transparent;
+      top: 22%;
+      bottom: 22%;
+      left: 5px;
+      width: 3px;
+      border-left: 1px solid #94a3b8;
+      border-right: 1px solid #cbd5e1;
+      opacity: 0.75;
     }
     .left-head:hover .column-resize-handle::after,
     body.column-resizing .column-resize-handle::after {
-      background: #0f766e;
+      border-color: #0f766e;
+      opacity: 1;
     }
     body.column-resizing {
       cursor: col-resize;
@@ -411,6 +414,14 @@
     body[class*="freeze-cols-"] .programme :is(.category-col, .item-col, .action-col, .person-col, .checklist-col, .remarks-col) {
       position: static;
       left: auto;
+    }
+    body.freeze-cols-0 .programme thead [data-left-index],
+    body.freeze-cols-1 .programme thead [data-left-index]:not([data-left-index="0"]),
+    body.freeze-cols-2 .programme thead [data-left-index]:not([data-left-index="0"]):not([data-left-index="1"]),
+    body.freeze-cols-3 .programme thead [data-left-index]:not([data-left-index="0"]):not([data-left-index="1"]):not([data-left-index="2"]),
+    body.freeze-cols-4 .programme thead :is([data-left-index="4"], [data-left-index="5"]),
+    body.freeze-cols-5 .programme thead [data-left-index="5"] {
+      position: relative;
     }
     body.freeze-cols-1 .programme [data-left-index="0"],
     body.freeze-cols-2 .programme :is([data-left-index="0"], [data-left-index="1"]),
