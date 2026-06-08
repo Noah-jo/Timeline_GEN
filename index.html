@@ -242,6 +242,12 @@
     .project-title { min-width: 0; font-size: 13px; line-height: 1.45; }
     .project-title strong { display: block; font-size: 18px; margin-bottom: 4px; letter-spacing: 0.01em; }
     .project-meta { text-align: right; font-size: 12px; line-height: 1.45; color: #334155; }
+    .field-hint {
+      margin-top: 5px;
+      color: #64748b;
+      font-size: 11px;
+      line-height: 1.3;
+    }
     .client-summary {
       padding: 8px 12px;
       border-left: 1px solid var(--line);
@@ -909,6 +915,25 @@
       justify-content: center;
       margin-bottom: 6px;
     }
+    .drag-order-handle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 30px;
+      height: 28px;
+      padding: 0 7px;
+      border: 1px solid #94a3b8;
+      border-radius: 6px;
+      background: #fff;
+      color: #475569;
+      font-weight: 800;
+      cursor: grab;
+      user-select: none;
+    }
+    .drag-order-handle:active { cursor: grabbing; }
+    .row-editor tr.dragging-row { opacity: 0.42; }
+    .row-editor tr.drag-over-row td { box-shadow: inset 0 3px 0 #0f766e; }
+    body.actions-only-view .legend { display: none; }
     .item-order-controls button {
       width: 30px;
       height: 28px;
@@ -1015,8 +1040,8 @@
       <div class="toolbar-actions">
         <div class="toolbar-group primary" data-title="Schedule & View">
           <label class="project-code-control"><span>Project Code</span><input id="projectCodeInput"><button class="light mini" id="projectListButton" type="button">List</button></label>
-          <label>Start <input id="startInput" type="date"></label>
-          <label>End <input id="endInput" type="date"></label>
+          <label>Start <input id="startInput" type="date" title="Date format: DD/MM/YYYY"></label>
+          <label>End <input id="endInput" type="date" title="Date format: DD/MM/YYYY"></label>
           <select id="viewInput">
             <option value="auto">Auto View</option>
             <option value="day">Day View</option>
@@ -1034,6 +1059,7 @@
           <select id="audienceInput">
             <option value="internal">Internal View</option>
             <option value="client">Client View</option>
+            <option value="actions">Actions Only View</option>
           </select>
           <select id="freezeColumnsInput" title="Freeze columns from the left">
             <option value="0">Freeze: None</option>
@@ -1097,6 +1123,7 @@
         </div>
         <div class="project-meta">
           <div>Noah (Asia) Limited</div>
+          <div id="projectCodeText"></div>
           <div id="lastUpdateText"></div>
           <div id="viewText"></div>
         </div>
@@ -1123,11 +1150,11 @@
             <tr><th>Free Column Title</th><td><input id="actionByLabelInput" placeholder="Example: Action By, PIC or Responsible Team"></td></tr>
             <tr><th>Free Column Position</th><td><select id="actionByPositionInput"><option value="afterAction">After Action</option><option value="afterItems">After Action Items</option><option value="afterRemarks">After Remarks</option></select></td></tr>
             <tr><th>Client Output Free Column</th><td><select id="clientShowFreeColumnInput"><option value="no">Hide Free Column</option><option value="yes">Show after Action</option></select></td></tr>
-            <tr><th>Event Period</th><td><div class="date-pair"><input id="eventStartInput" type="date"><input id="eventEndInput" type="date"></div></td></tr>
+            <tr><th>Event Period</th><td><div class="date-pair"><input id="eventStartInput" type="date"><input id="eventEndInput" type="date"></div><div class="field-hint">Date format: DD/MM/YYYY</div></td></tr>
             <tr><th>Version</th><td><input id="versionInput"></td></tr>
             <tr><th>Last Update</th><td><input id="lastUpdateInput" readonly><div style="margin-top:6px;color:#64748b">Automatically updated after edits.</div></td></tr>
-            <tr><th>Display Start Date</th><td><input id="projectStartInput" type="date"></td></tr>
-            <tr><th>Display End Date</th><td><input id="projectEndInput" type="date"></td></tr>
+            <tr><th>Display Start Date</th><td><input id="projectStartInput" type="date"><div class="field-hint">Date format: DD/MM/YYYY</div></td></tr>
+            <tr><th>Display End Date</th><td><input id="projectEndInput" type="date"><div class="field-hint">Date format: DD/MM/YYYY</div></td></tr>
             <tr><th>Client Summary</th><td><textarea id="summaryInput" style="min-height:80px"></textarea></td></tr>
             <tr><th>Notes</th><td><textarea id="notesInput" style="min-height:90px"></textarea></td></tr>
             <tr><th>HK Holidays</th><td><button class="light" id="updateHkHolidaysButton" type="button">Update HK Holidays</button> <span id="holidayStatus" class="status-pill">HK Holidays: not updated</span></td></tr>
@@ -1200,9 +1227,9 @@
             <tr><th style="width:180px">Project Code</th><td><input id="newProjectCodeInput"></td></tr>
             <tr><th>Project Name</th><td><input id="newProjectNameInput"></td></tr>
             <tr><th>Responsible Person</th><td><input id="newProjectOwnerInput" required placeholder="Required"></td></tr>
-            <tr><th>Start Date</th><td><input id="newProjectStartInput" type="date"></td></tr>
-            <tr><th>End Date</th><td><input id="newProjectEndInput" type="date"></td></tr>
-            <tr><th>Event Period</th><td><div class="date-pair"><input id="newEventStartInput" type="date"><input id="newEventEndInput" type="date"></div></td></tr>
+            <tr><th>Start Date</th><td><input id="newProjectStartInput" type="date"><div class="field-hint">Date format: DD/MM/YYYY</div></td></tr>
+            <tr><th>End Date</th><td><input id="newProjectEndInput" type="date"><div class="field-hint">Date format: DD/MM/YYYY</div></td></tr>
+            <tr><th>Event Period</th><td><div class="date-pair"><input id="newEventStartInput" type="date"><input id="newEventEndInput" type="date"></div><div class="field-hint">Date format: DD/MM/YYYY</div></td></tr>
           </tbody>
         </table>
       </div>
@@ -1224,13 +1251,13 @@
         <table class="row-editor">
           <thead>
             <tr>
-              <th style="width:42px">#</th>
+              <th style="width:76px">Order</th>
               <th style="width:170px">Category</th>
               <th style="width:210px">Sub-Category</th>
               <th style="width:420px">Action</th>
               <th id="rowsActionByHeader" style="width:150px">Action By</th>
-              <th style="width:125px">Start</th>
-              <th style="width:125px">End</th>
+              <th style="width:125px">Start<br><span class="field-hint">DD/MM/YYYY</span></th>
+              <th style="width:125px">End<br><span class="field-hint">DD/MM/YYYY</span></th>
               <th style="width:80px">Highlight</th>
               <th style="width:135px">Action</th>
             </tr>
@@ -1255,8 +1282,8 @@
             <tr><th>Sub-Category</th><td><input id="quickItemInput"></td></tr>
             <tr><th>Action</th><td><input id="quickActionInput"></td></tr>
             <tr><th id="quickActionByLabel">Action By</th><td><input id="quickActionByInput"></td></tr>
-            <tr><th>Start</th><td><input id="quickStartInput" type="date"></td></tr>
-            <tr><th>End</th><td><input id="quickEndInput" type="date"></td></tr>
+            <tr><th>Start</th><td><input id="quickStartInput" type="date" title="Date format: DD/MM/YYYY"><div class="field-hint">Date format: DD/MM/YYYY</div></td></tr>
+            <tr><th>End</th><td><input id="quickEndInput" type="date" title="Date format: DD/MM/YYYY"><div class="field-hint">Date format: DD/MM/YYYY</div></td></tr>
             <tr><th>Highlight</th><td><select id="quickHighlightInput"><option value="NO">NO</option><option value="YES">YES</option></select></td></tr>
             <tr><th>Action Items</th><td><textarea id="quickChecklistInput" style="min-height:110px" placeholder="One action item per line"></textarea></td></tr>
             <tr><th>Remarks</th><td><textarea id="quickRemarksInput" style="min-height:110px" placeholder="One remark per line, matching action items by line"></textarea></td></tr>
@@ -1373,7 +1400,7 @@
         checklist: [160, 520],
         remarks: [160, 600]
       };
-      const REQUIRED_IDS = ['app', 'projectName', 'versionText', 'ownerText', 'eventPeriodText', 'dateRangeText', 'lastUpdateText', 'viewText', 'clientSummary', 'notesText', 'startInput', 'endInput', 'viewInput', 'weekLabelInput', 'densityInput', 'freezeColumnsInput', 'programmeWrap', 'companyLogo', 'holidayStatus', 'saveStatus', 'projectCodeInput', 'cloudPasswordInput', 'cloudStatus'];
+      const REQUIRED_IDS = ['app', 'projectName', 'projectCodeText', 'versionText', 'ownerText', 'eventPeriodText', 'dateRangeText', 'lastUpdateText', 'viewText', 'clientSummary', 'notesText', 'startInput', 'endInput', 'viewInput', 'weekLabelInput', 'densityInput', 'freezeColumnsInput', 'programmeWrap', 'companyLogo', 'holidayStatus', 'saveStatus', 'projectCodeInput', 'cloudPasswordInput', 'cloudStatus'];
       let editingRows = [];
       let editingItems = [];
       let quickPeriod = null;
@@ -1397,6 +1424,8 @@
       let pendingUnlockCloudPayload = null;
       let expandedSubitems = new Set();
       let expandedChecklistRows = new Set();
+      let draggedItemIndex = null;
+      let draggedRowIndex = null;
       let templates = {};
       let deletedTemplateNames = new Set();
       let data;
@@ -2039,6 +2068,7 @@
         }
         if (activeCloudProjectCode && code !== activeCloudProjectCode) stopCloudSyncSilently();
         resetProjectCodeInputs(code);
+        setText('projectCodeText', `Project Code: ${code}`);
         saveData();
         if (cloudUser && isCloudUnlocked()) setCloudStatus(`Cloud unlocked: ${code} is local only. Press Sync Cloud to compare and sync.`, 'success');
       }
@@ -2515,7 +2545,7 @@
             weekend: isHexColor(sourceColors.weekend) ? sourceColors.weekend : '#cfcfcf',
             highlight: isHexColor(sourceColors.highlight) ? sourceColors.highlight : '#fff7ed'
           },
-          audienceMode: ['internal', 'client'].includes(source.audienceMode) ? source.audienceMode : 'internal',
+          audienceMode: ['internal', 'client', 'actions'].includes(source.audienceMode) ? source.audienceMode : 'internal',
           summary: String(source.summary || ''),
           notes: String(source.notes || ''),
           holidays: Array.isArray(source.holidays) ? source.holidays.filter(isValidDate) : [],
@@ -3070,7 +3100,7 @@
         saveData();
         const rows = data.rows.slice().sort((a, b) => a.order - b.order);
         const mode = getResolvedViewMode();
-        const periods = buildPeriods(mode);
+        const periods = data.audienceMode === 'actions' ? [] : buildPeriods(mode);
         document.documentElement.style.setProperty('--work', data.colors.work);
         document.documentElement.style.setProperty('--weekend', data.colors.weekend);
         document.documentElement.style.setProperty('--highlight', data.colors.highlight);
@@ -3078,6 +3108,7 @@
         safeClassToggle(document.body, 'month-view', mode === 'month');
         safeClassToggle(document.body, 'client-view', data.audienceMode === 'client');
         safeClassToggle(document.body, 'client-show-free-column', data.audienceMode === 'client' && data.clientShowFreeColumn);
+        safeClassToggle(document.body, 'actions-only-view', data.audienceMode === 'actions');
         document.documentElement.style.setProperty('--period-count', String(periods.length));
         setText('projectName', data.projectName);
         const logoElement = byId('companyLogo');
@@ -3087,9 +3118,10 @@
         const ownerDisplay = data.projectOwnerTitle ? `${data.projectOwnerTitle}: ${data.projectOwner}` : data.projectOwner;
         setText('ownerText', ownerDisplay || 'Responsible person not set');
         setText('eventPeriodText', `Event Period: ${formatOptionalDateRange(data.eventStartDate, data.eventEndDate, 'Not set')}`);
+        setText('projectCodeText', data.projectCode ? `Project Code: ${data.projectCode}` : 'Project Code: Not set');
         setText('lastUpdateText', data.lastUpdate);
         setText('dateRangeText', `Project Period: ${formatDisplayDate(data.startDate)} - ${formatDisplayDate(data.endDate)}`);
-        setText('viewText', `View: ${mode.toUpperCase()} / ${data.audienceMode === 'client' ? 'CLIENT' : 'INTERNAL'}`);
+        setText('viewText', `View: ${data.audienceMode === 'actions' ? 'ACTIONS ONLY' : `${mode.toUpperCase()} / ${data.audienceMode === 'client' ? 'CLIENT' : 'INTERNAL'}`}`);
         setHolidayStatus(data.holidayStatusText || 'HK Holidays: not updated', data.holidayStatusType || '');
         setText('clientSummary', data.summary);
         setHtml('notesText', escapeHtml(data.notes).split(LF).join('<br>'));
@@ -3152,23 +3184,26 @@
         const spanRows = rows.map(row => ({ ...row, itemSpanKey: `${row.category}|${row.item}` }));
         const itemSpans = calculateSpans(spanRows, 'itemSpanKey');
         const leftKeys = getLeftColumnKeys();
+        const actionsOnly = data.audienceMode === 'actions';
         let html = '<table class="programme"><thead><tr>';
         leftKeys.forEach(key => {
           const meta = leftColumnMeta(key);
-          html += `<th class="left-head ${meta.className}" rowspan="3" data-column-key="${key}" ${leftColumnAttrs(leftKeys, key)}>${escapeHtml(meta.label)}<span class="column-resize-handle" data-column-key="${key}" title="Drag to resize. Double-click to reset." aria-label="Resize ${escapeHtml(meta.label)} column"></span></th>`;
+          html += `<th class="left-head ${meta.className}" rowspan="${actionsOnly ? 1 : 3}" data-column-key="${key}" ${leftColumnAttrs(leftKeys, key)}>${escapeHtml(meta.label)}<span class="column-resize-handle" data-column-key="${key}" title="Drag to resize. Double-click to reset." aria-label="Resize ${escapeHtml(meta.label)} column"></span></th>`;
         });
-        groupSpans(periods, 'label1').forEach(group => {
-          html += `<th class="month-cell" colspan="${group.count}">${escapeHtml(group.label)}</th>`;
-        });
-        html += '</tr><tr>';
-        periods.forEach(period => {
-          const weekday = period.type === 'day' ? period.label2 : '';
-          html += `<th class="period-col weekday-cell ${period.blocked ? 'weekend' : ''} ${weekday === 'Sat' ? 'sat' : ''} ${weekday === 'Sun' ? 'sun' : ''}">${escapeHtml(period.label2)}</th>`;
-        });
-        html += '</tr><tr>';
-        periods.forEach(period => {
-          html += `<th class="period-col day-cell ${period.blocked ? 'weekend' : ''}" title="${escapeHtml(period.start + ' to ' + period.end)}">${escapeHtml(period.label3)}</th>`;
-        });
+        if (!actionsOnly) {
+          groupSpans(periods, 'label1').forEach(group => {
+            html += `<th class="month-cell" colspan="${group.count}">${escapeHtml(group.label)}</th>`;
+          });
+          html += '</tr><tr>';
+          periods.forEach(period => {
+            const weekday = period.type === 'day' ? period.label2 : '';
+            html += `<th class="period-col weekday-cell ${period.blocked ? 'weekend' : ''} ${weekday === 'Sat' ? 'sat' : ''} ${weekday === 'Sun' ? 'sun' : ''}">${escapeHtml(period.label2)}</th>`;
+          });
+          html += '</tr><tr>';
+          periods.forEach(period => {
+            html += `<th class="period-col day-cell ${period.blocked ? 'weekend' : ''}" title="${escapeHtml(period.start + ' to ' + period.end)}">${escapeHtml(period.label3)}</th>`;
+          });
+        }
         html += '</tr></thead><tbody>';
         rows.forEach((row, index) => {
           const groupStart = index === 0 || rows[index - 1].category !== row.category;
@@ -3824,9 +3859,10 @@
             <td><textarea class="item-remark-input" data-index="${index}" data-field="remarks">${escapeHtml(item.remarks)}</textarea></td>
             <td>
               <div class="item-order-controls">
-                <button class="mini light" data-action="moveItemUp" data-index="${index}" title="Move item up" aria-label="Move item up" ${index === 0 ? 'disabled' : ''}>↑</button>
-                <button class="mini light" data-action="moveItemDown" data-index="${index}" title="Move item down" aria-label="Move item down" ${index === editingItems.length - 1 ? 'disabled' : ''}>↓</button>
+                <button class="mini light" data-action="moveItemUp" data-index="${index}" title="Move item up" aria-label="Move item up" ${index === 0 ? 'disabled' : ''}>Up</button>
+                <button class="mini light" data-action="moveItemDown" data-index="${index}" title="Move item down" aria-label="Move item down" ${index === editingItems.length - 1 ? 'disabled' : ''}>Down</button>
               </div>
+              <span class="drag-order-handle" draggable="true" data-drag-index="${index}" title="Drag to reorder action item">Drag</span>
               <button class="mini danger" data-action="deleteItem" data-index="${index}">Delete</button>
             </td>
           </tr>`).join('');
@@ -3840,6 +3876,7 @@
           if (!button || !body.contains(button)) return;
           handleItemButton({ currentTarget: button });
         };
+        bindEditorDragOrder(body, 'items');
       }
 
       function updateEditingItemField(event) {
@@ -3917,9 +3954,11 @@
       function renderRowsEditor() {
         const body = byId('rowsEditorBody');
         if (!body) return;
+        const wrap = body.closest('.row-editor-wrap');
+        const previousScrollTop = wrap ? wrap.scrollTop : 0;
         body.innerHTML = editingRows.map((row, index) => `
-          <tr>
-            <td>${index + 1}</td>
+          <tr data-drag-index="${index}">
+            <td><span class="drag-order-handle" draggable="true" data-drag-index="${index}" title="Drag to reorder row">Drag</span><div class="field-hint">#${index + 1}</div></td>
             <td><input data-index="${index}" data-field="category" value="${escapeHtml(row.category)}"></td>
             <td><input data-index="${index}" data-field="item" value="${escapeHtml(row.item)}"></td>
             <td><textarea data-index="${index}" data-field="action">${escapeHtml(row.action)}</textarea></td>
@@ -3928,11 +3967,12 @@
             <td><input data-index="${index}" data-field="end" type="date" value="${escapeHtml(row.end)}"></td>
             <td><select data-index="${index}" data-field="highlight"><option value="NO" ${row.highlight ? '' : 'selected'}>NO</option><option value="YES" ${row.highlight ? 'selected' : ''}>YES</option></select></td>
             <td>
-              <button class="mini light" data-action="up" data-index="${index}">↑</button>
-              <button class="mini light" data-action="down" data-index="${index}">↓</button>
+              <button class="mini light" data-action="up" data-index="${index}">Up</button>
+              <button class="mini light" data-action="down" data-index="${index}">Down</button>
               <button class="mini danger" data-action="delete" data-index="${index}">Delete</button>
             </td>
           </tr>`).join('');
+        if (wrap) wrap.scrollTop = previousScrollTop;
         body.querySelectorAll('input, select, textarea').forEach(input => {
           input.addEventListener('input', updateEditingRowField);
           input.addEventListener('change', updateEditingRowField);
@@ -3940,6 +3980,7 @@
         body.querySelectorAll('button[data-action]').forEach(button => {
           button.addEventListener('click', handleRowButton);
         });
+        bindEditorDragOrder(body, 'rows');
       }
 
       function updateEditingRowField(event) {
@@ -3952,11 +3993,62 @@
       function handleRowButton(event) {
         const index = Number(event.currentTarget.dataset.index);
         const action = event.currentTarget.dataset.action;
-        if (action === 'delete') editingRows.splice(index, 1);
+        if (action === 'delete') {
+          const row = editingRows[index];
+          const label = row?.action || row?.item || `Row ${index + 1}`;
+          if (!window.confirm(`Delete row "${label}"?`)) return;
+          editingRows.splice(index, 1);
+        }
         if (action === 'up' && index > 0) [editingRows[index - 1], editingRows[index]] = [editingRows[index], editingRows[index - 1]];
         if (action === 'down' && index < editingRows.length - 1) [editingRows[index + 1], editingRows[index]] = [editingRows[index], editingRows[index + 1]];
         editingRows = editingRows.map((row, order) => ({ ...row, order }));
         renderRowsEditor();
+      }
+
+      function bindEditorDragOrder(body, type) {
+        if (!body) return;
+        body.querySelectorAll('.drag-order-handle').forEach(handle => {
+          handle.addEventListener('dragstart', event => {
+            const index = Number(handle.dataset.dragIndex);
+            if (!Number.isInteger(index)) return;
+            if (type === 'items') draggedItemIndex = index;
+            else draggedRowIndex = index;
+            safeClassAdd(handle.closest('tr'), 'dragging-row');
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/plain', String(index));
+          });
+          handle.addEventListener('dragend', () => {
+            draggedItemIndex = null;
+            draggedRowIndex = null;
+            body.querySelectorAll('tr').forEach(row => {
+              safeClassRemove(row, 'dragging-row');
+              safeClassRemove(row, 'drag-over-row');
+            });
+          });
+        });
+        body.querySelectorAll('tr').forEach((row, targetIndex) => {
+          row.addEventListener('dragover', event => {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = 'move';
+            body.querySelectorAll('tr').forEach(candidate => safeClassRemove(candidate, 'drag-over-row'));
+            safeClassAdd(row, 'drag-over-row');
+          });
+          row.addEventListener('drop', event => {
+            event.preventDefault();
+            const sourceIndex = type === 'items' ? draggedItemIndex : draggedRowIndex;
+            if (!Number.isInteger(sourceIndex) || sourceIndex === targetIndex) return;
+            const collection = type === 'items' ? editingItems : editingRows;
+            const [moved] = collection.splice(sourceIndex, 1);
+            collection.splice(targetIndex, 0, moved);
+            if (type === 'items') {
+              editingItems = collection.map((item, order) => ({ ...item, order }));
+              renderItemsEditor();
+            } else {
+              editingRows = collection.map((item, order) => ({ ...item, order }));
+              renderRowsEditor();
+            }
+          });
+        });
       }
 
       function addRow() {
@@ -4057,7 +4149,7 @@
       function exportExcel() {
         const rows = data.rows.slice().sort((a, b) => a.order - b.order);
         const mode = getResolvedViewMode();
-        const periods = buildPeriods(mode);
+        const periods = data.audienceMode === 'actions' ? [] : buildPeriods(mode);
         const includeChecklist = data.audienceMode !== 'client';
         const exportKeys = getLeftColumnKeys().filter(key => includeChecklist || !['checklist', 'remarks'].includes(key));
         const leftHeaders = exportKeys.map(key => leftColumnMeta(key).label);
