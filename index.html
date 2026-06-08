@@ -1055,6 +1055,23 @@
       </div>
     </div>
   </div>
+  <div class="modal" id="cloudUnlockChoiceModal">
+    <div class="modal-card">
+      <h2>Cloud Project Already Exists</h2>
+      <p style="margin-top:0;color:#475569;line-height:1.5">
+        Cloud sync is unlocked. A cloud project already uses code <strong id="cloudUnlockProjectCodeText"></strong>.<br>
+        Your current local screen has not been changed. Choose what to do next.
+      </p>
+      <div class="editor-actions">
+        <button id="loadCloudAfterUnlockButton" type="button">Load Cloud Version</button>
+        <button class="secondary" id="keepLocalAfterUnlockButton" type="button">Keep Local Version and Sync</button>
+        <button class="light" id="cancelCloudAfterUnlockButton" type="button">Cancel</button>
+      </div>
+      <div style="margin-top:8px;color:#b91c1c;line-height:1.45">
+        Keep Local Version and Sync will overwrite the cloud version with the project currently shown on screen.
+      </div>
+    </div>
+  </div>
   <div class="modal" id="projectListModal">
     <div class="modal-card">
       <h2>Cloud Project List</h2>
@@ -1271,6 +1288,9 @@
       let cloudBaseJson = '';
       let cloudConflictPending = false;
       let cloudConflictPromptOpen = false;
+      let cloudUnlockChoiceRequested = false;
+      let pendingUnlockCloudCode = '';
+      let pendingUnlockCloudPayload = null;
       let expandedSubitems = new Set();
       let expandedChecklistRows = new Set();
       let templates = {};
@@ -1523,17 +1543,17 @@
           cloudUser = user || null;
           if (cloudUser && isCloudUnlocked()) {
             setCloudUnlocked(true);
-            const code = getProjectCode();
-            if (code) {
-              setCloudStatus(`Cloud: syncing ${code}`, 'success');
-              loadCloudProject(code);
-            } else {
-              setCloudStatus('Cloud unlocked: choose a project from List or enter Project Code', 'success');
+            setCloudStatus('Cloud unlocked: local project unchanged', 'success');
+            if (cloudUnlockChoiceRequested) {
+              cloudUnlockChoiceRequested = false;
+              offerCloudChoiceForCurrentCode();
             }
           } else {
             if (cloudUnsubscribe) cloudUnsubscribe();
             cloudUnsubscribe = null;
             activeCloudProjectCode = '';
+            cloudUnlockChoiceRequested = false;
+            closeCloudUnlockChoiceModal();
             setCloudUnlocked(false);
             if (cloudUser) api.signOut(api.auth).catch(() => {});
             setCloudStatus('Cloud: enter password to sync', 'warning');
@@ -1561,13 +1581,72 @@
               return;
             }
             setCloudUnlocked(true);
+            cloudUnlockChoiceRequested = true;
             setCloudStatus('Cloud: connecting...', 'loading');
             await api.signInAnonymously(api.auth);
           }
         } catch (error) {
+          cloudUnlockChoiceRequested = false;
           setCloudUnlocked(false);
           setCloudStatus(`Cloud sync failed: ${error.code || error.message}`, 'error');
         }
+      }
+
+      function closeCloudUnlockChoiceModal() {
+        pendingUnlockCloudCode = '';
+        pendingUnlockCloudPayload = null;
+        safeClassRemove(byId('cloudUnlockChoiceModal'), 'show');
+      }
+
+      async function offerCloudChoiceForCurrentCode() {
+        const api = getFirebaseApi();
+        const code = normalizeProjectCode(getProjectCode());
+        if (!api || !cloudUser || !isCloudUnlocked()) return;
+        if (!code || code.length < 3) {
+          setCloudStatus('Cloud unlocked: choose a project from List or enter Project Code', 'success');
+          return;
+        }
+        setCloudStatus(`Cloud unlocked: checking ${code}...`, 'loading');
+        try {
+          const snap = await api.getDoc(cloudDocRef(code));
+          if (!snap.exists() || snap.data()?.deleted === true) {
+            setCloudStatus(`Cloud unlocked: no cloud project loaded for ${code}`, 'success');
+            return;
+          }
+          const payload = snap.data();
+          if (!payload?.data || !Array.isArray(payload.data.rows)) throw new Error('Bad cloud project data');
+          pendingUnlockCloudCode = code;
+          pendingUnlockCloudPayload = payload;
+          setText('cloudUnlockProjectCodeText', code);
+          safeClassAdd(byId('cloudUnlockChoiceModal'), 'show');
+          setCloudStatus(`Cloud unlocked: choose how to handle ${code}`, 'warning');
+        } catch (error) {
+          setCloudStatus(`Cloud check failed: ${error.code || error.message}`, 'error');
+        }
+      }
+
+      function loadCloudVersionAfterUnlock() {
+        const code = pendingUnlockCloudCode;
+        closeCloudUnlockChoiceModal();
+        if (code) loadCloudProject(code);
+      }
+
+      async function keepLocalVersionAfterUnlock() {
+        const code = pendingUnlockCloudCode;
+        const payload = pendingUnlockCloudPayload;
+        closeCloudUnlockChoiceModal();
+        if (!code || !payload) return;
+        resetProjectCodeInputs(code);
+        setCloudBaseFromPayload(payload, code);
+        saveData();
+        setCloudStatus(`Cloud: saving local version to ${code}...`, 'loading');
+        await saveCloudProjectNow(code);
+      }
+
+      function cancelCloudChoiceAfterUnlock() {
+        const code = pendingUnlockCloudCode;
+        closeCloudUnlockChoiceModal();
+        setCloudStatus(`Cloud unlocked: local project unchanged${code ? ` (${code} not loaded or syncing)` : ''}`, 'success');
       }
 
       function cloudDocRef(projectCode) {
@@ -2001,14 +2080,14 @@
       }
 
       function queueCloudSave() {
-        if (suppressCloudSave || !cloudUser || !isCloudUnlocked() || !(activeCloudProjectCode || getProjectCode())) return;
+        if (suppressCloudSave || !cloudUser || !isCloudUnlocked() || !activeCloudProjectCode) return;
         window.clearTimeout(cloudSaveTimer);
         if (cloudConflictPending) {
           if (cloudConflictPromptOpen) return;
-          saveCloudProjectNow(activeCloudProjectCode || getProjectCode());
+          saveCloudProjectNow(activeCloudProjectCode);
           return;
         }
-        cloudSaveTimer = window.setTimeout(() => saveCloudProjectNow(activeCloudProjectCode || getProjectCode()), 900);
+        cloudSaveTimer = window.setTimeout(() => saveCloudProjectNow(activeCloudProjectCode), 900);
       }
 
       function subscribeCloudProject(projectCode) {
@@ -3857,6 +3936,9 @@ ${visualRows}
         bind('cloudPasswordInput', 'keydown', event => {
           if (event.key === 'Enter') toggleCloudSignIn();
         });
+        bind('loadCloudAfterUnlockButton', 'click', loadCloudVersionAfterUnlock);
+        bind('keepLocalAfterUnlockButton', 'click', keepLocalVersionAfterUnlock);
+        bind('cancelCloudAfterUnlockButton', 'click', cancelCloudChoiceAfterUnlock);
         bind('projectListButton', 'click', openProjectListModal);
         bind('addProjectButton', 'click', openNewProjectModal);
         bind('deleteProjectButton', 'click', deleteCurrentProject);
