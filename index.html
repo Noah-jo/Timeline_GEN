@@ -384,6 +384,10 @@
       padding-right: 4px;
       scrollbar-width: thin;
     }
+    .checklist-list.expanded {
+      max-height: none;
+      overflow-y: visible;
+    }
     .remarks-list {
       align-content: start;
     }
@@ -402,7 +406,7 @@
       top: 0;
       z-index: 1;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-columns: 14px minmax(0, 1fr) auto;
       gap: 3px;
       padding: 2px 0 5px;
       background: white;
@@ -415,11 +419,43 @@
       font-size: 10px;
     }
     .progress-track {
-      grid-column: 1 / -1;
+      grid-column: 2 / -1;
       height: 5px;
       border-radius: 999px;
       background: #e2e8f0;
       overflow: hidden;
+    }
+    .row-expand-toggle,
+    .row-expand-spacer {
+      width: 14px;
+      height: 14px;
+    }
+    .row-expand-toggle {
+      position: relative;
+      padding: 0;
+      border: 0;
+      border-radius: 2px;
+      background: transparent;
+    }
+    .row-expand-toggle::before {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 4px;
+      border-top: 4px solid transparent;
+      border-bottom: 4px solid transparent;
+      border-left: 6px solid #64748b;
+    }
+    .row-expand-toggle.expanded::before {
+      top: 5px;
+      left: 3px;
+      border-top: 6px solid #64748b;
+      border-right: 4px solid transparent;
+      border-bottom: 0;
+      border-left: 4px solid transparent;
+    }
+    .row-expand-toggle:hover {
+      background: #e2e8f0;
     }
     .progress-fill {
       height: 100%;
@@ -462,6 +498,12 @@
     .subcheck-toggle-button:hover {
       color: #0f766e;
       text-decoration: underline;
+    }
+    .subcheck-toggle-button:disabled {
+      color: #64748b;
+      cursor: default;
+      opacity: 1;
+      text-decoration: none;
     }
     .subcheck-item {
       display: grid;
@@ -860,7 +902,7 @@
     <div class="toolbar">
       <div>
         <h1>Noah Master Programme Timeline</h1>
-        <p>純展示型客戶版。左邊為 Category / Sub-Category / Action / Action By，右邊可切換 Day / Week / Month timeline，適合列印或 Save as PDF。</p>
+        <p>純展示型客戶版。左邊為 Category / Sub-Category / Action / <span id="actionByHelpLabel">Action By</span>，右邊可切換 Day / Week / Month timeline，適合列印或 Save as PDF。</p>
       </div>
       <div class="toolbar-actions">
         <div class="toolbar-group primary" data-title="Schedule & View">
@@ -890,7 +932,7 @@
             <option value="1">Freeze: Category</option>
             <option value="2">Freeze: Sub-Category</option>
             <option value="3">Freeze: Action</option>
-            <option value="4">Freeze: Action By</option>
+            <option id="freezeActionByOption" value="4">Freeze: Action By</option>
             <option value="5">Freeze: Action Items</option>
             <option value="6">Freeze: Remarks</option>
           </select>
@@ -968,6 +1010,8 @@
             <tr><th style="width:180px">Project Name</th><td><input id="projectNameInput"></td></tr>
             <tr><th>Project Code</th><td><input id="projectCodeProjectInput" placeholder="Same code used for cloud sync"></td></tr>
             <tr><th>Responsible Person</th><td><input id="projectOwnerInput" required placeholder="Required"></td></tr>
+            <tr><th>Responsible Person Display Title</th><td><input id="projectOwnerTitleInput" placeholder="Example: Project Lead. Leave blank to show name only."></td></tr>
+            <tr><th>Action By Column Title</th><td><input id="actionByLabelInput" placeholder="Example: PIC or Responsible Team"></td></tr>
             <tr><th>Event Period</th><td><div class="date-pair"><input id="eventStartInput" type="date"><input id="eventEndInput" type="date"></div></td></tr>
             <tr><th>Version</th><td><input id="versionInput"></td></tr>
             <tr><th>Last Update</th><td><input id="lastUpdateInput" readonly><div style="margin-top:6px;color:#64748b">Automatically updated after edits.</div></td></tr>
@@ -1070,7 +1114,7 @@
               <th style="width:170px">Category</th>
               <th style="width:210px">Sub-Category</th>
               <th style="width:420px">Action</th>
-              <th style="width:150px">Action By</th>
+              <th id="rowsActionByHeader" style="width:150px">Action By</th>
               <th style="width:125px">Start</th>
               <th style="width:125px">End</th>
               <th style="width:80px">Highlight</th>
@@ -1096,7 +1140,7 @@
             <tr><th style="width:180px">Category</th><td><input id="quickCategoryInput"></td></tr>
             <tr><th>Sub-Category</th><td><input id="quickItemInput"></td></tr>
             <tr><th>Action</th><td><input id="quickActionInput"></td></tr>
-            <tr><th>Action By</th><td><input id="quickActionByInput"></td></tr>
+            <tr><th id="quickActionByLabel">Action By</th><td><input id="quickActionByInput"></td></tr>
             <tr><th>Start</th><td><input id="quickStartInput" type="date"></td></tr>
             <tr><th>End</th><td><input id="quickEndInput" type="date"></td></tr>
             <tr><th>Highlight</th><td><select id="quickHighlightInput"><option value="NO">NO</option><option value="YES">YES</option></select></td></tr>
@@ -1226,6 +1270,7 @@
       let cloudConflictPending = false;
       let cloudConflictPromptOpen = false;
       let expandedSubitems = new Set();
+      let expandedChecklistRows = new Set();
       let templates = {};
       let deletedTemplateNames = new Set();
       let data;
@@ -1276,6 +1321,8 @@
         version: 'Version: 2.0',
         lastUpdate: 'Last update: 25 SEP 2025',
         projectOwner: 'Luxe',
+        projectOwnerTitle: '',
+        actionByLabel: 'Action By',
         eventStartDate: '2025-10-16',
         eventEndDate: '2025-11-05',
         startDate: '2025-09-26',
@@ -2230,6 +2277,8 @@
           version: String(source.version || 'Version: 1.0'),
           lastUpdate: String(source.lastUpdate || `Last update: ${formatDisplayDate(todayISO())}`),
           projectOwner: String(source.projectOwner || source.owner || source.responsiblePerson || ''),
+          projectOwnerTitle: String(source.projectOwnerTitle || source.ownerTitle || ''),
+          actionByLabel: String(source.actionByLabel || 'Action By').trim() || 'Action By',
           eventStartDate: isValidDate(source.eventStartDate) ? source.eventStartDate : '',
           eventEndDate: isValidDate(source.eventEndDate) ? source.eventEndDate : '',
           startDate: startDate <= endDate ? startDate : endDate,
@@ -2810,7 +2859,8 @@
         if (logoElement) logoElement.src = data.logoDataUrl || '';
         safeClassToggle(document.body, 'has-logo', Boolean(data.logoDataUrl));
         setText('versionText', data.version);
-        setText('ownerText', data.projectOwner ? `Owner: ${data.projectOwner}` : 'Owner: Not set');
+        const ownerDisplay = data.projectOwnerTitle ? `${data.projectOwnerTitle}: ${data.projectOwner}` : data.projectOwner;
+        setText('ownerText', ownerDisplay || 'Responsible person not set');
         setText('eventPeriodText', `Event Period: ${formatOptionalDateRange(data.eventStartDate, data.eventEndDate, 'Not set')}`);
         setText('lastUpdateText', data.lastUpdate);
         setText('dateRangeText', `Project Period: ${formatDisplayDate(data.startDate)} - ${formatDisplayDate(data.endDate)}`);
@@ -2824,6 +2874,10 @@
         setValue('viewInput', data.viewMode || 'auto');
         setValue('weekLabelInput', data.weekLabelMode || 'project');
         setValue('audienceInput', data.audienceMode || 'internal');
+        setText('rowsActionByHeader', data.actionByLabel);
+        setText('quickActionByLabel', data.actionByLabel);
+        setText('actionByHelpLabel', data.actionByLabel);
+        setText('freezeActionByOption', `Freeze: ${data.actionByLabel}`);
         safeClassToggle(byId('app'), 'compact', byId('densityInput') ? byId('densityInput').value === 'compact' : true);
         setHtml('programmeWrap', buildTable(rows, periods, mode));
         bindProgrammeDoubleClick();
@@ -2839,7 +2893,7 @@
         html += '<th class="left-head category-col" rowspan="3">Category</th>';
         html += '<th class="left-head item-col" rowspan="3">Sub-Category</th>';
         html += '<th class="left-head action-col" rowspan="3">Action</th>';
-        html += '<th class="left-head person-col" rowspan="3">Action By</th>';
+        html += `<th class="left-head person-col" rowspan="3">${escapeHtml(data.actionByLabel)}</th>`;
         html += '<th class="left-head checklist-col" rowspan="3">Action Items</th>';
         html += '<th class="left-head remarks-col" rowspan="3">Remarks</th>';
         groupSpans(periods, 'label1').forEach(group => {
@@ -2863,7 +2917,7 @@
           if (categorySpans.has(`category:${index}`)) html += `<td class="category-col inline-edit-cell" data-row-id="${escapeHtml(row.id)}" data-field="category" rowspan="${categorySpans.get(`category:${index}`)}" title="Double-click to edit Category">${escapeHtml(row.category)}</td>`;
           if (itemSpans.has(`itemSpanKey:${index}`)) html += `<td class="item-col inline-edit-cell" data-row-id="${escapeHtml(row.id)}" data-field="item" rowspan="${itemSpans.get(`itemSpanKey:${index}`)}" title="Double-click to edit Sub-Category">${escapeHtml(row.item)}</td>`;
           html += `<td class="action-col inline-edit-cell" data-row-id="${escapeHtml(row.id)}" data-field="action" title="Double-click to edit Action">${escapeHtml(row.action)}</td>`;
-          html += `<td class="person-col inline-edit-cell" data-row-id="${escapeHtml(row.id)}" data-field="actionBy" title="Double-click to edit Action By">${escapeHtml(row.actionBy)}</td>`;
+          html += `<td class="person-col inline-edit-cell" data-row-id="${escapeHtml(row.id)}" data-field="actionBy" title="Double-click to edit ${escapeHtml(data.actionByLabel)}">${escapeHtml(row.actionBy)}</td>`;
           html += `<td class="checklist-col" data-row-id="${escapeHtml(row.id)}">${renderChecklistCell(row)}</td>`;
           html += `<td class="remarks-col">${renderRemarksCell(row)}</td>`;
           periods.forEach((period, periodIndex) => {
@@ -2883,9 +2937,11 @@
         const items = normalizeChecklist(row.checklist);
         const doneCount = items.filter(isChecklistItemDone).length;
         const percent = items.length ? Math.round((doneCount / items.length) * 100) : 0;
+        const rowExpanded = expandedChecklistRows.has(row.id);
         const progressLabel = items.length ? `${percent}% complete (${doneCount}/${items.length})` : 'No action items';
         const progressTrack = items.length ? `<div class="progress-track"><div class="progress-fill" style="width:${percent}%"></div></div>` : '';
-        const progress = `<div class="checklist-progress"><div class="progress-label">${escapeHtml(progressLabel)}</div><button type="button" class="mini light edit-items-button" data-row-id="${escapeHtml(row.id)}">Edit Items</button>${progressTrack}</div>`;
+        const expandControl = items.length ? `<button type="button" class="row-expand-toggle${rowExpanded ? ' expanded' : ''}" data-row-id="${escapeHtml(row.id)}" title="${rowExpanded ? 'Collapse action items' : 'Expand all action items and sub items'}" aria-label="${rowExpanded ? 'Collapse action items' : 'Expand all action items and sub items'}"></button>` : '<span class="row-expand-spacer"></span>';
+        const progress = `<div class="checklist-progress">${expandControl}<div class="progress-label">${escapeHtml(progressLabel)}</div><button type="button" class="mini light edit-items-button" data-row-id="${escapeHtml(row.id)}">Edit Items</button>${progressTrack}</div>`;
         const list = items.length ? items.map(item => {
           const itemDone = isChecklistItemDone(item);
           const doneClass = itemDone ? ' done' : '';
@@ -2893,10 +2949,10 @@
           const title = item.remarks ? ` title="${escapeHtml(item.remarks)}"` : '';
           const subitems = normalizeSubChecklist(item.subitems);
           const subKey = `${row.id}:${item.id}`;
-          const subExpanded = expandedSubitems.has(subKey);
+          const subExpanded = rowExpanded || expandedSubitems.has(subKey);
           const subDoneCount = subitems.filter(subitem => subitem.done).length;
           const subButtonText = `${subExpanded ? '▾' : '▸'} (${subDoneCount}/${subitems.length})`;
-          const subButton = subitems.length ? `<button type="button" class="subcheck-toggle-button" data-row-id="${escapeHtml(row.id)}" data-item-id="${escapeHtml(item.id)}" title="${subExpanded ? 'Hide sub checklist' : 'Show sub checklist'}">${escapeHtml(subButtonText)}</button>` : '';
+          const subButton = subitems.length ? `<button type="button" class="subcheck-toggle-button" data-row-id="${escapeHtml(row.id)}" data-item-id="${escapeHtml(item.id)}" title="${rowExpanded ? 'All sub items are shown by row expansion' : subExpanded ? 'Hide sub checklist' : 'Show sub checklist'}"${rowExpanded ? ' disabled' : ''}>${escapeHtml(subButtonText)}</button>` : '';
           const sublist = subitems.length && subExpanded ? `<div class="subcheck-list">${subitems.map(subitem => {
             const subDoneClass = subitem.done ? ' done' : '';
             const subChecked = subitem.done ? ' checked' : '';
@@ -2904,7 +2960,7 @@
           }).join('')}</div>` : '';
           return `<div><div class="check-parent-row"><label class="check-item${doneClass}"${title}><input type="checkbox" class="checklist-toggle" data-row-id="${escapeHtml(row.id)}" data-item-id="${escapeHtml(item.id)}"${checked}><span>${escapeHtml(item.text)}</span></label>${subButton}</div>${sublist}</div>`;
         }).join('') : '<div class="items-empty">No action items</div>';
-        return `<div class="checklist-list">${progress}${list}</div>`;
+        return `<div class="checklist-list${rowExpanded ? ' expanded' : ''}">${progress}${list}</div>`;
       }
 
       function updateChecklistCell(rowId, previousScrollTop = 0) {
@@ -2927,6 +2983,8 @@
         setValue('projectNameInput', data.projectName);
         setValue('projectCodeProjectInput', data.projectCode || getProjectCode());
         setValue('projectOwnerInput', data.projectOwner || '');
+        setValue('projectOwnerTitleInput', data.projectOwnerTitle || '');
+        setValue('actionByLabelInput', data.actionByLabel || 'Action By');
         setValue('eventStartInput', data.eventStartDate || '');
         setValue('eventEndInput', data.eventEndDate || '');
         setValue('versionInput', data.version);
@@ -2988,6 +3046,8 @@
         data.projectName = (byId('projectNameInput')?.value || '').trim() || 'Project Timeline';
         const requestedProjectCode = normalizeProjectCode(byId('projectCodeProjectInput')?.value || getProjectCode());
         data.projectOwner = owner;
+        data.projectOwnerTitle = (byId('projectOwnerTitleInput')?.value || '').trim();
+        data.actionByLabel = (byId('actionByLabelInput')?.value || '').trim() || 'Action By';
         const eventStart = byId('eventStartInput')?.value || '';
         const eventEnd = byId('eventEndInput')?.value || '';
         data.eventStartDate = isValidDate(eventStart) ? eventStart : '';
@@ -3094,6 +3154,14 @@
           updateChecklistCell(row.id, scrollTop);
         };
         wrap.onclick = event => {
+          const rowExpandButton = event.target.closest('.row-expand-toggle');
+          if (rowExpandButton) {
+            const rowId = rowExpandButton.dataset.rowId;
+            if (expandedChecklistRows.has(rowId)) expandedChecklistRows.delete(rowId);
+            else expandedChecklistRows.add(rowId);
+            updateChecklistCell(rowId);
+            return;
+          }
           const subButton = event.target.closest('.subcheck-toggle-button');
           if (subButton) {
             const list = subButton.closest('.checklist-list');
@@ -3575,7 +3643,7 @@
 
       function exportCsv() {
         const includeChecklist = data.audienceMode !== 'client';
-        const headers = includeChecklist ? ['Category', 'Sub-Category', 'Action', 'Action By', 'Action Items', 'Remarks', 'Start', 'End', 'Highlight'] : ['Category', 'Sub-Category', 'Action', 'Action By', 'Start', 'End', 'Highlight'];
+        const headers = includeChecklist ? ['Category', 'Sub-Category', 'Action', data.actionByLabel, 'Action Items', 'Remarks', 'Start', 'End', 'Highlight'] : ['Category', 'Sub-Category', 'Action', data.actionByLabel, 'Start', 'End', 'Highlight'];
         const rows = [headers].concat(data.rows.map(row => includeChecklist ? [row.category, row.item, row.action, row.actionBy, checklistItemsText(row), checklistRemarksText(row), row.start, row.end, row.highlight ? 'YES' : 'NO'] : [row.category, row.item, row.action, row.actionBy, row.start, row.end, row.highlight ? 'YES' : 'NO']));
         const csv = BOM + rows.map(row => row.map(csvEscape).join(',')).join(CR + LF);
         downloadBlob(csv, `${safeFileName(data.projectName)}-programme.csv`, 'text/csv;charset=utf-8');
@@ -3600,7 +3668,7 @@
         const mode = getResolvedViewMode();
         const periods = buildPeriods(mode);
         const includeChecklist = data.audienceMode !== 'client';
-        const leftHeaders = includeChecklist ? ['Category', 'Sub-Category', 'Action', 'Action By', 'Action Items', 'Remarks'] : ['Category', 'Sub-Category', 'Action', 'Action By'];
+        const leftHeaders = includeChecklist ? ['Category', 'Sub-Category', 'Action', data.actionByLabel, 'Action Items', 'Remarks'] : ['Category', 'Sub-Category', 'Action', data.actionByLabel];
         const visualRows = rows.map(row => {
           const leftValues = includeChecklist ? [row.category, row.item, row.action, row.actionBy, checklistItemsText(row), checklistRemarksText(row)] : [row.category, row.item, row.action, row.actionBy];
           const left = leftValues.map(value => excelCell(value, 'TextWrap')).join('');
@@ -3623,7 +3691,7 @@
 </Styles>
 <Worksheet ss:Name="Programme"><Table>
 <Row>${excelCell(data.projectName, 'Header')}</Row>
-<Row>${excelCell(data.version)}${excelCell(data.lastUpdate)}${excelCell(`Owner: ${data.projectOwner || ''}`)}${excelCell(`Event: ${formatOptionalDateRange(data.eventStartDate, data.eventEndDate, '')}`)}${excelCell(`Project: ${data.startDate} to ${data.endDate}`)}</Row>
+<Row>${excelCell(data.version)}${excelCell(data.lastUpdate)}${excelCell(data.projectOwnerTitle ? `${data.projectOwnerTitle}: ${data.projectOwner || ''}` : data.projectOwner || '')}${excelCell(`Event: ${formatOptionalDateRange(data.eventStartDate, data.eventEndDate, '')}`)}${excelCell(`Project: ${data.startDate} to ${data.endDate}`)}</Row>
 <Row></Row>
 <Row>${header1}</Row>
 <Row>${header2}</Row>
@@ -3695,7 +3763,7 @@ ${visualRows}
               category: value(row, 'Category'),
               item: value(row, 'Sub-Category') || value(row, 'Item'),
               action: value(row, 'Action'),
-              actionBy: value(row, 'Action By'),
+              actionBy: value(row, data.actionByLabel) || value(row, 'Action By'),
               checklist: checklistFromTextareas(value(row, 'Action Items'), value(row, 'Remarks')),
               start: value(row, 'Start'),
               end: value(row, 'End'),
