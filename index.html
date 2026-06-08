@@ -662,12 +662,14 @@
     .programme td.workday.start, .programme td.workday.end { background: var(--work) !important; }
     .programme tr.group-start td, .programme tr.group-start th { box-shadow: inset -1px -1px 0 var(--line), inset 0 2px 0 var(--line); }
     .programme tr.highlight td.category-col, .programme tr.highlight td.item-col, .programme tr.highlight td.action-col, .programme tr.highlight td.person-col, .programme tr.highlight td.checklist-col, .programme tr.highlight td.remarks-col { background: var(--highlight); }
-    body.client-view .app {
+    body.client-view:not(.client-show-free-column) .app {
       --person-w: 0px;
+    }
+    body.client-view .app {
       --checklist-w: 0px;
       --remarks-w: 0px;
     }
-    body.client-view .person-col,
+    body.client-view:not(.client-show-free-column) .person-col,
     body.client-view .checklist-col,
     body.client-view .remarks-col {
       display: none !important;
@@ -1109,6 +1111,7 @@
             <tr><th>Responsible Person Display Title</th><td><input id="projectOwnerTitleInput" placeholder="Example: Project Lead. Leave blank to show name only."></td></tr>
             <tr><th>Free Column Title</th><td><input id="actionByLabelInput" placeholder="Example: Action By, PIC or Responsible Team"></td></tr>
             <tr><th>Free Column Position</th><td><select id="actionByPositionInput"><option value="afterAction">After Action</option><option value="afterItems">After Action Items</option><option value="afterRemarks">After Remarks</option></select></td></tr>
+            <tr><th>Client Output Free Column</th><td><select id="clientShowFreeColumnInput"><option value="no">Hide Free Column</option><option value="yes">Show after Action</option></select></td></tr>
             <tr><th>Event Period</th><td><div class="date-pair"><input id="eventStartInput" type="date"><input id="eventEndInput" type="date"></div></td></tr>
             <tr><th>Version</th><td><input id="versionInput"></td></tr>
             <tr><th>Last Update</th><td><input id="lastUpdateInput" readonly><div style="margin-top:6px;color:#64748b">Automatically updated after edits.</div></td></tr>
@@ -1436,6 +1439,7 @@
         projectOwnerTitle: '',
         actionByLabel: 'Action By',
         actionByPosition: 'afterAction',
+        clientShowFreeColumn: false,
         eventStartDate: '2025-10-16',
         eventEndDate: '2025-11-05',
         startDate: '2025-09-26',
@@ -2482,6 +2486,7 @@
           projectOwnerTitle: String(source.projectOwnerTitle || source.ownerTitle || ''),
           actionByLabel: String(source.actionByLabel || 'Action By').trim() || 'Action By',
           actionByPosition: ['afterAction', 'afterItems', 'afterRemarks'].includes(source.actionByPosition) ? source.actionByPosition : 'afterAction',
+          clientShowFreeColumn: source.clientShowFreeColumn === true,
           eventStartDate: isValidDate(source.eventStartDate) ? source.eventStartDate : '',
           eventEndDate: isValidDate(source.eventEndDate) ? source.eventEndDate : '',
           startDate: startDate <= endDate ? startDate : endDate,
@@ -3061,6 +3066,7 @@
         safeClassToggle(document.body, 'week-view', mode === 'week');
         safeClassToggle(document.body, 'month-view', mode === 'month');
         safeClassToggle(document.body, 'client-view', data.audienceMode === 'client');
+        safeClassToggle(document.body, 'client-show-free-column', data.audienceMode === 'client' && data.clientShowFreeColumn);
         document.documentElement.style.setProperty('--period-count', String(periods.length));
         setText('projectName', data.projectName);
         const logoElement = byId('companyLogo');
@@ -3097,6 +3103,7 @@
       }
 
       function getLeftColumnKeys() {
+        if (data.audienceMode === 'client') return data.clientShowFreeColumn ? ['category', 'item', 'action', 'person'] : ['category', 'item', 'action'];
         if (data.actionByPosition === 'afterItems') return ['category', 'item', 'action', 'checklist', 'person', 'remarks'];
         if (data.actionByPosition === 'afterRemarks') return ['category', 'item', 'action', 'checklist', 'remarks', 'person'];
         return ['category', 'item', 'action', 'person', 'checklist', 'remarks'];
@@ -3105,8 +3112,8 @@
       function populateFreezeColumnOptions() {
         const select = byId('freezeColumnsInput');
         if (!select) return;
-        const current = String(uiState.freezeColumns);
         const labels = getLeftColumnKeys().map(key => leftColumnMeta(key).label);
+        const current = String(Math.min(uiState.freezeColumns, labels.length));
         select.innerHTML = '<option value="0">Freeze: None</option>' + labels.map((label, index) => `<option value="${index + 1}">Freeze through: ${escapeHtml(label)}</option>`).join('');
         select.value = current;
       }
@@ -3292,6 +3299,7 @@
         setValue('projectOwnerTitleInput', data.projectOwnerTitle || '');
         setValue('actionByLabelInput', data.actionByLabel || 'Action By');
         setValue('actionByPositionInput', data.actionByPosition || 'afterAction');
+        setValue('clientShowFreeColumnInput', data.clientShowFreeColumn ? 'yes' : 'no');
         setValue('eventStartInput', data.eventStartDate || '');
         setValue('eventEndInput', data.eventEndDate || '');
         setValue('versionInput', data.version);
@@ -3356,6 +3364,7 @@
         data.projectOwnerTitle = (byId('projectOwnerTitleInput')?.value || '').trim();
         data.actionByLabel = (byId('actionByLabelInput')?.value || '').trim() || 'Action By';
         data.actionByPosition = ['afterAction', 'afterItems', 'afterRemarks'].includes(byId('actionByPositionInput')?.value) ? byId('actionByPositionInput').value : 'afterAction';
+        data.clientShowFreeColumn = byId('clientShowFreeColumnInput')?.value === 'yes';
         const eventStart = byId('eventStartInput')?.value || '';
         const eventEnd = byId('eventEndInput')?.value || '';
         data.eventStartDate = isValidDate(eventStart) ? eventStart : '';
@@ -4013,7 +4022,7 @@
 
       function exportCsv() {
         const includeChecklist = data.audienceMode !== 'client';
-        const keys = getLeftColumnKeys().filter(key => includeChecklist || !['person', 'checklist', 'remarks'].includes(key));
+        const keys = getLeftColumnKeys().filter(key => includeChecklist || !['checklist', 'remarks'].includes(key));
         const headers = keys.map(key => leftColumnMeta(key).label).concat(['Start', 'End', 'Highlight']);
         const rows = [headers].concat(data.rows.map(row => keys.map(key => exportColumnValue(row, key)).concat([row.start, row.end, row.highlight ? 'YES' : 'NO'])));
         const csv = BOM + rows.map(row => row.map(csvEscape).join(',')).join(CR + LF);
@@ -4039,7 +4048,7 @@
         const mode = getResolvedViewMode();
         const periods = buildPeriods(mode);
         const includeChecklist = data.audienceMode !== 'client';
-        const exportKeys = getLeftColumnKeys().filter(key => includeChecklist || !['person', 'checklist', 'remarks'].includes(key));
+        const exportKeys = getLeftColumnKeys().filter(key => includeChecklist || !['checklist', 'remarks'].includes(key));
         const leftHeaders = exportKeys.map(key => leftColumnMeta(key).label);
         const visualRows = rows.map(row => {
           const leftValues = exportKeys.map(key => exportColumnValue(row, key));
