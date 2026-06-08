@@ -908,13 +908,6 @@
     .row-editor textarea[data-field="action"] {
       min-width: 360px;
     }
-    .item-order-controls {
-      display: grid;
-      grid-template-columns: repeat(2, 30px);
-      gap: 5px;
-      justify-content: center;
-      margin-bottom: 6px;
-    }
     .drag-order-handle {
       display: inline-flex;
       align-items: center;
@@ -931,16 +924,32 @@
       user-select: none;
     }
     .drag-order-handle:active { cursor: grabbing; }
+    .item-action-controls {
+      display: grid;
+      gap: 8px;
+      width: 100%;
+      min-width: 74px;
+    }
+    .item-action-controls .drag-order-handle,
+    .item-action-controls button {
+      width: 100%;
+      min-width: 0;
+      height: 32px;
+    }
+    .item-action-controls .drag-order-handle {
+      gap: 5px;
+      border-color: #cbd5e1;
+      background: #f8fafc;
+      color: #334155;
+    }
+    .item-action-controls .drag-order-handle::before {
+      content: "::";
+      color: #64748b;
+      letter-spacing: 1px;
+    }
     .row-editor tr.dragging-row { opacity: 0.42; }
     .row-editor tr.drag-over-row td { box-shadow: inset 0 3px 0 #0f766e; }
     body.actions-only-view .legend { display: none; }
-    .item-order-controls button {
-      width: 30px;
-      height: 28px;
-      padding: 0;
-      font-size: 15px;
-      line-height: 1;
-    }
     .editor-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
     .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
     .project-list-table {
@@ -1317,7 +1326,7 @@
               <th>Action Item</th>
               <th style="width:280px">Sub Checklist</th>
               <th>Remarks</th>
-              <th style="width:110px">Order / Action</th>
+              <th style="width:96px">Action</th>
             </tr>
           </thead>
           <tbody id="itemsEditorBody"></tbody>
@@ -3858,12 +3867,10 @@
             </td>
             <td><textarea class="item-remark-input" data-index="${index}" data-field="remarks">${escapeHtml(item.remarks)}</textarea></td>
             <td>
-              <div class="item-order-controls">
-                <button class="mini light" data-action="moveItemUp" data-index="${index}" title="Move item up" aria-label="Move item up" ${index === 0 ? 'disabled' : ''}>Up</button>
-                <button class="mini light" data-action="moveItemDown" data-index="${index}" title="Move item down" aria-label="Move item down" ${index === editingItems.length - 1 ? 'disabled' : ''}>Down</button>
+              <div class="item-action-controls">
+                <span class="drag-order-handle" draggable="true" data-drag-index="${index}" title="Drag to reorder action item">Drag</span>
+                <button class="mini danger" data-action="deleteItem" data-index="${index}">Delete</button>
               </div>
-              <span class="drag-order-handle" draggable="true" data-drag-index="${index}" title="Drag to reorder action item">Drag</span>
-              <button class="mini danger" data-action="deleteItem" data-index="${index}">Delete</button>
             </td>
           </tr>`).join('');
         if (wrap) wrap.scrollTop = previousScrollTop;
@@ -3902,13 +3909,6 @@
       function handleItemButton(event) {
         const index = Number(event.currentTarget.dataset.index);
         const action = event.currentTarget.dataset.action;
-        if ((action === 'moveItemUp' || action === 'moveItemDown') && editingItems[index]) {
-          const targetIndex = action === 'moveItemUp' ? index - 1 : index + 1;
-          if (targetIndex >= 0 && targetIndex < editingItems.length) {
-            const [movedItem] = editingItems.splice(index, 1);
-            editingItems.splice(targetIndex, 0, movedItem);
-          }
-        }
         if (action === 'deleteItem') {
           const itemName = editingItems[index]?.text || `Item ${index + 1}`;
           if (!window.confirm(`Delete action item "${itemName}"?`)) return;
