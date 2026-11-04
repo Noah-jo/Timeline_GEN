@@ -16,7 +16,7 @@ from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.action_chains import ActionChains
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / "index.html" if (ROOT / "index.html").exists() else ROOT / "MGT_improved.html"
+SOURCE = ROOT / "index.html" if (ROOT / "index.html").exists() else ROOT / "MGT_workspace.html"
 ARTIFACTS = Path(tempfile.mkdtemp(prefix="noah-upgrade-"))
 FIXTURE = {
     "projectName": "Event planning review", "projectCode": "AUD-A",
@@ -190,14 +190,14 @@ def run():
         js("audit.applyCsvImport(true)")
         check("CSV round trip preserves full checklist", original == js("return audit.get().rows[0].checklist"))
         reset()
-        js("audit.openItemsModal('r1');const s=document.querySelector('#itemsEditorBody .move-position');s.value='2';s.dispatchEvent(new Event('change'));document.getElementById('applyItemsButton').click()")
+        js("audit.openItemsModal('r1');const s=document.querySelector('#itemDetails .move-position');s.value='2';s.dispatchEvent(new Event('change'));document.getElementById('applyItemsButton').click()")
         check("item position menu reorders without drag", js("return audit.get().rows[0].checklist[2].text==='Venue sourcing'"))
         reset()
         js("audit.openItemsModal('r1')")
         handle = driver.find_elements(By.CSS_SELECTOR, "#itemsEditorBody .drag-order-handle")[0]
         target = driver.find_elements(By.CSS_SELECTOR, "#itemsEditorBody tr")[2]
         ActionChains(driver).move_to_element(handle).click_and_hold().pause(0.15).move_to_element(target).pause(0.15).release().perform()
-        check("native mouse drag reorders items", js("return document.querySelector('#itemsEditorBody textarea[data-field=text]').value!=='Venue sourcing'"))
+        check("native mouse drag reorders items", js("return document.querySelector('#itemsEditorBody .item-title-select>span').textContent!=='Venue sourcing'"))
         reset()
         js("audit.openRowsModal()")
         handle = driver.find_elements(By.CSS_SELECTOR, "#rowsEditorBody .drag-order-handle")[0]

@@ -1096,99 +1096,428 @@
       .sheet { overflow:visible; }
       .programme [data-left-index] { position:static !important; left:auto !important; }
     }
+    /* Workspace surfaces share a compact, flat control system. */
+    :root { --ink:#24323a; --muted:#67767f; --line:#bac7ce; --brand:#08766b; --surface:#f4f6f7; --border:#d8e0e4; }
+    html { scrollbar-gutter:stable; }
+    body { background:#f3f5f6; font-family:"Segoe UI Variable Text","Segoe UI","Microsoft JhengHei",sans-serif; font-size:13px; }
+    button,input,select,textarea { border-radius:6px; letter-spacing:0; }
+    [hidden] { display:none !important; }
+    button { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:34px; padding:7px 12px; font-size:12px; font-weight:600; white-space:nowrap; }
+    button.light { background:#fff; border-color:#d4dde2; color:#37474f; }
+    button.light:hover { background:#f1f5f5; border-color:#acbbc3; }
+    button:hover { filter:brightness(.98); }
+    button.danger { background:#be3b45; }
+    .danger-text { color:#b33440 !important; }
+    .ui-icon { width:17px; height:17px; flex-shrink:0; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+    .icon-button { width:34px; height:34px; min-height:34px; padding:0; flex-shrink:0; }
+    .app { padding:0 18px 14px; max-width:none; }
+    .app-topbar { height:64px; display:flex; align-items:center; gap:12px; border-bottom:1px solid var(--border); }
+    .app-brand { display:flex; align-items:center; gap:9px; text-decoration:none; color:#26373b; flex-shrink:0; font-size:15px; font-weight:800; }
+    .app-brand small { display:block; color:#78848b; font-size:10px; font-weight:500; margin-top:-2px; }
+    .brand-symbol { display:grid; place-items:center; width:30px; height:30px; background:#d2ea4b; color:#233116; border-radius:5px; font-size:23px; font-weight:900; }
+    .topbar-spacer { flex:1; min-width:0; }
+    .project-switcher { background:transparent; border:1px solid transparent; justify-content:flex-start; text-align:left; gap:10px; min-width:180px; max-width:460px; height:46px; color:var(--ink); margin-left:20px; }
+    .project-switcher:hover { background:#e9eef0; }
+    .project-switcher>span { min-width:0; flex:1; }
+    .project-switcher strong { display:block; overflow:hidden; text-overflow:ellipsis; font-size:13px; font-weight:600; }
+    .project-switcher small { display:block; color:var(--muted); font-size:11px; line-height:1.5; }
+    .project-switcher>.ui-icon:first-child { color:#70868a; }
+    .connection-control { background:transparent; color:#52676c; font-size:12px; gap:7px; padding:5px 8px; }
+    .connection-dot { width:7px; height:7px; border-radius:50%; background:#8c9ca5; flex-shrink:0; }
+    .connection-control[data-state=synced] .connection-dot { background:#138466; }
+    .connection-control[data-state=pending] .connection-dot { background:#c78820; }
+    .connection-control[data-state=conflict] .connection-dot { background:#c13e4c; }
+    .app-topbar .status-pill { border:0; padding:0; background:transparent; color:inherit; min-height:0; max-width:160px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:12px; }
+    .commandbar { min-height:58px; display:flex; flex-wrap:wrap; gap:7px; align-items:center; padding:10px 0; }
+    .command-set { display:flex; align-items:center; gap:6px; }
+    .command-divider { width:1px; height:23px; background:#d2dce0; margin:0 7px; }
+    .select-command { display:flex; align-items:center; gap:6px; padding-left:9px; background:#fff; border:1px solid #d5dfe3; border-radius:6px; min-height:34px; }
+    .select-command>.ui-icon { width:15px; color:#70838c; }
+    .select-command select { border:0; background:transparent; min-height:32px; padding:5px 22px 5px 0; min-width:90px; font-size:12px; color:#35484f; }
+    .workspace-progress { font-size:11px; color:#687d85; margin-right:8px; white-space:nowrap; }
+    .sheet { box-shadow:none; border:1px solid #c9d4da; border-radius:6px; overflow:hidden; }
+    .sheet-head { border:0; padding:16px 18px 12px; gap:18px; grid-template-columns:auto minmax(0,1fr) auto; }
+    .brand-logo { width:auto; height:100%; max-width:min(38vw,560px); max-height:116px; min-height:72px; object-fit:contain; border:0; }
+    .logo-box { align-items:center; }
+    .project-title strong,.project-title h1 { font-size:18px; font-weight:700; line-height:1.3; margin:0 0 5px; }
+    .project-title>div { font-size:11px; line-height:1.6; color:#50636c; }
+    .project-meta { font-size:11px; line-height:1.65; color:#6b7d84; }
+    .client-summary { border:0; border-top:1px solid #e5ebee; background:#fafbfc; padding:7px 18px; color:#7b898f; font-size:11px; }
+    .filter-bar { border:0; border-top:1px solid #e1e7eb; padding:9px 12px; gap:7px; background:#fff; }
+    .filter-bar input,.filter-bar select { min-height:32px; border-color:#dce3e7; font-size:11px; padding:5px 8px; }
+    .filter-bar input { width:230px; }
+    .filter-count { color:#74858d; font-size:11px; }
+    .programme-wrap { border:0; border-top:1px solid #c6d1d7; max-height:calc(100dvh - 320px); min-height:180px; }
+    .programme th,.programme td { color:#33474f; }
+    .programme .category-col { background:#f9fbfb; font-weight:600; }
+    .programme thead th { background:#f3f6f7 !important; color:#526974; font-weight:600; font-size:11px; }
+    .checklist-col,.remarks-col { font-size:11px; }
+    .checklist-progress { gap:4px; padding-bottom:7px; }
+    .progress-label { font-size:10px; font-weight:600; }
+    .progress-track { height:3px; }
+    .checklist-progress .edit-items-button { min-height:24px; height:24px; padding:3px 6px; font-size:10px; border-color:#e0e7ea; font-weight:500; }
+    .legend { border:0; border-top:1px solid #dce4e8; padding:8px 12px; font-size:10px; color:#78888f; }
+    .notes { border:0; border-top:1px solid #edf0f2; color:#7d8b92; font-size:10px; padding:8px 12px; }
+    .workspace-footer { display:flex; align-items:center; gap:10px; min-height:28px; padding:5px 1px; }
+    .workspace-footer .status-pill { border:0; background:transparent; min-height:0; padding:0; border-radius:0; color:#7b8b93; font-size:10px; }
+    .workspace-footer .status-pill.error { color:#b73548; font-weight:600; }
+    .workspace-footer .status-pill.warning { color:#a17821; }
+    .tools-drawer { position:fixed; z-index:90; top:0; right:0; width:420px; max-width:100vw; height:100dvh; background:#fff; border-left:1px solid #cad5db; box-shadow:-12px 0 38px #24363b1a; display:flex; flex-direction:column; }
+    .tools-drawer[hidden] { display:none; }
+    .drawer-heading { display:flex; align-items:center; justify-content:space-between; height:64px; padding:0 18px; border-bottom:1px solid #e2e8eb; flex-shrink:0; }
+    .drawer-heading h2 { font-size:16px; margin:0; font-weight:650; }
+    .drawer-tabs { display:flex; gap:0; padding:8px 10px 0; border-bottom:1px solid #e1e7eb; flex-shrink:0; }
+    .drawer-tabs button { flex:1; flex-direction:column; gap:5px; border-radius:0; background:transparent; color:#7c8b91; font-size:10px; padding:8px 5px 11px; border-bottom:2px solid transparent; min-width:0; }
+    .drawer-tabs button[aria-selected=true] { color:#08766b; border-bottom-color:#08766b; }
+    .drawer-body { overflow-y:auto; padding:18px 20px; flex:1; }
+    .tool-panel { width:100%; }
+    .tool-panel[hidden] { display:none; }
+    .form-section { padding:18px 0; border-top:1px solid #e4eaed; margin-top:16px; }
+    .form-section:first-child { margin-top:0; border-top:0; padding-top:0; }
+    .form-section h3 { margin:0 0 12px; color:#52666e; font-size:12px; font-weight:650; }
+    .form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px 18px; }
+    .form-grid label,.form-field { display:flex; flex-direction:column; gap:7px; font-size:12px; color:#516670; font-weight:500; min-width:0; }
+    .form-grid input,.form-grid select,.form-grid textarea,.form-field input,.form-field select,.form-field textarea { width:100%; min-width:0; min-height:36px; padding:8px 10px; color:#263c46; border:1px solid #d5dfe4; font-weight:400; background:#fff; }
+    .form-field { margin:0 0 14px; }
+    .form-field textarea,.form-grid textarea { font:inherit; resize:vertical; min-height:78px; }
+    .span-two { grid-column:1/-1; }
+    .button-pair { display:flex; gap:8px; flex-wrap:wrap; }
+    .full-button { width:100%; }
+    .check-control { display:flex; gap:8px; align-items:center; color:#526670; font-size:12px; min-height:34px; }
+    .check-control input { width:16px; height:16px; margin:0; accent-color:#08766b; }
+    .drawer-command { width:100%; background:transparent; color:#3c525d; justify-content:flex-start; padding:11px 8px; min-height:42px; text-align:left; border:0; font-weight:500; font-size:12px; }
+    .drawer-command span { flex:1; }
+    .drawer-command .ui-icon { color:#7b939d; }
+    .drawer-command:hover { background:#f2f6f7; }
+    .drawer-body .status-pill { width:100%; max-width:none; border-radius:6px; margin-top:14px; padding:10px; line-height:1.5; }
+    .drawer-backdrop { position:fixed; inset:0; background:#24343a4d; z-index:89; }
+    .drawer-backdrop[hidden] { display:none; }
+    @media(min-width:900px) { .drawer-backdrop { display:none; } }
+    .modal { background:#22303870; z-index:110; padding:20px; align-items:center; }
+    .modal-card { padding:20px; border-radius:10px; box-shadow:0 24px 80px #1f323b38; width:min(1420px,96vw); max-height:94dvh; gap:0; }
+    .dialog-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-shrink:0; padding-bottom:17px; }
+    .dialog-heading h2,.modal-card h2 { font-size:18px; line-height:1.3; margin:0; font-weight:650; }
+    .dialog-caption { display:block; color:#819097; font-size:12px; margin-top:6px; }
+    .modal-actions { border-top:1px solid #e0e7eb; padding-top:14px; margin-top:14px; align-items:center; gap:8px; }
+    .modal-actions .footer-start,.modal-actions .date-format-note,.modal-actions .draft-status { margin-right:auto; font-size:11px; color:#7b8e97; }
+    .project-dialog { width:min(760px,96vw); }
+    .new-project-dialog { width:min(660px,96vw); }
+    .project-form-scroll { overflow-y:auto; min-height:0; padding:2px 3px 2px 0; }
+    .section-tabs { display:flex; gap:20px; border-bottom:1px solid #dde5e9; margin-bottom:20px; flex-shrink:0; }
+    .section-tabs button { background:transparent; color:#7b8c95; border-radius:0; padding:10px 1px; border-bottom:2px solid transparent; font-weight:500; }
+    .section-tabs button[aria-selected=true] { color:#08766b; border-bottom-color:#08766b; }
+    [data-project-form][hidden] { display:none; }
+    .colour-fields { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    .colour-fields label { display:flex; flex-direction:column; gap:8px; font-size:11px; color:#5f737b; }
+    .colour-fields input[type=color] { width:100%; min-height:36px; height:36px; padding:3px; }
+    .items-dialog { width:min(1120px,96vw); height:min(780px,94dvh); }
+    .items-editor-toolbar { display:flex; align-items:center; gap:7px; padding-bottom:14px; flex-shrink:0; }
+    .search-control { display:flex; align-items:center; gap:6px; border:1px solid #d8e1e6; border-radius:6px; padding-left:10px; background:white; min-width:0; }
+    .search-control>.ui-icon { color:#8c9ba3; width:15px; }
+    .search-control input { border:0; min-width:0; width:100%; padding:8px; font-size:12px; background:transparent; }
+    .items-editor-toolbar .search-control { flex:1; }
+    .items-workbench { display:grid; grid-template-columns:minmax(280px,36%) minmax(0,1fr); border:1px solid #d8e2e7; border-radius:7px; flex:1; min-height:0; overflow:hidden; }
+    .items-list-pane { display:flex; flex-direction:column; min-height:0; border-right:1px solid #dbe4e8; background:#fbfcfc; }
+    .list-pane-heading { display:flex; align-items:center; justify-content:space-between; padding:8px 12px; height:43px; color:#7c8d96; border-bottom:1px solid #e7ecef; font-size:11px; flex-shrink:0; }
+    .list-pane-heading .icon-button { width:26px; min-height:26px; height:26px; border:0; background:transparent; }
+    .item-list-scroll { max-height:none; overflow:auto; border:0; flex:1; }
+    .item-select-table { border-collapse:collapse; width:100%; table-layout:fixed; }
+    .item-select-table td { padding:8px 4px; border-bottom:1px solid #e8edf0; vertical-align:middle; }
+    .item-select-table tr { height:51px; cursor:pointer; }
+    .item-select-table tr:hover { background:#f1f6f6; }
+    .item-select-table tr.is-selected { background:#eaf4f2; box-shadow:inset 3px 0 0 #08766b; }
+    .item-select-table .drag-cell { width:27px; padding-left:8px; }
+    .item-select-table .done-cell { width:27px; }
+    .item-select-table .row-action-cell { width:31px; }
+    .item-select-table .drag-order-handle { width:20px; min-width:0; height:26px; border:0; padding:0; color:#a0afb7; background:transparent; }
+    .item-select-table .drag-order-handle .ui-icon { width:14px; }
+    .item-select-table input[type=checkbox] { width:16px; height:16px; accent-color:#08766b; margin:0; }
+    .item-title-select { display:block; text-align:left; white-space:normal; overflow-wrap:anywhere; background:transparent; color:#3f535e; min-height:0; padding:0 4px; line-height:1.35; font-weight:500; font-size:12px; width:100%; }
+    .item-title-select small { display:block; margin-top:4px; font-size:10px; font-weight:400; color:#8a9aa2; }
+    .item-select-table .row-action-cell button { width:25px; height:26px; min-height:26px; padding:0; border:0; background:transparent; opacity:0; color:#9b5f66; }
+    .item-select-table tr:hover .row-action-cell button,.item-select-table tr.is-selected .row-action-cell button,.item-select-table tr:focus-within .row-action-cell button { opacity:1; }
+    .item-detail-pane { overflow-y:auto; min-height:0; padding:20px 22px; background:white; }
+    .item-detail-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:17px; gap:10px; }
+    .item-detail-top .check-control { font-weight:600; color:#425963; }
+    .position-control { display:flex; align-items:center; gap:7px; font-size:11px; color:#83949c; }
+    .position-control .move-position { display:inline-block; width:61px; margin:0; min-height:29px; padding:4px 7px !important; }
+    .item-detail-pane textarea { font:13px/1.6 inherit; min-height:80px; font-family:inherit; }
+    .item-detail-pane .item-name-field { min-height:45px; height:50px; font-size:14px; font-weight:550; }
+    .subtask-heading { display:flex; justify-content:space-between; align-items:center; border-top:1px solid #e4eaed; padding-top:17px; margin-top:18px; margin-bottom:9px; }
+    .subtask-heading h3 { margin:0; font-size:12px; color:#5b717b; font-weight:600; }
+    .subtask-heading span { font-size:11px; color:#92a0a7; }
+    .subtask-edit-line { display:grid; grid-template-columns:18px minmax(0,1fr) 28px; gap:9px; align-items:center; margin-bottom:7px; }
+    .subtask-edit-line input[type=checkbox] { width:16px; height:16px; margin:0; accent-color:#08766b; }
+    .subtask-edit-line input[type=text] { min-width:0; width:100%; height:33px; border-color:#dde5e9; font-size:12px; padding:6px 9px; }
+    .subtask-edit-line button { border:0; background:transparent; color:#8d9da5; height:28px; min-height:28px; width:28px; padding:0; }
+    .subtask-edit-line button:hover { color:#b73c47; background:#fff2f3; }
+    .add-subtask-button { background:transparent !important; color:#08766b !important; border:1px dashed #bdcfd1 !important; width:100%; margin-top:3px; font-weight:500; min-height:33px; }
+    .empty-state { padding:32px 20px; text-align:center; color:#8999a1; font-size:12px; line-height:1.6; }
+    .mobile-item-selector { display:none; }
+    .row-editor-wrap { border-color:#d7e1e6; }
+    #rowsModal .row-editor { min-width:1200px; }
+    #rowsModal .row-editor th { color:#7a8e98; font-size:11px; font-weight:500; border-color:#e0e7eb; padding:8px 6px; }
+    #rowsModal .row-editor td { border-color:#e3e9ec; padding:6px; }
+    #rowsModal .row-editor input,#rowsModal .row-editor select { min-height:33px; font-size:12px; padding:6px; border-color:#dde5e8; }
+    #rowsModal .row-editor textarea { min-height:43px; min-width:0; font-size:12px; padding:6px; border-color:#dde5e8; }
+    #rowsModal .row-editor textarea[data-field=action] { min-width:230px; }
+    .editor-actions { align-items:center; margin:0; padding-bottom:14px; }
+    .editor-actions .search-control { margin-left:auto; min-width:180px; max-width:280px; }
+    .bulk-actions { display:flex; gap:5px; align-items:center; }
+    .row-select-cell { text-align:center; width:30px; }
+    .row-order-icons { display:flex; align-items:center; justify-content:center; gap:1px; }
+    .row-order-icons button { width:24px; min-height:27px; padding:0; background:transparent; color:#899aa3; border:0; }
+    .row-order-icons button .ui-icon { width:14px; }
+    .row-order-icons .danger-text { color:#af5661 !important; }
+    .library-dialog { width:min(940px,96vw); height:min(700px,92dvh); }
+    .library-toolbar { display:flex; gap:7px; padding-bottom:14px; align-items:center; }
+    .library-toolbar input { flex:1; min-width:80px; height:35px; }
+    .library-layout { display:grid; grid-template-columns:250px minmax(0,1fr); border:1px solid #dce4e9; flex:1; min-height:0; overflow:hidden; border-radius:6px; }
+    .library-set-list { padding:15px; background:#f9fbfb; border-right:1px solid #dce4e9; }
+    .library-set-list select { min-height:230px; border:0; background:transparent; padding:0; font-size:12px; }
+    .library-set-list option { padding:10px 8px; border-radius:4px; }
+    #libraryPreview.library-preview { border:0; padding:18px 20px; max-height:none; overflow:auto; margin:0; white-space:normal; }
+    .library-preview h3 { margin:0 0 15px; font-size:14px; color:#3b535e; }
+    .library-preview ol { margin:0; padding-left:20px; }
+    .library-preview li { margin-bottom:12px; color:#4d6470; font-size:12px; }
+    .library-preview p { margin:5px 0; font-size:11px; color:#86969e; white-space:pre-wrap; }
+    .library-preview ul { padding-left:19px; margin:7px 0; }
+    .library-preview ul li { margin:3px 0; font-size:11px; color:#84949d; }
+    .output-dialog { width:min(1560px,97vw); height:94dvh; }
+    .output-layout { display:grid; grid-template-columns:210px minmax(0,1fr); min-height:0; flex:1; border:1px solid #dbe4e9; border-radius:6px; overflow:hidden; }
+    .output-settings { padding:18px; border-right:1px solid #dbe4e9; overflow:auto; }
+    .preview-stage { padding:14px; background:#e9eef0; min-height:0; }
+    .preview-frame { width:100%; height:100%; border:1px solid #d4dee3; display:block; background:white; }
+    .tab-strip { gap:4px; margin-bottom:13px; }
+    .tab-strip button { background:transparent; color:#70858e; border:0; border-radius:5px; }
+    .tab-strip button[aria-selected=true] { background:#e8f3f0; color:#08766b; }
+    .project-list-table { min-width:630px; }
+    .project-list-table th { font-size:11px; color:#7e919a; font-weight:500; border:0; padding:10px 12px; background:#f5f8f9; }
+    .project-list-table td { border:0; border-bottom:1px solid #e7edf0; padding:12px; font-size:12px; color:#57707c; }
+    .project-list-table button { min-height:29px; }
+    .project-list-table .danger { background:transparent; color:#ad6470; }
+    .project-name-cell strong { color:#324d59; font-size:13px; font-weight:600; }
+    .project-name-cell small { display:block; color:#8a9ba3; font-size:11px; margin-top:4px; }
+    .modal>.modal-card>.status-pill { border:0; background:transparent; padding:0; margin:0 0 10px; color:#81939c; min-height:0; font-size:11px; }
+    body.workspace-focus .sheet-head,body.workspace-focus .client-summary { display:none; }
+    body.workspace-focus .programme-wrap { max-height:calc(100dvh - 219px); }
+    body.actions-only-view .timeline-scale-control { display:none; }
+    body.keep-table-headers .programme thead th { position:sticky !important; top:0 !important; z-index:25; }
+    body.keep-table-headers .programme thead tr:nth-child(2) th { top:var(--header-h) !important; }
+    body.keep-table-headers .programme thead tr:nth-child(3) th { top:calc(var(--header-h)*2) !important; }
+    .toast-message { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:180; background:#263f48; color:white; padding:10px 17px; border-radius:6px; font-size:12px; max-width:calc(100vw - 30px); box-shadow:0 8px 25px #253a4426; }
+    .toast-message[hidden] { display:none; }
+    .rows-batch-toolbar { display:flex; align-items:center; gap:12px; padding:0 0 12px; font-size:11px; color:#7e929c; flex-wrap:wrap; }
+    .checkbox-field { display:flex; align-items:center; gap:7px; font-size:12px; }
+    .rows-batch-toolbar .mini { min-height:28px; padding:4px 8px; }
+    .row-actions,.row-order-control { display:flex; gap:3px; align-items:center; justify-content:center; }
+    button.danger-ghost { background:transparent; color:#ac5360; border:1px solid transparent; }
+    button.danger-ghost:hover { background:#fbedef; color:#a33d4d; }
+    button.danger-ghost:disabled { opacity:.4; }
+    .item-detail-top { flex-wrap:wrap; }
+    .row-actions .icon-button { width:28px; min-height:29px; height:29px; padding:0; border:0; }
+    #rowsModal .row-order-control .move-position { width:45px; margin:0; padding:3px !important; }
+    .row-order-control .drag-order-handle { border:0; padding:0; min-width:18px; width:18px; background:transparent; }
+    .rows-dialog { height:min(800px,94dvh); }
+    #rowsModal input[type=checkbox] { width:16px; height:16px; min-height:16px; accent-color:#08766b; }
+    .item-select-table tr.dragging-row { opacity:.45; }
+    .item-select-table tr.drag-over-row td { box-shadow:inset 0 2px 0 #08766b; }
+    .item-select-table tr.drag-after-row td { box-shadow:inset 0 -2px 0 #08766b; }
+    .library-preview-heading { display:flex; align-items:center; gap:12px; border-bottom:1px solid #e1e8eb; padding-bottom:14px; margin-bottom:14px; }
+    .library-preview-heading h3 { margin:0; flex:1; }
+    .library-preview-heading>span { font-size:11px; color:#82969f; }
+    .library-preview-item { padding:12px 0; border-bottom:1px solid #edf1f3; font-size:12px; color:#526b77; }
+    .library-item-number { display:inline-block; min-width:23px; color:#94a4ac; font-size:11px; font-weight:400; }
+    .quick-checklist-summary { border-top:1px solid #e4eaee; margin-top:16px; padding-top:14px; display:flex; justify-content:space-between; align-items:center; font-size:12px; color:#607983; }
+    .remarks-entry,.programme tbody .action-col { white-space:pre-wrap; }
+    .check-item input,.subcheck-item input { width:14px; height:14px; accent-color:#08766b; }
+    .form-error { color:#ad4052; font-size:12px; margin:0 0 12px; }
+    .form-error:empty { display:none; }
+    .notes:empty,.client-summary:empty { display:none; }
+    .project-title strong,.drag-order-handle { letter-spacing:0; }
+    #projectListModal .modal-card { width:min(960px,96vw); min-height:420px; }
+    #projectListModal .project-list-table { min-width:0; }
+    #projectListModal .tab-strip { margin-top:16px; flex-wrap:wrap; }
+    #projectListModal .tab-strip input { margin-left:auto; flex:1; min-width:180px; max-width:340px; }
+    .period-actions { padding-top:12px; gap:8px; }
+    .connection-control.is-synced .connection-dot { background:#138466; }
+    .connection-control.needs-review .connection-dot { background:#c78820; }
+    .empty-state strong { display:block; margin-bottom:12px; color:#647e89; }
+    @media(max-width:1000px) {
+      .project-switcher { margin-left:4px; max-width:340px; min-width:150px; }
+      .connection-control { max-width:110px; }
+      .workspace-progress { display:none; }
+      .brand-logo { max-width:32vw; max-height:116px; }
+      .commandbar { gap:5px; }
+    }
+    @media(max-width:680px) {
+      .app { padding:0 8px 8px; }
+      .app-topbar { height:58px; gap:5px; }
+      .app-brand { gap:5px; }
+      .app-brand>span:last-child { display:none; }
+      .brand-symbol { width:27px; height:27px; font-size:20px; }
+      .project-switcher { min-width:0; max-width:none; margin-left:0; flex:1; padding:3px 5px; gap:5px; }
+      .project-switcher strong { font-size:11px; max-width:130px; }
+      .project-switcher small { font-size:10px; }
+      .project-switcher>.ui-icon:first-child { display:none; }
+      .app-topbar>.topbar-spacer { display:none; }
+      .app-topbar #printButton { width:33px; padding:0; }
+      .app-topbar #printButton span,.app-topbar #hideToolbarButton span,.app-topbar .connection-control #workspaceSync { display:none; }
+      .app-topbar #hideToolbarButton { width:33px; padding:0; }
+      .app-topbar .connection-control { width:24px; padding:0; min-width:0; }
+      .commandbar { min-height:0; gap:5px; padding:8px 0; }
+      .commandbar .command-set button { padding:6px 8px; font-size:11px; }
+      .commandbar .command-set button .ui-icon { width:14px; }
+      .command-divider { margin:0 2px; }
+      .commandbar .select-command select { min-width:75px; font-size:11px; }
+      .commandbar .select-command { padding-left:6px; }
+      .commandbar .select-command .ui-icon { display:none; }
+      .commandbar .icon-button { width:29px; min-height:31px; height:31px; }
+      .commandbar>.topbar-spacer { display:none; }
+      .sheet-head { padding:12px; gap:10px; }
+      .brand-logo { max-width:105px; min-height:32px; max-height:60px; }
+      .project-title strong { font-size:15px; }
+      .project-title>div,.project-meta { font-size:10px; }
+      .project-meta { grid-column:1/-1; display:flex; flex-wrap:wrap; gap:2px 10px; }
+      .filter-bar { gap:5px; padding:8px; }
+      .filter-bar input { width:100%; }
+      .filter-bar select { width:calc(50% - 4px); min-width:0; }
+      .filter-bar #completionFilter { width:calc(100% - 58px); }
+      .filter-count { width:100%; margin:3px 0 0; font-size:10px; }
+      .programme-wrap { max-height:calc(100dvh - 398px); }
+      body.workspace-focus .programme-wrap { max-height:calc(100dvh - 274px); }
+      .tools-drawer { width:min(420px,100vw - 15px); }
+      .modal { padding:8px; }
+      .modal-card { width:100%; max-height:96dvh; padding:14px; border-radius:8px; }
+      .dialog-heading { padding-bottom:13px; }
+      .dialog-heading h2 { font-size:17px; }
+      .form-grid { gap:12px; }
+      .form-grid label { font-size:11px; }
+      .form-grid input { padding:7px; }
+      .items-dialog { height:94dvh; }
+      .items-editor-toolbar { flex-wrap:wrap; }
+      .items-editor-toolbar .search-control { display:none; }
+      .mobile-item-selector { display:block; width:100%; margin-bottom:10px; min-height:35px; }
+      .items-workbench { display:flex; }
+      .items-list-pane { display:none; }
+      .item-detail-pane { flex:1; padding:15px 12px; }
+      .library-toolbar { flex-wrap:wrap; }
+      .library-toolbar input { flex-basis:100%; }
+      .library-toolbar #librarySaveButton { flex:1; }
+      .library-layout { grid-template-columns:1fr; grid-template-rows:auto minmax(0,1fr); }
+      .library-set-list { padding:8px 12px; border-right:0; border-bottom:1px solid #e0e7eb; }
+      .library-set-list label { margin:0; }
+      .library-set-list select { min-height:65px; height:65px; }
+      .library-dialog .modal-actions { gap:6px; }
+      .library-dialog .footer-start { width:100%; }
+      .output-layout { grid-template-columns:1fr; grid-template-rows:auto minmax(0,1fr); }
+      .output-settings { display:flex; flex-wrap:wrap; gap:7px; padding:10px; max-height:175px; border-right:0; border-bottom:1px solid #dde5e9; }
+      .output-settings .form-field { flex:1; min-width:85px; margin:0; font-size:11px; }
+      .output-settings .check-control { font-size:10px; }
+      .preview-stage { padding:5px; }
+      .date-format-note { display:none; }
+      #projectListModal .project-list-table thead { display:none; }
+      #projectListModal .project-list-table tr { display:grid; grid-template-columns:minmax(0,1fr) auto; padding:8px 0; border-bottom:1px solid #e0e8ec; }
+      #projectListModal .project-list-table td { border:0; padding:5px 10px; overflow-wrap:anywhere; }
+      #projectListModal .project-list-table td:nth-child(2) { grid-column:1; grid-row:2; font-size:10px; }
+      #projectListModal .project-list-table td:nth-child(3) { grid-column:2; grid-row:1/span 2; display:flex; flex-direction:column; gap:5px; }
+      #rowsModal .row-editor { min-width:0; border-collapse:separate; border-spacing:0; }
+      #rowsModal .row-editor thead { display:none; }
+      #rowsModal .row-editor tbody tr { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); border-bottom:1px solid #b8cbd4; padding:9px 3px; }
+      #rowsModal .row-editor td { display:block; border:0; padding:5px; min-width:0; }
+      #rowsModal .row-editor td::before { content:attr(data-label); display:block; color:#81949e; font-size:10px; margin-bottom:4px; }
+      #rowsModal .row-editor td:nth-child(5) { grid-column:1/-1; }
+      #rowsModal .row-editor textarea[data-field=action] { min-width:0; width:100%; }
+      #rowsModal .editor-actions { flex-wrap:wrap; gap:5px; }
+      #rowsModal .editor-actions .search-control { flex-basis:100%; max-width:none; margin-left:0; }
+    }
+    @media(prefers-reduced-motion:reduce) { * { scroll-behavior:auto !important; transition:none !important; } }
+    @media print {
+      .app-topbar,.commandbar,.tools-drawer,.drawer-backdrop,.workspace-footer,.toast-message { display:none !important; }
+      .app { padding:0; }
+      .sheet { border:0; border-radius:0; overflow:visible; }
+      .sheet-head { display:grid !important; border:0; }
+      body.workspace-focus .client-summary { display:block !important; }
+      .brand-logo { width:auto; height:auto; max-width:105mm; max-height:28mm; min-height:0; }
+      .project-title strong { font-size:15px; }
+      .programme-wrap,body.workspace-focus .programme-wrap { max-height:none !important; min-height:0; }
+      .programme th,.programme td { color:#172b35; }
+      .programme thead th { background:#f5f8f9 !important; }
+      .programme .category-col { background:white; }
+      body.keep-table-headers .programme thead th { position:static !important; }
+    }
   </style>
 </head>
 <body>
   <div class="app compact" id="app">
-    <div class="toolbar-toggle"><button id="showToolbarButton" type="button">Show Tools</button></div>
-    <div class="toolbar">
-      <div>
-        <h1>Noah Master Programme Timeline</h1>
-        <p>純展示型客戶版。左邊為 Category / Sub-Category / Action / <span id="actionByHelpLabel">Action By</span>，右邊可切換 Day / Week / Month timeline，適合列印或 Save as PDF。</p>
+    <header class="app-topbar">
+      <a class="app-brand" href="#" aria-label="Noah Programme"><span class="brand-symbol">N</span><span>NOAH <small>Programme</small></span></a>
+      <button class="project-switcher" id="projectListButton" title="Open projects"><i data-icon="folder-open"></i><span><strong id="navProjectName">Untitled project</strong><small id="navProjectCode">Local draft</small></span><i data-icon="chevron-down"></i></button>
+      <div class="topbar-spacer"></div>
+      <button class="connection-control" id="connectionButton" data-open-tool="cloud"><span class="connection-dot"></span><span id="workspaceSync" role="status" aria-live="polite">Local only</span></button>
+      <button class="light" id="hideToolbarButton" type="button" aria-controls="toolsDrawer" aria-expanded="false"><i data-icon="sliders-horizontal"></i><span>Tools</span></button>
+      <button id="printButton"><i data-icon="download"></i><span>Export PDF</span></button>
+    </header>
+    <div class="commandbar">
+      <div class="command-set">
+        <button class="light" id="editProjectButton"><i data-icon="pencil"></i><span>Project details</span></button>
+        <button class="light" id="editRowsButton"><i data-icon="clipboard-list"></i><span>Edit rows</span></button>
       </div>
-      <div class="toolbar-actions">
-        <div class="toolbar-group primary" data-title="Schedule & View">
-          <label class="project-code-control"><span>Project Code</span><input id="projectCodeInput"><button class="light mini" id="projectListButton" type="button">List</button></label>
-          <label>Start <input id="startInput" type="date" title="Date format: DD/MM/YYYY"></label>
-          <label>End <input id="endInput" type="date" title="Date format: DD/MM/YYYY"></label>
-          <select id="viewInput">
-            <option value="auto">Auto View</option>
-            <option value="day">Day View</option>
-            <option value="week">Week View</option>
-            <option value="month">Month View</option>
-          </select>
-          <select id="weekLabelInput">
-            <option value="project">Week: Project W1</option>
-            <option value="iso">Week: ISO Year Week</option>
-          </select>
-          <select id="densityInput">
-            <option value="compact">Compact / Fit</option>
-            <option value="normal">Normal</option>
-          </select>
-          <select id="audienceInput">
-            <option value="internal">Internal View</option>
-            <option value="client">Client View</option>
-            <option value="actions">Actions Only View</option>
-          </select>
-          <select id="freezeColumnsInput" title="Freeze columns from the left">
-            <option value="0">Freeze: None</option>
-            <option value="1">Freeze: Category</option>
-            <option value="2">Freeze: Sub-Category</option>
-            <option value="3">Freeze: Action</option>
-            <option id="freezeActionByOption" value="4">Freeze: Action By</option>
-            <option value="5">Freeze: Action Items</option>
-            <option value="6">Freeze: Remarks</option>
-          </select>
-        </div>
-        <div class="toolbar-group" data-title="Templates">
-          <select id="templateInput"></select>
-          <button class="light" id="applyTemplateButton">Apply Template</button>
-          <button class="light" id="saveTemplateButton">Save As Template</button>
-          <button class="light" id="deleteTemplateButton">Delete Template</button>
-          <button class="light" id="exportTemplatesButton">Export Templates</button>
-          <button class="light" id="importTemplatesButton">Import Templates</button>
-          <input id="templateJsonInput" type="file" accept="application/json,.json" style="display:none">
-        </div>
-        <div class="toolbar-group" data-title="Cloud Sync">
-          <input id="cloudPasswordInput" type="password" inputmode="numeric" placeholder="Sync password">
-          <button id="cloudSignInButton" type="button">Unlock Sync</button>
-          <button class="secondary" id="cloudSyncButton" type="button" disabled>Sync Cloud</button>
-          <span id="cloudStatus" class="status-pill">Cloud: not connected</span>
-        </div>
-        <div class="toolbar-group health-group" data-title="Edit and Save">
-          <button id="editProjectButton">Edit Project</button>
-          <button id="editRowsButton">Edit Rows</button>
-          <button class="light" id="addProjectButton" type="button">New Project</button>
-          <button class="danger" id="deleteProjectButton" type="button">Delete Project</button>
-          <span class="toolbar-break"></span>
-          <button class="light" id="clientPdfButton">Client PDF Preset</button>
-          <button id="printButton">Save PDF</button>
-          <span id="saveStatus" class="status-pill">Saved locally</span>
-        </div>
-        <div class="toolbar-group" data-title="Import / Export">
-          <button class="secondary" id="exportProjectButton">Export Project JSON</button>
-          <button class="light" id="importProjectButton">Import Project JSON</button>
-          <input id="projectJsonInput" type="file" accept="application/json,.json" style="display:none">
-          <button class="secondary" id="exportCsvButton">Export CSV</button>
-          <button class="secondary" id="exportExcelButton">Export Excel (.xls)</button>
-          <button class="light" id="importCsvButton">Import CSV</button>
-          <button class="light" id="editDataButton">Advanced JSON</button>
-          <input id="csvInput" type="file" accept=".csv,text/csv" style="display:none">
-        </div>
-      </div>
-      <div class="toolbar-controls">
-        <button class="light" id="hideToolbarButton" type="button">Hide Tools</button>
-      </div>
+      <span class="command-divider"></span>
+      <label class="select-command"><i data-icon="columns-3"></i><select id="audienceInput" aria-label="Workspace view"><option value="internal">Timeline</option><option value="actions">Actions only</option><option value="client">Client view</option></select></label>
+      <label class="select-command timeline-scale-control"><i data-icon="calendar-range"></i><select id="viewInput" aria-label="Timeline scale"><option value="auto">Auto scale</option><option value="day">Day</option><option value="week">Week</option><option value="month">Month</option></select></label>
+      <button class="icon-button light timeline-scale-control" id="todayButton" title="Go to today" aria-label="Go to today"><i data-icon="calendar-days"></i></button>
+      <div class="topbar-spacer"></div>
+      <span id="workspaceProgress" class="workspace-progress"></span>
+      <button id="undoButton" class="icon-button light" title="Undo last edit" aria-label="Undo last edit"><i data-icon="undo-2"></i></button>
+      <button id="redoButton" class="icon-button light" title="Redo" aria-label="Redo"><i data-icon="redo-2"></i></button>
+      <button id="focusWorkspaceButton" class="icon-button light" title="Focus mode" aria-label="Focus mode" aria-pressed="false"><i data-icon="maximize-2"></i></button>
     </div>
-    <div class="workspace-strip">
-      <strong id="workspaceProject"></strong>
-      <div class="commands">
-        <span id="workspaceSync" class="status-pill" role="status" aria-live="polite">Local only</span>
-        <button id="undoButton" class="light mini" title="Undo last edit" aria-label="Undo last edit">&#8630;</button>
-        <button id="redoButton" class="light mini" title="Redo" aria-label="Redo">&#8631;</button>
-        <button id="historyButton" class="light mini">Local History</button>
+    <aside class="tools-drawer" id="toolsDrawer" aria-label="Workspace tools" hidden>
+      <div class="drawer-heading"><h2 id="drawerTitle">View &amp; schedule</h2><button class="icon-button light" id="closeDrawerButton" aria-label="Close tools" title="Close tools"><i data-icon="x"></i></button></div>
+      <nav class="drawer-tabs" aria-label="Tool categories">
+        <button data-tool-tab="view" aria-selected="true" title="View & schedule"><i data-icon="sliders-horizontal"></i><span>View</span></button>
+        <button data-tool-tab="project" aria-selected="false"><i data-icon="folder-open"></i><span>Project</span></button>
+        <button data-tool-tab="templates" aria-selected="false"><i data-icon="layout-template"></i><span>Templates</span></button>
+        <button data-tool-tab="cloud" aria-selected="false"><i data-icon="cloud"></i><span>Cloud</span></button>
+        <button data-tool-tab="files" aria-selected="false"><i data-icon="files"></i><span>Files</span></button>
+      </nav>
+      <div class="drawer-body">
+        <section class="tool-panel" data-tool-panel="view">
+          <div class="form-section"><h3>Project period</h3><div class="form-grid">
+            <label>Start<input id="startInput" type="date" title="DD/MM/YYYY"></label><label>End<input id="endInput" type="date" title="DD/MM/YYYY"></label>
+          </div></div>
+          <div class="form-section"><h3>Table</h3>
+            <label class="form-field">Density<select id="densityInput"><option value="compact">Compact</option><option value="normal">Comfortable</option></select></label>
+            <label class="form-field">Week labels<select id="weekLabelInput"><option value="project">Project week (W1, W2...)</option><option value="iso">ISO week number</option></select></label>
+            <label class="form-field">Freeze columns<select id="freezeColumnsInput"><option value="0">None</option><option value="4">Through Free Column</option></select></label>
+            <label class="check-control"><input type="checkbox" id="stickyHeaderInput"> Keep column headers visible</label>
+          </div>
+          <div class="form-section"><h3>Checklist details</h3><div class="button-pair"><button class="light" id="expandDetailsButton"><i data-icon="maximize-2"></i>Expand all</button><button class="light" id="collapseDetailsButton"><i data-icon="minimize-2"></i>Collapse all</button></div></div>
+        </section>
+        <section class="tool-panel" data-tool-panel="project" hidden>
+          <div class="form-section"><label class="form-field">Project code<input id="projectCodeInput" spellcheck="false" autocomplete="off"></label><div class="button-pair"><button class="light" data-command="details"><i data-icon="pencil"></i>Edit details</button><button id="addProjectButton"><i data-icon="plus"></i>New project</button></div></div>
+          <div class="form-section"><h3>Recovery</h3><button class="drawer-command" id="historyButton"><i data-icon="rotate-ccw"></i><span>Local version history</span><i data-icon="chevron-right"></i></button></div>
+          <div class="form-section"><button class="drawer-command danger-text" id="deleteProjectButton"><i data-icon="trash-2"></i><span>Delete project</span></button></div>
+        </section>
+        <section class="tool-panel" data-tool-panel="templates" hidden>
+          <div class="form-section"><label class="form-field">Programme template<select id="templateInput"></select></label><button id="applyTemplateButton" class="full-button"><i data-icon="check"></i>Apply template</button></div>
+          <div class="form-section"><button class="drawer-command" id="saveTemplateButton"><i data-icon="save"></i><span>Save current as template</span></button><button class="drawer-command" id="exportTemplatesButton"><i data-icon="download"></i><span>Export templates</span></button><button class="drawer-command" id="importTemplatesButton"><i data-icon="upload"></i><span>Import templates</span></button><button class="drawer-command danger-text" id="deleteTemplateButton"><i data-icon="trash-2"></i><span>Delete template</span></button></div>
+          <input id="templateJsonInput" type="file" accept="application/json,.json" hidden>
+        </section>
+        <section class="tool-panel" data-tool-panel="cloud" hidden>
+          <div class="form-section"><h3 id="cloudProjectLabel">Current project</h3><label class="form-field">Cloud password<input id="cloudPasswordInput" type="password" inputmode="numeric" autocomplete="current-password"></label><div class="button-pair"><button id="cloudSignInButton">Unlock Sync</button><button class="secondary" id="cloudSyncButton" disabled>Sync Cloud</button></div><div id="cloudStatus" class="status-pill" role="status" aria-live="polite">Local only</div></div>
+          <button class="drawer-command" data-command="projects"><i data-icon="folder-open"></i><span>Browse projects</span><i data-icon="chevron-right"></i></button>
+        </section>
+        <section class="tool-panel" data-tool-panel="files" hidden>
+          <div class="form-section"><h3>Export</h3><button class="drawer-command" id="exportProjectButton"><i data-icon="download"></i><span>Project backup (.json)</span></button><button class="drawer-command" id="exportExcelButton"><i data-icon="download"></i><span>Excel programme (.xls)</span></button><button class="drawer-command" id="exportCsvButton"><i data-icon="download"></i><span>Rows (.csv)</span></button><button class="drawer-command" id="clientPdfButton"><i data-icon="files"></i><span>Client PDF preset</span></button></div>
+          <div class="form-section"><h3>Import</h3><button class="drawer-command" id="importProjectButton"><i data-icon="upload"></i><span>Project backup (.json)</span></button><button class="drawer-command" id="importCsvButton"><i data-icon="upload"></i><span>Rows (.csv)</span></button></div>
+          <details class="form-section"><summary>Advanced</summary><button class="drawer-command" id="editDataButton"><i data-icon="settings-2"></i><span>Project JSON editor</span></button></details>
+          <input id="projectJsonInput" type="file" accept="application/json,.json" hidden><input id="csvInput" type="file" accept=".csv,text/csv" hidden>
+        </section>
       </div>
-    </div>
+    </aside>
+    <div id="drawerBackdrop" class="drawer-backdrop" hidden></div>
     <section class="sheet">
       <div class="sheet-head">
         <div class="logo-box"><img id="companyLogo" class="brand-logo" alt="Company Logo"></div>
@@ -1222,45 +1551,34 @@
       </div>
       <div class="notes" id="notesText"></div>
     </section>
+    <footer class="workspace-footer"><span id="saveStatus" class="status-pill" role="status" aria-live="polite">Saved locally</span><span class="topbar-spacer"></span><span class="field-hint">Noah Programme</span></footer>
   </div>
+  <div id="toastMessage" class="toast-message" role="status" aria-live="polite" hidden></div>
   <div class="modal" id="projectModal">
-    <div class="modal-card">
-      <h2>Edit Project Details</h2>
-      <div class="row-editor-wrap">
-        <table class="row-editor">
-          <tbody>
-            <tr><th style="width:180px">Project Name</th><td><input id="projectNameInput"></td></tr>
-            <tr><th>Project Code</th><td><input id="projectCodeProjectInput" placeholder="Same code used for cloud sync"></td></tr>
-            <tr><th>Responsible Person</th><td><input id="projectOwnerInput" required placeholder="Required"></td></tr>
-            <tr><th>Responsible Person Display Title</th><td><input id="projectOwnerTitleInput" placeholder="Example: Project Lead. Leave blank to show name only."></td></tr>
-            <tr><th>Free Column Title</th><td><input id="actionByLabelInput" placeholder="Example: Action By, PIC or Responsible Team"></td></tr>
-            <tr><th>Free Column Position</th><td><select id="actionByPositionInput"><option value="afterAction">After Action</option><option value="afterItems">After Action Items</option><option value="afterRemarks">After Remarks</option></select></td></tr>
-            <tr><th>Client Output Free Column</th><td><select id="clientShowFreeColumnInput"><option value="no">Hide Free Column</option><option value="yes">Show after Action</option></select></td></tr>
-            <tr><th>Event Period</th><td><div class="date-pair"><input id="eventStartInput" type="date"><input id="eventEndInput" type="date"></div><div class="field-hint">Date format: DD/MM/YYYY</div></td></tr>
-            <tr><th>Version</th><td><input id="versionInput"></td></tr>
-            <tr><th>Last Update</th><td><input id="lastUpdateInput" readonly><div style="margin-top:6px;color:#64748b">Automatically updated after edits.</div></td></tr>
-            <tr><th>Display Start Date</th><td><input id="projectStartInput" type="date"><div class="field-hint">Date format: DD/MM/YYYY</div></td></tr>
-            <tr><th>Display End Date</th><td><input id="projectEndInput" type="date"><div class="field-hint">Date format: DD/MM/YYYY</div></td></tr>
-            <tr><th>Client Summary</th><td><textarea id="summaryInput" style="min-height:80px"></textarea></td></tr>
-            <tr><th>Notes</th><td><textarea id="notesInput" style="min-height:90px"></textarea></td></tr>
-            <tr><th>HK Holidays</th><td><button class="light" id="updateHkHolidaysButton" type="button">Update HK Holidays</button> <span id="holidayStatus" class="status-pill">HK Holidays: not updated</span></td></tr>
-            <tr><th>Holidays</th><td><input id="holidaysInput" placeholder="YYYY-MM-DD, YYYY-MM-DD"></td></tr>
-            <tr><th>Holiday Proxy URL</th><td><input id="holidayProxyInput" placeholder="https://holidays.napjoc.workers.dev/"><div style="margin-top:6px;color:#64748b">如 GovHK 被 CORS 擋住，可填入公司 proxy / Cloudflare Worker URL。</div></td></tr>
-            <tr><th>Timeline Colours</th><td>
-              <div class="color-grid">
-                <label class="color-control"><span>Work</span><input id="workColorInput" class="color-input" type="color"></label>
-                <label class="color-control"><span>Weekend / Holiday</span><input id="weekendColorInput" class="color-input" type="color"></label>
-                <label class="color-control"><span>Highlight</span><input id="highlightColorInput" class="color-input" type="color"></label>
-              </div>
-            </td></tr>
-            <tr><th>Company Logo</th><td><button type="button" class="light" id="uploadLogoButton">Upload Logo</button> <button type="button" class="light" id="removeLogoButton">Remove Logo</button><input id="logoInput" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" style="display:none"><div id="logoStatus" style="margin-top:6px;color:#64748b"></div></td></tr>
-          </tbody>
-        </table>
+    <div class="modal-card project-dialog">
+      <div class="dialog-heading"><div><h2>Project details</h2><span class="dialog-caption" id="projectDialogCaption"></span></div><button class="icon-button light" data-cancel-editor="projectModal" aria-label="Close project details"><i data-icon="x"></i></button></div>
+      <nav class="section-tabs" aria-label="Project detail sections"><button data-project-section="general" aria-selected="true">General</button><button data-project-section="presentation">Presentation</button><button data-project-section="calendar">Calendar</button></nav>
+      <div class="project-form-scroll">
+        <section data-project-form="general">
+          <div class="form-grid"><label class="span-two">Project name<input id="projectNameInput"></label><label>Project code<input id="projectCodeProjectInput" spellcheck="false"></label><label>Version<input id="versionInput"></label><label>Responsible person<input id="projectOwnerInput" required></label><label>Display title<input id="projectOwnerTitleInput" placeholder="e.g. Project lead"></label></div>
+          <div class="form-section"><h3>Project period</h3><div class="form-grid"><label>Start<input id="projectStartInput" type="date"></label><label>End<input id="projectEndInput" type="date"></label></div></div>
+          <div class="form-section"><h3>Event period</h3><div class="form-grid"><label>Start<input id="eventStartInput" type="date"></label><label>End<input id="eventEndInput" type="date"></label></div></div>
+          <label class="form-field">Last edited<input id="lastUpdateInput" readonly></label>
+        </section>
+        <section data-project-form="presentation" hidden>
+          <div class="form-grid"><label>Free Column title<input id="actionByLabelInput" placeholder="e.g. Team"></label><label>Position<select id="actionByPositionInput"><option value="afterAction">After Action</option><option value="afterItems">After Action Items</option><option value="afterRemarks">After Remarks</option></select></label></div>
+          <label class="form-field">Client output<select id="clientShowFreeColumnInput"><option value="no">Hide Free Column</option><option value="yes">Show after Action</option></select></label>
+          <label class="form-field">Client summary<textarea id="summaryInput" rows="3"></textarea></label><label class="form-field">Notes<textarea id="notesInput" rows="3"></textarea></label>
+          <div class="form-section"><h3>Timeline colours</h3><div class="colour-fields"><label>Work<input id="workColorInput" type="color"></label><label>Weekend / holiday<input id="weekendColorInput" type="color"></label><label>Highlight<input id="highlightColorInput" type="color"></label></div></div>
+          <div class="form-section"><h3>Company logo</h3><div class="button-pair"><button class="light" id="uploadLogoButton"><i data-icon="upload"></i>Upload logo</button><button class="light" id="removeLogoButton">Remove</button></div><input id="logoInput" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden><span id="logoStatus" class="field-hint"></span></div>
+        </section>
+        <section data-project-form="calendar" hidden>
+          <div class="form-section"><h3>Hong Kong holidays</h3><button class="light" id="updateHkHolidaysButton"><i data-icon="rotate-ccw"></i>Update holidays</button><div id="holidayStatus" class="status-pill"></div></div>
+          <label class="form-field">Additional holiday dates<input id="holidaysInput" placeholder="YYYY-MM-DD, YYYY-MM-DD"></label>
+          <label class="form-field">Holiday proxy URL<input id="holidayProxyInput" type="url"></label>
+        </section>
       </div>
-      <div class="modal-actions">
-        <button class="light" id="cancelProjectButton">Cancel</button>
-        <button id="applyProjectButton">Apply</button>
-      </div>
+      <div class="modal-actions"><span class="date-format-note">Dates: DD/MM/YYYY</span><button class="light" id="cancelProjectButton">Cancel</button><button id="applyProjectButton"><i data-icon="check"></i>Save project</button></div>
     </div>
   </div>
   <div class="modal" id="cloudUnlockChoiceModal">
@@ -1290,14 +1608,14 @@
         <input id="projectSearchInput" type="search" placeholder="Project code or name" aria-label="Search projects">
       </div>
       <div id="projectListStatus" class="status-pill">Unlock cloud sync first</div>
+      <button id="listUnlockCloudButton" class="light" hidden>Unlock Cloud</button>
       <div class="row-editor-wrap" style="margin-top:10px">
         <table class="project-list-table">
           <thead>
             <tr>
-              <th style="width:180px">Project Code</th>
-              <th>Project Name</th>
-              <th style="width:210px">Time Period</th>
-              <th style="width:150px">Action</th>
+              <th>Project</th>
+              <th style="width:240px">Time period</th>
+              <th style="width:140px"></th>
             </tr>
           </thead>
           <tbody id="projectListBody"></tbody>
@@ -1311,117 +1629,54 @@
     </div>
   </div>
   <div class="modal" id="newProjectModal">
-    <div class="modal-card">
-      <h2>New Project</h2>
-      <div class="row-editor-wrap">
-        <table class="row-editor">
-          <tbody>
-            <tr><th style="width:180px">Project Code</th><td><input id="newProjectCodeInput"></td></tr>
-            <tr><th>Project Name</th><td><input id="newProjectNameInput"></td></tr>
-            <tr><th>Responsible Person</th><td><input id="newProjectOwnerInput" required placeholder="Required"></td></tr>
-            <tr><th>Start Date</th><td><input id="newProjectStartInput" type="date"><div class="field-hint">Date format: DD/MM/YYYY</div></td></tr>
-            <tr><th>End Date</th><td><input id="newProjectEndInput" type="date"><div class="field-hint">Date format: DD/MM/YYYY</div></td></tr>
-            <tr><th>Event Period</th><td><div class="date-pair"><input id="newEventStartInput" type="date"><input id="newEventEndInput" type="date"></div><div class="field-hint">Date format: DD/MM/YYYY</div></td></tr>
-          </tbody>
-        </table>
+    <div class="modal-card new-project-dialog">
+      <div class="dialog-heading"><h2>New project</h2><button class="icon-button light" data-cancel-editor="newProjectModal" aria-label="Close new project"><i data-icon="x"></i></button></div>
+      <div id="newProjectError" class="form-error" role="alert"></div>
+      <div class="project-form-scroll">
+        <div class="form-grid"><label>Project code<input id="newProjectCodeInput" spellcheck="false" autocomplete="off"></label><label>Responsible person<input id="newProjectOwnerInput" required></label><label class="span-two">Project name<input id="newProjectNameInput"></label><label class="span-two">Start with<select id="newProjectMode"><option value="blank">Blank project</option><option value="current">Copy current project</option></select></label></div>
+        <div class="form-section"><h3>Project period</h3><div class="form-grid"><label>Start<input id="newProjectStartInput" type="date"></label><label>End<input id="newProjectEndInput" type="date"></label></div></div>
+        <div class="form-section"><h3>Event period</h3><div class="form-grid"><label>Start<input id="newEventStartInput" type="date"></label><label>End<input id="newEventEndInput" type="date"></label></div></div>
       </div>
-      <div class="modal-actions">
-        <button class="light" id="cancelNewProjectButton" type="button">Cancel</button>
-        <button class="secondary" id="createFromCurrentButton" type="button">Create From Current</button>
-        <button id="createBlankProjectButton" type="button">Create Blank Project</button>
-      </div>
+      <div class="modal-actions"><span class="date-format-note">Dates: DD/MM/YYYY</span><button class="light" id="cancelNewProjectButton">Cancel</button><button id="createBlankProjectButton"><i data-icon="plus"></i>Create project</button></div>
     </div>
   </div>
   <div class="modal" id="rowsModal">
-    <div class="modal-card">
-      <h2>Edit Rows</h2>
-      <div class="editor-actions">
-        <button id="addRowButton">＋ Add Row</button>
-        <button class="light" id="duplicateLastRowButton">Duplicate Last Row</button>
-      </div>
+    <div class="modal-card rows-dialog">
+      <div class="dialog-heading"><div><h2>Rows</h2><span class="dialog-caption" id="rowsEditorCount"></span></div><button class="icon-button light" data-cancel-editor="rowsModal" aria-label="Close rows"><i data-icon="x"></i></button></div>
+      <div class="items-editor-toolbar"><div class="search-control"><i data-icon="search"></i><input id="rowsEditorSearch" type="search" placeholder="Find a row" aria-label="Find a row"></div><button id="addRowButton"><i data-icon="plus"></i>Add row</button><button class="light" id="duplicateLastRowButton"><i data-icon="copy"></i>Duplicate last</button><button class="icon-button light" id="undoRowsButton" title="Undo editor change" aria-label="Undo editor change"><i data-icon="undo-2"></i></button></div>
+      <div class="rows-batch-toolbar"><label class="checkbox-field"><input type="checkbox" id="selectAllEditorRows">Select visible</label><span id="selectedRowsCount"></span><button class="light mini" id="duplicateSelectedRowsButton"><i data-icon="copy"></i>Duplicate</button><button class="danger-ghost mini" id="deleteSelectedRowsButton"><i data-icon="trash-2"></i>Delete selected</button></div>
       <div class="row-editor-wrap">
         <table class="row-editor">
-          <thead>
-            <tr>
-              <th style="width:76px">Order</th>
-              <th style="width:170px">Category</th>
-              <th style="width:210px">Sub-Category</th>
-              <th style="width:420px">Action</th>
-              <th id="rowsActionByHeader" style="width:150px">Action By</th>
-              <th style="width:125px">Start<br><span class="field-hint">DD/MM/YYYY</span></th>
-              <th style="width:125px">End<br><span class="field-hint">DD/MM/YYYY</span></th>
-              <th style="width:80px">Highlight</th>
-              <th style="width:135px">Action</th>
-            </tr>
-          </thead>
+          <thead><tr><th style="width:42px"></th><th style="width:66px">Order</th><th style="width:140px">Category</th><th style="width:170px">Sub-Category</th><th style="width:300px">Action</th><th id="rowsActionByHeader" style="width:140px">Free</th><th style="width:145px">Start</th><th style="width:145px">End</th><th style="width:75px">Highlight</th><th style="width:82px"></th></tr></thead>
           <tbody id="rowsEditorBody"></tbody>
         </table>
       </div>
-      <div class="modal-actions">
-        <button class="light" id="cancelRowsButton">Cancel</button>
-        <button id="applyRowsButton">Apply</button>
-      </div>
+      <div class="modal-actions"><span class="draft-status">DD/MM/YYYY</span><button class="light" id="cancelRowsButton">Cancel</button><button id="applyRowsButton"><i data-icon="check"></i>Save changes</button></div>
     </div>
   </div>
   <div class="modal" id="quickRowModal">
-    <div class="modal-card">
-      <h2>Quick Edit Row <span class="edit-hint" id="quickRowHint"></span></h2>
+    <div class="modal-card project-dialog">
+      <div class="dialog-heading"><div><h2>Row details</h2><span class="dialog-caption" id="quickRowHint"></span></div><button class="icon-button light" data-cancel-editor="quickRowModal" aria-label="Close row details"><i data-icon="x"></i></button></div>
       <input id="quickRowId" type="hidden">
-      <div class="row-editor-wrap">
-        <table class="row-editor">
-          <tbody>
-            <tr><th style="width:180px">Category</th><td><input id="quickCategoryInput"></td></tr>
-            <tr><th>Sub-Category</th><td><input id="quickItemInput"></td></tr>
-            <tr><th>Action</th><td><input id="quickActionInput"></td></tr>
-            <tr><th id="quickActionByLabel">Action By</th><td><input id="quickActionByInput"></td></tr>
-            <tr><th>Start</th><td><input id="quickStartInput" type="date" title="Date format: DD/MM/YYYY"><div class="field-hint">Date format: DD/MM/YYYY</div></td></tr>
-            <tr><th>End</th><td><input id="quickEndInput" type="date" title="Date format: DD/MM/YYYY"><div class="field-hint">Date format: DD/MM/YYYY</div></td></tr>
-            <tr><th>Highlight</th><td><select id="quickHighlightInput"><option value="NO">NO</option><option value="YES">YES</option></select></td></tr>
-            <tr><th>Action Items</th><td><textarea id="quickChecklistInput" style="min-height:110px" placeholder="One action item per line"></textarea></td></tr>
-            <tr><th>Remarks</th><td><textarea id="quickRemarksInput" style="min-height:110px" placeholder="One remark per line, matching action items by line"></textarea></td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="editor-actions">
-        <button class="light" id="useClickedAsStartButton">Use clicked period as Start</button>
-        <button class="light" id="useClickedAsEndButton">Use clicked period as End</button>
-        <button class="light" id="quickEditItemsButton">Apply &amp; Edit Items</button>
-      </div>
-      <div class="modal-actions">
-        <button class="danger" id="deleteQuickRowButton">Delete Row</button>
-        <button class="light" id="cancelQuickRowButton">Cancel</button>
-        <button id="applyQuickRowButton">Apply</button>
-      </div>
+      <div class="project-form-scroll"><div class="form-grid"><label>Category<input id="quickCategoryInput"></label><label>Sub-Category<input id="quickItemInput"></label><label class="span-two">Action<textarea id="quickActionInput" rows="3"></textarea></label><label><span id="quickActionByLabel">Free</span><input id="quickActionByInput"></label><label>Highlight<select id="quickHighlightInput"><option value="NO">No</option><option value="YES">Yes</option></select></label><label>Start<input id="quickStartInput" type="date" title="DD/MM/YYYY"></label><label>End<input id="quickEndInput" type="date" title="DD/MM/YYYY"></label></div>
+      <div class="editor-actions period-actions"><button class="light mini" id="useClickedAsStartButton">Set start to selected period</button><button class="light mini" id="useClickedAsEndButton">Set end to selected period</button></div>
+      <div class="quick-checklist-summary"><span>Action items</span><button class="light" id="quickEditItemsButton"><i data-icon="clipboard-list"></i>Save &amp; edit items</button></div>
+      <textarea id="quickChecklistInput" hidden></textarea><textarea id="quickRemarksInput" hidden></textarea></div>
+      <div class="modal-actions"><button class="danger-ghost" id="deleteQuickRowButton"><i data-icon="trash-2"></i>Delete row</button><span class="topbar-spacer"></span><span class="field-hint">DD/MM/YYYY</span><button class="light" id="cancelQuickRowButton">Cancel</button><button id="applyQuickRowButton"><i data-icon="check"></i>Save changes</button></div>
     </div>
   </div>
 
   <div class="modal" id="itemsModal">
-    <div class="modal-card">
-      <h2>Edit Action Items <span class="edit-hint" id="itemsModalHint"></span></h2>
+    <div class="modal-card items-dialog">
+      <div class="dialog-heading"><div><h2>Action items</h2><span class="dialog-caption" id="itemsModalHint"></span></div><button class="icon-button light" data-cancel-editor="itemsModal" aria-label="Close action items"><i data-icon="x"></i></button></div>
       <input id="itemsRowId" type="hidden">
-      <div class="editor-actions">
-        <button id="addChecklistItemButton">＋ Add Item</button>
-        <button id="openLibraryButton" class="light">Checklist Library</button>
+      <div class="items-editor-toolbar"><div class="search-control"><i data-icon="search"></i><input id="itemEditorSearch" type="search" placeholder="Find an item" aria-label="Search action items"></div><button id="addChecklistItemButton"><i data-icon="plus"></i>Add item</button><button class="light" id="openLibraryButton"><i data-icon="layout-template"></i>Library</button><button class="icon-button light" id="undoItemsButton" title="Undo editor change" aria-label="Undo editor change"><i data-icon="undo-2"></i></button></div>
+      <select id="mobileItemSelect" class="mobile-item-selector" aria-label="Select action item"></select>
+      <div class="items-workbench">
+        <div class="items-list-pane"><div class="list-pane-heading"><span id="itemEditorCount"></span><button class="icon-button light" id="completeAllItemsButton" title="Mark all items complete" aria-label="Mark all items complete"><i data-icon="check-check"></i></button></div><div class="row-editor-wrap item-list-scroll"><table class="item-select-table"><tbody id="itemsEditorBody"></tbody></table><div id="itemListEmpty" class="empty-state" hidden>No matching items</div></div></div>
+        <section id="itemDetails" class="item-detail-pane" aria-label="Selected action item"></section>
       </div>
-      <div class="row-editor-wrap">
-        <table class="row-editor">
-          <thead>
-            <tr>
-              <th style="width:62px">Order</th>
-              <th style="width:48px">Done</th>
-              <th>Action Item</th>
-              <th style="width:280px">Sub Checklist</th>
-              <th>Remarks</th>
-              <th style="width:96px">Action</th>
-            </tr>
-          </thead>
-          <tbody id="itemsEditorBody"></tbody>
-        </table>
-      </div>
-      <div class="modal-actions">
-        <button class="light" id="cancelItemsButton">Cancel</button>
-        <button id="applyItemsButton">Apply</button>
-      </div>
+      <div class="modal-actions"><span id="itemsDraftStatus" class="draft-status"></span><button class="light" id="cancelItemsButton">Cancel</button><button id="applyItemsButton"><i data-icon="check"></i>Save changes</button></div>
     </div>
   </div>
 
@@ -1443,7 +1698,7 @@
   </div>
   <div class="modal" id="mergeModal" role="dialog" aria-modal="true" aria-labelledby="mergeTitle">
     <div class="modal-card"><h2 id="mergeTitle">Review simultaneous edits</h2>
-      <div class="row-editor-wrap"><table class="project-list-table"><thead><tr><th>Field</th><th>Your version</th><th>Cloud version</th><th>Keep</th></tr></thead><tbody id="mergeBody"></tbody></table></div>
+      <div class="row-editor-wrap"><table class="project-list-table"><thead><tr><th>Field</th><th>Your version</th><th id="mergeRemoteHeading">Cloud version</th><th>Keep</th></tr></thead><tbody id="mergeBody"></tbody></table></div>
       <div class="modal-actions"><button class="light" id="mergePauseButton">Keep local, stop sync</button><button id="mergeApplyButton">Apply Choices &amp; Sync</button></div>
     </div>
   </div>
@@ -1455,25 +1710,25 @@
     </div>
   </div>
   <div class="modal" id="libraryModal" role="dialog" aria-modal="true" aria-labelledby="libraryTitle">
-    <div class="modal-card"><h2 id="libraryTitle">Checklist Library</h2>
-      <div class="editor-actions"><input id="libraryNameInput" placeholder="Checklist name" aria-label="Checklist name"><button id="librarySaveButton">Save Editor Items</button></div>
-      <select id="librarySelect" aria-label="Saved checklist"></select><pre id="libraryPreview"></pre>
-      <label><input id="librarySkipDuplicates" type="checkbox" checked> Skip matching item names</label>
-      <div class="editor-actions"><button class="light" id="libraryExportButton">Export Library</button><button class="light" id="libraryImportButton">Import Library</button><button class="danger" id="libraryDeleteButton">Delete Set</button><input type="file" id="libraryFileInput" accept=".json,application/json" hidden></div>
-      <div class="modal-actions"><button class="light" data-close-modal="libraryModal">Cancel</button><button class="light" id="libraryAppendButton">Append Items</button><button id="libraryReplaceButton">Replace Items</button></div>
+    <div class="modal-card library-dialog">
+      <div class="dialog-heading"><div><h2 id="libraryTitle">Checklist library</h2><span class="dialog-caption">Local library</span></div><button class="icon-button light" data-close-modal="libraryModal" aria-label="Close library"><i data-icon="x"></i></button></div>
+      <div class="library-toolbar"><input id="libraryNameInput" placeholder="Name this checklist" aria-label="Checklist name"><button id="librarySaveButton"><i data-icon="save"></i>Save current list</button><button class="icon-button light" id="libraryExportButton" title="Export library" aria-label="Export library"><i data-icon="download"></i></button><button class="icon-button light" id="libraryImportButton" title="Import library" aria-label="Import library"><i data-icon="upload"></i></button><button class="icon-button light danger-text" id="libraryDeleteButton" title="Delete saved set" aria-label="Delete saved set"><i data-icon="trash-2"></i></button><input type="file" id="libraryFileInput" accept=".json,application/json" hidden></div>
+      <div class="library-layout"><div class="library-set-list"><label class="form-field">Saved checklists<select id="librarySelect" size="8" aria-label="Saved checklist"></select></label></div><section id="libraryPreview" class="library-preview" aria-label="Checklist preview"></section></div>
+      <div class="modal-actions"><label class="check-control footer-start"><input id="librarySkipDuplicates" type="checkbox" checked>Skip matching names</label><button class="light" data-close-modal="libraryModal">Cancel</button><button class="light" id="libraryReplaceButton">Replace list</button><button id="libraryAppendButton"><i data-icon="plus"></i>Append items</button></div>
     </div>
   </div>
   <div class="modal" id="outputModal" role="dialog" aria-modal="true" aria-labelledby="outputTitle">
-    <div class="modal-card"><h2 id="outputTitle">PDF Preview</h2>
-      <div class="editor-actions">
-        <select id="outputAudience" aria-label="Output view"><option value="client">Client</option><option value="internal">Internal</option><option value="actions">Actions Only</option></select>
-        <select id="outputPeriod" aria-label="Timeline scale"><option value="auto">Auto</option><option value="day">Day</option><option value="week">Week</option><option value="month">Month</option></select>
-        <select id="outputPaper" aria-label="Paper"><option value="A3">A3 Landscape</option><option value="A4">A4 Landscape</option></select>
-        <label><input id="outputFree" type="checkbox"> Free Column</label>
-        <label><input id="outputAllRows" type="checkbox" checked> All Rows</label>
-      </div>
-      <iframe id="outputFrame" class="preview-frame" title="PDF preview" sandbox="allow-same-origin allow-modals"></iframe>
-      <div class="modal-actions"><button class="light" data-close-modal="outputModal">Cancel</button><button id="outputPrintButton">Save PDF</button></div>
+    <div class="modal-card output-dialog">
+      <div class="dialog-heading"><h2 id="outputTitle">Export PDF</h2><button class="icon-button light" data-close-modal="outputModal" aria-label="Close PDF preview"><i data-icon="x"></i></button></div>
+      <div class="output-layout"><aside class="output-settings">
+        <label class="form-field">View<select id="outputAudience"><option value="client">Client</option><option value="internal">Internal</option><option value="actions">Actions only</option></select></label>
+        <label class="form-field">Timescale<select id="outputPeriod"><option value="auto">Automatic</option><option value="day">Day</option><option value="week">Week</option><option value="month">Month</option></select></label>
+        <label class="form-field">Paper<select id="outputPaper"><option value="A3">A3 landscape</option><option value="A4">A4 landscape</option></select></label>
+        <label class="check-control"><input id="outputFree" type="checkbox">Show Free Column</label>
+        <label class="check-control"><input id="outputAllRows" type="checkbox" checked>Include all rows</label>
+        <div id="outputSummary" class="field-hint"></div>
+      </aside><div class="preview-stage"><iframe id="outputFrame" class="preview-frame" title="PDF preview" sandbox="allow-same-origin allow-modals"></iframe></div></div>
+      <div class="modal-actions"><button class="light" data-close-modal="outputModal">Cancel</button><button id="outputPrintButton"><i data-icon="download"></i>Save PDF</button></div>
     </div>
   </div>
   <script type="module">
@@ -1527,6 +1782,22 @@
       const DQ = String.fromCharCode(34);
       const BOM = String.fromCharCode(65279);
       const BS = String.fromCharCode(92);
+      /* Selected Lucide v0.468.0 icon nodes. ISC License.
+       * Copyright (c) for portions of Lucide are held by Cole Bemis 2013-2022
+       * as part of Feather (MIT). All other copyright (c) for Lucide are held
+       * by Lucide Contributors 2022.
+       * Permission to use, copy, modify, and/or distribute this software for any
+       * purpose with or without fee is hereby granted, provided that the above
+       * copyright notice and this permission notice appear in all copies.
+       * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+       * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+       * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+       * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+       * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+       * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+       * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+       */
+      const WORKSPACE_ICONS = {"upload":[["path",{"d":"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"}],["polyline",{"points":"17 8 12 3 7 8"}],["line",{"x1":"12","x2":"12","y1":"3","y2":"15"}]],"download":[["path",{"d":"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"}],["polyline",{"points":"7 10 12 15 17 10"}],["line",{"x1":"12","x2":"12","y1":"15","y2":"3"}]],"sliders-horizontal":[["line",{"x1":"21","x2":"14","y1":"4","y2":"4"}],["line",{"x1":"10","x2":"3","y1":"4","y2":"4"}],["line",{"x1":"21","x2":"12","y1":"12","y2":"12"}],["line",{"x1":"8","x2":"3","y1":"12","y2":"12"}],["line",{"x1":"21","x2":"16","y1":"20","y2":"20"}],["line",{"x1":"12","x2":"3","y1":"20","y2":"20"}],["line",{"x1":"14","x2":"14","y1":"2","y2":"6"}],["line",{"x1":"8","x2":"8","y1":"10","y2":"14"}],["line",{"x1":"16","x2":"16","y1":"18","y2":"22"}]],"folder-open":[["path",{"d":"m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"}]],"settings-2":[["path",{"d":"M20 7h-9"}],["path",{"d":"M14 17H5"}],["circle",{"cx":"17","cy":"17","r":"3"}],["circle",{"cx":"7","cy":"7","r":"3"}]],"files":[["path",{"d":"M20 7h-3a2 2 0 0 1-2-2V2"}],["path",{"d":"M9 18a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h7l4 4v10a2 2 0 0 1-2 2Z"}],["path",{"d":"M3 7.6v12.8A1.6 1.6 0 0 0 4.6 22h9.8"}]],"plus":[["path",{"d":"M5 12h14"}],["path",{"d":"M12 5v14"}]],"undo-2":[["path",{"d":"M9 14 4 9l5-5"}],["path",{"d":"M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11"}]],"clipboard-list":[["rect",{"width":"8","height":"4","x":"8","y":"2","rx":"1","ry":"1"}],["path",{"d":"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"}],["path",{"d":"M12 11h4"}],["path",{"d":"M12 16h4"}],["path",{"d":"M8 11h.01"}],["path",{"d":"M8 16h.01"}]],"x":[["path",{"d":"M18 6 6 18"}],["path",{"d":"m6 6 12 12"}]],"trash-2":[["path",{"d":"M3 6h18"}],["path",{"d":"M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"}],["path",{"d":"M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"}],["line",{"x1":"10","x2":"10","y1":"11","y2":"17"}],["line",{"x1":"14","x2":"14","y1":"11","y2":"17"}]],"grip-vertical":[["circle",{"cx":"9","cy":"12","r":"1"}],["circle",{"cx":"9","cy":"5","r":"1"}],["circle",{"cx":"9","cy":"19","r":"1"}],["circle",{"cx":"15","cy":"12","r":"1"}],["circle",{"cx":"15","cy":"5","r":"1"}],["circle",{"cx":"15","cy":"19","r":"1"}]],"maximize-2":[["polyline",{"points":"15 3 21 3 21 9"}],["polyline",{"points":"9 21 3 21 3 15"}],["line",{"x1":"21","x2":"14","y1":"3","y2":"10"}],["line",{"x1":"3","x2":"10","y1":"21","y2":"14"}]],"filter":[["polygon",{"points":"22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"}]],"minimize-2":[["polyline",{"points":"4 14 10 14 10 20"}],["polyline",{"points":"20 10 14 10 14 4"}],["line",{"x1":"14","x2":"21","y1":"10","y2":"3"}],["line",{"x1":"3","x2":"10","y1":"21","y2":"14"}]],"layout-template":[["rect",{"width":"18","height":"7","x":"3","y":"3","rx":"1"}],["rect",{"width":"9","height":"7","x":"3","y":"14","rx":"1"}],["rect",{"width":"5","height":"7","x":"16","y":"14","rx":"1"}]],"search":[["circle",{"cx":"11","cy":"11","r":"8"}],["path",{"d":"m21 21-4.3-4.3"}]],"chevron-down":[["path",{"d":"m6 9 6 6 6-6"}]],"redo-2":[["path",{"d":"m15 14 5-5-5-5"}],["path",{"d":"M20 9H9.5A5.5 5.5 0 0 0 4 14.5A5.5 5.5 0 0 0 9.5 20H13"}]],"chevron-left":[["path",{"d":"m15 18-6-6 6-6"}]],"arrow-down":[["path",{"d":"M12 5v14"}],["path",{"d":"m19 12-7 7-7-7"}]],"pencil":[["path",{"d":"M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"}],["path",{"d":"m15 5 4 4"}]],"copy":[["rect",{"width":"14","height":"14","x":"8","y":"8","rx":"2","ry":"2"}],["path",{"d":"M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"}]],"check":[["path",{"d":"M20 6 9 17l-5-5"}]],"chevron-right":[["path",{"d":"m9 18 6-6-6-6"}]],"check-check":[["path",{"d":"M18 6 7 17l-5-5"}],["path",{"d":"m22 10-7.5 7.5L13 16"}]],"arrow-up":[["path",{"d":"m5 12 7-7 7 7"}],["path",{"d":"M12 19V5"}]],"calendar-days":[["path",{"d":"M8 2v4"}],["path",{"d":"M16 2v4"}],["rect",{"width":"18","height":"18","x":"3","y":"4","rx":"2"}],["path",{"d":"M3 10h18"}],["path",{"d":"M8 14h.01"}],["path",{"d":"M12 14h.01"}],["path",{"d":"M16 14h.01"}],["path",{"d":"M8 18h.01"}],["path",{"d":"M12 18h.01"}],["path",{"d":"M16 18h.01"}]],"rotate-ccw":[["path",{"d":"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"}],["path",{"d":"M3 3v5h5"}]],"ellipsis":[["circle",{"cx":"12","cy":"12","r":"1"}],["circle",{"cx":"19","cy":"12","r":"1"}],["circle",{"cx":"5","cy":"12","r":"1"}]],"panel-right-close":[["rect",{"width":"18","height":"18","x":"3","y":"3","rx":"2"}],["path",{"d":"M15 3v18"}],["path",{"d":"m8 9 3 3-3 3"}]],"save":[["path",{"d":"M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"}],["path",{"d":"M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"}],["path",{"d":"M7 3v4a1 1 0 0 0 1 1h7"}]],"arrow-left":[["path",{"d":"m12 19-7-7 7-7"}],["path",{"d":"M19 12H5"}]],"list-filter":[["path",{"d":"M3 6h18"}],["path",{"d":"M7 12h10"}],["path",{"d":"M10 18h4"}]],"cloud-off":[["path",{"d":"m2 2 20 20"}],["path",{"d":"M5.782 5.782A7 7 0 0 0 9 19h8.5a4.5 4.5 0 0 0 1.307-.193"}],["path",{"d":"M21.532 16.5A4.5 4.5 0 0 0 17.5 10h-1.79A7.008 7.008 0 0 0 10 5.07"}]],"cloud-upload":[["path",{"d":"M12 13v8"}],["path",{"d":"M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"}],["path",{"d":"m8 17 4-4 4 4"}]],"calendar-range":[["rect",{"width":"18","height":"18","x":"3","y":"4","rx":"2"}],["path",{"d":"M16 2v4"}],["path",{"d":"M3 10h18"}],["path",{"d":"M8 2v4"}],["path",{"d":"M17 14h-6"}],["path",{"d":"M13 18H7"}],["path",{"d":"M7 14h.01"}],["path",{"d":"M17 18h.01"}]],"cloud":[["path",{"d":"M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"}]],"columns-3":[["rect",{"width":"18","height":"18","x":"3","y":"3","rx":"2"}],["path",{"d":"M9 3v18"}],["path",{"d":"M15 3v18"}]]};
       const COLUMN_WIDTH_DEFAULTS = { category: 130, item: 170, action: 330, person: 120, checklist: 230, remarks: 260 };
       const COLUMN_WIDTH_LIMITS = {
         category: [90, 300],
@@ -1565,6 +1836,7 @@
       let mergeDialogRevision = 0;
       let projectListMode = 'local';
       let cachedCloudProjects = [];
+      let projectListRequest = 0;
       let projectLogoDraft = '';
       let projectLogoRead = 0;
       let editorBaselines = new Map();
@@ -1580,6 +1852,19 @@
       const LIBRARY_KEY = 'noah_checklist_library_v1';
       let rowFilters = { search: '', category: '', person: '', status: 'all' };
       let alignFrame = 0;
+      let selectedEditingItemId = '';
+      let itemDraftUndo = [];
+      let selectedEditorRows = new Set();
+      let rowsDraftUndo = [];
+      let drawerSection = 'view';
+      let cloudRetryTimer = null;
+      let cloudRetryCount = 0;
+      let localSharedBase = null;
+      let pendingLocalVersion = null;
+      let localMergeDialogVersion = '';
+      let isLocalMergeDialog = false;
+      let applyingLocalMerge = false;
+      let toastTimer = 0;
       let pendingUnlockCloudCode = '';
       let pendingUnlockCloudPayload = null;
       let expandedSubitems = new Set();
@@ -1712,6 +1997,12 @@
       }
 
       function safeClassAdd(element, className) {
+        if (className === 'show' && element?.classList.contains('modal')) {
+          closeToolsDrawer(); hydrateIcons(element);
+          window.setTimeout(() => {
+            if (element.classList.contains('show') && !element.contains(document.activeElement)) element.querySelector('input:not([type=hidden]),textarea,select,button')?.focus({preventScroll:true});
+          },20);
+        }
         if (element && element.classList) element.classList.add(className);
       }
 
@@ -1759,6 +2050,7 @@
         element.className = `status-pill ${type}`.trim();
         setText('workspaceSync', message);
         if (byId('workspaceSync')) byId('workspaceSync').className = `status-pill ${type}`.trim();
+          refreshWorkspaceShell();
       }
 
       function setProjectListStatus(message, type = '') {
@@ -1997,6 +2289,7 @@
       function stopCloudSyncSilently() {
         cloudSessionEpoch += 1;
         window.clearTimeout(cloudSaveTimer);
+        window.clearTimeout(cloudRetryTimer); cloudRetryCount = 0;
         if (cloudUnsubscribe) cloudUnsubscribe();
         cloudUnsubscribe = null;
         activeCloudProjectCode = '';
@@ -2025,15 +2318,15 @@
       function renderProjectList(projects) {
         const body = byId('projectListBody');
         if (!body) return;
+        const query = (byId('projectSearchInput')?.value || '').trim().toLowerCase();
+        projects = projects.filter(project => `${project.code} ${project.name}`.toLowerCase().includes(query));
         if (!projects.length) {
-          body.innerHTML = '<tr><td colspan="4"><div class="project-list-empty">No cloud projects found.</div></td></tr>';
+          body.innerHTML = '<tr><td colspan="3"><div class="project-list-empty">' + (query ? 'No matching projects.' : projectListMode === 'cloud' ? 'No cloud projects loaded.' : projectListMode === 'trash' ? 'Recycle Bin is empty.' : 'No local projects yet.') + '</div></td></tr>';
           return;
         }
-        const query = (byId('projectSearchInput')?.value || '').trim().toLowerCase();
-        body.innerHTML = projects.filter(project => `${project.code} ${project.name}`.toLowerCase().includes(query)).map(project => `
+        body.innerHTML = projects.map(project => `
           <tr>
-            <td><strong>${escapeHtml(project.code)}</strong></td>
-            <td>${escapeHtml(project.name || 'Untitled Project')}</td>
+            <td class="project-name-cell"><strong>${escapeHtml(project.name || 'Untitled project')}</strong><small>${escapeHtml(projectListMode === 'trash' ? 'Deleted project' : project.code)}</small></td>
             <td>${escapeHtml(project.period || '')}</td>
             <td>
               <button class="mini project-list-load-button" type="button" data-code="${escapeHtml(project.code)}">${projectListMode === 'trash' ? 'Restore' : 'Load'}</button>
@@ -2044,6 +2337,9 @@
       }
 
       async function refreshProjectList() {
+        const request = ++projectListRequest;
+        const requestedMode = projectListMode;
+        byId('listUnlockCloudButton').hidden = projectListMode !== 'cloud' || Boolean(cloudUser && isCloudUnlocked());
         if (projectListMode !== 'cloud') {
           const projects = projectListMode === 'trash' ? readStore(TRASH_KEY, []).map(entry => ({code: entry.id, name: entry.data.projectName, period: entry.data.projectCode + ' / ' + new Date(entry.at).toLocaleString()})) : listLocalProjects();
           renderProjectList(projects);
@@ -2059,6 +2355,7 @@
         setProjectListStatus('Loading cloud projects...', 'loading');
         try {
           const snap = await api.getDocs(api.collection(api.db, 'programmeProjects'));
+          if (request !== projectListRequest || requestedMode !== projectListMode) return;
           const projects = [];
           snap.forEach(docSnap => {
             const payload = docSnap.data() || {};
@@ -2078,6 +2375,7 @@
           renderProjectList(projects);
           setProjectListStatus(`Loaded ${projects.length} project${projects.length === 1 ? '' : 's'}`, 'success');
         } catch (error) {
+          if (request !== projectListRequest || requestedMode !== projectListMode) return;
           renderProjectList([]);
           setProjectListStatus(`Project list failed: ${error.code || error.message}`, 'error');
         }
@@ -2110,9 +2408,11 @@
       }
 
       function openNewProjectModal() {
+        setText('newProjectError','');
         const start = data?.startDate || todayISO();
         const end = data?.endDate || addDays(start, 30);
         setValue('newProjectCodeInput', '');
+        setValue('newProjectMode','blank');
         setValue('newProjectNameInput', '');
         setValue('newProjectOwnerInput', data?.projectOwner || '');
         setValue('newProjectStartInput', start);
@@ -2121,6 +2421,13 @@
         setValue('newEventEndInput', data?.eventEndDate || start);
         safeClassAdd(byId('newProjectModal'), 'show');
         captureEditor('newProjectModal');
+      }
+
+      function blankProjectData() {
+        return normalizeData({projectName:'Project Timeline',projectCode:'',projectOwner:'',projectOwnerTitle:'',version:'Version: 1.0',
+          startDate:todayISO(),endDate:addDays(todayISO(),30),eventStartDate:'',eventEndDate:'',summary:'',notes:'',rows:[],
+          logoDataUrl:data?.logoDataUrl || '',colors:data?.colors,holidays:[],govHolidays:[],holidaySourceYears:[],
+          lastUpdate:'Last update: '+formatDisplayDateTime(),updatedAtISO:new Date().toISOString()});
       }
 
       function buildNewProjectData(mode) {
@@ -2133,7 +2440,7 @@
         const eventStart = isValidDate(byId('newEventStartInput')?.value) ? byId('newEventStartInput').value : '';
         const eventEndInput = byId('newEventEndInput')?.value || '';
         const eventEnd = isValidDate(eventEndInput) ? eventEndInput : eventStart;
-        const base = mode === 'current' ? normalizeData(data) : normalizeData({ ...defaultData, rows: [] });
+        const base = mode === 'current' ? normalizeData(data) : blankProjectData();
         base.projectCode = code;
         base.projectName = name;
         base.projectOwner = owner;
@@ -2142,6 +2449,7 @@
         base.eventStartDate = eventStart && eventEnd && eventStart <= eventEnd ? eventStart : eventEnd || eventStart;
         base.eventEndDate = eventStart && eventEnd && eventEnd >= eventStart ? eventEnd : eventStart || eventEnd;
         base.lastUpdate = `Last update: ${formatDisplayDateTime()}`;
+        base.updatedAtISO = new Date().toISOString();
         if (mode !== 'current') {
           base.summary = '';
           base.notes = '';
@@ -2160,6 +2468,7 @@
         const projectData = buildNewProjectData(mode);
         if (!projectData.projectCode || projectData.projectCode.length < 3) {
           const message = 'New project needs a Project Code with at least 3 characters';
+          setText('newProjectError',message);
           setProjectListStatus(message, 'warning');
           setCloudStatus(message, 'warning');
           byId('newProjectCodeInput')?.focus();
@@ -2167,6 +2476,7 @@
         }
         if (!projectData.projectOwner) {
           const message = 'New project needs a Responsible Person';
+          setText('newProjectError',message);
           setProjectListStatus(message, 'warning');
           setCloudStatus(message, 'warning');
           byId('newProjectOwnerInput')?.focus();
@@ -2245,7 +2555,7 @@
         cloudBaseJson = '';
         cloudConflictPending = false;
         updateCloudSyncButton();
-        data = normalizeData({ ...defaultData, projectCode: '', projectName: 'Project Timeline', rows: [] });
+        data = blankProjectData();
         resetProjectCodeInputs('');
         suppressCloudSave = true;
         render();
@@ -2375,6 +2685,7 @@
           });
           if (session !== cloudSessionEpoch || data.projectCode !== code || activeCloudProjectCode !== code) return;
           cloudRevision = savedRevision;
+          window.clearTimeout(cloudRetryTimer); cloudRetryCount = 0;
           cloudBaseJson = nextJson;
           cloudConflictPending = false;
           setCloudStatus(`Cloud: saved ${code} (v${cloudRevision})`, 'success');
@@ -2382,22 +2693,29 @@
         } catch (error) {
           if (session !== cloudSessionEpoch || error.message === 'cancelled-session') return;
           if (error.message === 'deleted-project') {
-            window.clearTimeout(cloudSaveTimer);
-            if (cloudUnsubscribe) cloudUnsubscribe();
-            cloudUnsubscribe = null;
-            activeCloudProjectCode = '';
+            stopCloudSyncSilently();
             setCloudStatus(`Cloud: project ${code} was deleted; save stopped`, 'warning');
             return;
           }
           if (error.message === 'cloud-conflict') {
             cloudConflictPending = true;
-            const latest = await api.getDoc(cloudDocRef(code));
-            if (session === cloudSessionEpoch && latest.exists()) receiveRemotePayload(latest.data(), code);
+            try {
+              const latest = await api.getDoc(cloudDocRef(code));
+              if (session === cloudSessionEpoch && latest.exists()) receiveRemotePayload(latest.data(), code);
+            } catch (compareError) {
+              if (session !== cloudSessionEpoch) return;
+              cloudConflictPending = false;
+              setCloudStatus('Could not retrieve the latest cloud version. Local changes are retained.','error');
+              if (!String(compareError.code || '').includes('permission')) scheduleCloudRetry(code,session);
+            }
             return;
           }
-          setCloudStatus(`Cloud save failed: ${error.code || error.message}`, 'error');
+          const transient = !navigator.onLine || ['unavailable','deadline-exceeded','network-request-failed','aborted','resource-exhausted'].some(code => String(error.code || '').endsWith(code));
+          setCloudStatus(transient ? 'Connection interrupted. Saved locally; Auto Sync will retry.' : `Cloud save failed: ${error.code || error.message}`,transient ? 'warning' : 'error');
+          if (transient) scheduleCloudRetry(code,session);
         } finally {
           cloudSaveInFlight = false;
+          refreshWorkspaceShell();
           if (pendingRemotePayload && activeCloudProjectCode) window.setTimeout(processRemotePayload,0);
           if (cloudSaveAgain && activeCloudProjectCode) {
             cloudSaveAgain = false;
@@ -2407,6 +2725,7 @@
       }
 
       function queueCloudSave() {
+        if (!navigator.onLine && activeCloudProjectCode) { scheduleCloudRetry(activeCloudProjectCode,cloudSessionEpoch); return; }
         if (suppressCloudSave || !cloudUser || !isCloudUnlocked() || !activeCloudProjectCode || dragState) return;
         window.clearTimeout(cloudSaveTimer);
         if (pendingRemotePayload) { processRemotePayload(); return; }
@@ -2428,11 +2747,7 @@
           if (!snap.exists()) return;
           const payload = snap.data();
           if (payload?.deleted === true) {
-            window.clearTimeout(cloudSaveTimer);
-            if (cloudUnsubscribe) cloudUnsubscribe();
-            cloudUnsubscribe = null;
-            activeCloudProjectCode = '';
-            updateCloudSyncButton();
+            stopCloudSyncSilently();
             setCloudStatus(`Cloud: project ${projectCode} was deleted; current screen is local only`, 'warning');
             return;
           }
@@ -2464,7 +2779,8 @@
               freezeColumns: Number.isInteger(freezeColumns) && freezeColumns >= 0 && freezeColumns <= 6 ? freezeColumns : 4,
               columnWidths: normalizeColumnWidths(saved.columnWidths),
               projectViews: saved.projectViews && typeof saved.projectViews === 'object' ? saved.projectViews : {},
-              density: saved.density === 'normal' ? 'normal' : 'compact'
+              density: saved.density === 'normal' ? 'normal' : 'compact',
+              stickyHeaders: saved.stickyHeaders === true
             };
           }
         } catch (error) {}
@@ -2480,6 +2796,9 @@
       function setToolbarHidden(hidden) {
         uiState.toolbarHidden = Boolean(hidden);
         safeClassToggle(document.body, 'toolbar-hidden', uiState.toolbarHidden);
+        safeClassToggle(document.body, 'workspace-focus',uiState.toolbarHidden);
+        byId('focusWorkspaceButton')?.setAttribute('aria-pressed',String(uiState.toolbarHidden));
+        window.requestAnimationFrame(fitWorkspaceTable);
         saveUiState();
       }
 
@@ -2487,10 +2806,11 @@
         const requested = Number(value);
         const freezeColumns = Number.isInteger(requested) && requested >= 0 && requested <= 6 ? requested : 4;
         uiState.freezeColumns = freezeColumns;
+        const applied = getEffectiveFreezeColumns(freezeColumns);
         for (let index = 0; index <= 6; index += 1) {
-          safeClassToggle(document.body, `freeze-cols-${index}`, index === freezeColumns);
+          safeClassToggle(document.body, `freeze-cols-${index}`, index === applied);
         }
-        setValue('freezeColumnsInput', String(freezeColumns));
+        setValue('freezeColumnsInput', String(applied));
         saveUiState();
       }
 
@@ -2705,6 +3025,7 @@
         if (data && !saveData()) return false;
         if (data) recordRecovery(data, reason);
         stopCloudSyncSilently();
+        localSharedBase = null; pendingLocalVersion = null; isLocalMergeDialog = false;
         data = normalizeData(project);
         lastSavedContent = '';
         lastSavedSnapshot = null;
@@ -2766,6 +3087,8 @@
       }
 
       function editorSignature(id) {
+        if (id === 'itemsModal') return JSON.stringify(editingItems);
+        if (id === 'rowsModal') return JSON.stringify(editingRows);
         const modal = byId(id);
         const fields = Array.from(modal?.querySelectorAll('input, textarea, select') || []).map(field => [field.id || field.dataset.field, field.type === 'checkbox' ? field.checked : field.value]);
         if (id === 'projectModal') fields.push(['logo', projectLogoDraft]);
@@ -2783,7 +3106,8 @@
       function settleRemoteAfterEditor() {
         window.setTimeout(() => {
           if (!hasOpenEditorModal()) {
-            if (pendingRemotePayload) processRemotePayload();
+            if (pendingLocalVersion && !activeCloudProjectCode) processLocalVersion();
+            else if (pendingRemotePayload) processRemotePayload();
             else if (activeCloudProjectCode && cloudDataJson() !== cloudBaseJson) queueCloudSave();
           }
         }, 0);
@@ -2824,11 +3148,21 @@
         if (Number(payload.revision || 0) < cloudRevision) return;
         pendingRemotePayload = payload;
         window.clearTimeout(cloudSaveTimer);
-        if (hasOpenEditorModal() || cloudSaveInFlight) {
+        if (hasOpenEditorModal() || cloudSaveInFlight || dragState) {
           setCloudStatus('Teammate update waiting. Your current edit is preserved.', 'warning');
           return;
         }
         processRemotePayload();
+      }
+
+      function rebaseHistoryAfterRemote(base,remote,next) {
+        const rebase = entries => entries.map(snapshot => {
+          const initial = mergeVersions(base,snapshot,remote);
+          const choices = Object.fromEntries(initial.conflicts.map(conflict => [conflict.path,'remote']));
+          return contentData(mergeVersions(base,snapshot,remote,choices).value);
+        }).filter(snapshot => snapshot.projectCode === next.projectCode && JSON.stringify(snapshot) !== JSON.stringify(contentData(next)));
+        undoEntries = rebase(undoEntries);
+        redoEntries = rebase(redoEntries);
       }
 
       function mergeFieldLabel(path) {
@@ -2861,19 +3195,23 @@
           if (result.conflicts.length && !reviewed) {
             cloudConflictPending = true;
             mergeDialogRevision = Number(payload.revision || 0);
-              setHtml('mergeBody', result.conflicts.map(conflict => '<tr><td>' + escapeHtml(mergeFieldLabel(conflict.path)) + '</td><td><pre>' + escapeHtml(JSON.stringify(conflict.local ?? '(deleted)')) + '</pre></td><td><pre>' + escapeHtml(JSON.stringify(conflict.remote ?? '(deleted)')) + '</pre></td><td><select data-merge-path="' + escapeHtml(conflict.path) + '"><option value="local">Keep mine</option><option value="remote">Use cloud</option></select></td></tr>').join(''));
+            isLocalMergeDialog = false;
+            showMergeReview(result.conflicts,'Cloud version','Apply choices & sync','Keep local, stop sync');
             safeClassAdd(byId('mergeModal'), 'show');
             setCloudStatus('Conflicting edits: review changes. Both versions are retained.', 'warning');
             return;
           }
           recordRecovery(data, 'Before merging teammate update');
+          rebaseHistoryAfterRemote(base,remote,result.value);
           const view = { viewMode:data.viewMode, audienceMode:data.audienceMode, weekLabelMode:data.weekLabelMode };
           data = normalizeData({ ...result.value, ...view });
           if (data.updatedAtISO && !Number.isNaN(Date.parse(data.updatedAtISO))) data.lastUpdate = 'Last update: ' + formatDisplayDateTime(new Date(data.updatedAtISO));
           setCloudBaseFromPayload(payload,data.projectCode);
           pendingRemotePayload = null;
           suppressCloudSave = true;
-          render();
+          const previousHistoryApplying = historyApplying;
+          historyApplying = true;
+          try { render(); } finally { historyApplying = previousHistoryApplying; }
           suppressCloudSave = false;
           safeClassRemove(byId('mergeModal'),'show');
           if (cloudDataJson(data,data.projectCode) !== cloudBaseJson) queueCloudSave();
@@ -2906,6 +3244,15 @@
           const snapshot = contentData(data);
           const currentContent = JSON.stringify(snapshot);
           const changed = currentContent !== lastSavedContent;
+          const diskKey = localProjectStorageKey(data.projectCode);
+          const disk = diskKey && readStore(diskKey,null);
+          if (!applyingLocalMerge && !activeCloudProjectCode && localSharedBase?.projectCode === data.projectCode && disk && JSON.stringify(contentData(disk)) !== JSON.stringify(localSharedBase)) {
+            pendingLocalVersion = contentData(disk);
+            processLocalVersion();
+            if (isLocalMergeDialog) { lastSaveError = true; return false; }
+            if (pendingLocalVersion) { recordRecovery(snapshot,'Draft waiting for another-tab merge'); return false; }
+            return true;
+          }
           localStorage.setItem(STORE_KEY, serialized);
           const projectKey = localProjectStorageKey(data?.projectCode);
           if (projectKey) localStorage.setItem(projectKey, serialized);
@@ -2917,12 +3264,14 @@
           }
           lastSavedContent = currentContent;
           lastSavedSnapshot = snapshot;
+          localSharedBase = snapshot;
           lastSaveError = false;
           setSaveStatus(`Saved locally${data?.projectCode ? `: ${data.projectCode}` : ''} ${new Date().toLocaleTimeString()}`, 'success');
           if (byId('undoButton')) byId('undoButton').disabled = undoEntries.length === 0;
           if (byId('redoButton')) byId('redoButton').disabled = redoEntries.length === 0;
           setText('lastUpdateText', data.lastUpdate);
           if (changed) queueCloudSave();
+          refreshWorkspaceShell();
           return true;
         } catch (error) {
           lastSaveError = true;
@@ -3625,10 +3974,13 @@
         setText('rowsActionByHeader', data.actionByLabel);
         setText('quickActionByLabel', data.actionByLabel);
         setText('actionByHelpLabel', data.actionByLabel);
-        populateFreezeColumnOptions();
         safeClassToggle(byId('app'), 'compact', byId('densityInput') ? byId('densityInput').value === 'compact' : true);
         applyWorkspaceColumnWidths();
+        populateFreezeColumnOptions();
         setHtml('programmeWrap', buildTable(rows, periods, mode));
+        if (!rows.length) wrap.insertAdjacentHTML('beforeend','<div class="empty-state"><strong>' + (data.rows.length ? 'No matching rows' : 'No rows yet') + '</strong><button class="light" id="emptyRowsButton">' + (data.rows.length ? 'Clear filters' : 'Add a row') + '</button></div>');
+        byId('emptyRowsButton')?.addEventListener('click',() => data.rows.length ? byId('clearFiltersButton').click() : (openRowsModal(),addRow()));
+        refreshWorkspaceShell();
         wrap.scrollTop = previousScroll.top;
         wrap.scrollLeft = previousScroll.left;
         bindProgrammeDoubleClick();
@@ -3636,6 +3988,7 @@
         bindProgrammeChecklist();
         bindColumnResize();
         window.requestAnimationFrame(() => {
+          fitWorkspaceTable();
           alignAllChecklistRemarks();
           innerScroll.forEach((top,id) => {
             const list = wrap.querySelector('.checklist-col[data-row-id="' + cssEscape(id) + '"] .checklist-list');
@@ -3655,9 +4008,26 @@
         const select = byId('freezeColumnsInput');
         if (!select) return;
         const labels = getLeftColumnKeys().map(key => leftColumnMeta(key).label);
-        const current = String(Math.min(uiState.freezeColumns, labels.length));
-        select.innerHTML = '<option value="0">Freeze: None</option>' + labels.map((label, index) => `<option value="${index + 1}">Freeze through: ${escapeHtml(label)}</option>`).join('');
+        const effective = getEffectiveFreezeColumns(uiState.freezeColumns);
+        const maximum = getEffectiveFreezeColumns(6);
+        const current = String(Math.min(effective, labels.length));
+        select.innerHTML = '<option value="0">Freeze: None</option>' + labels.map((label, index) => `<option value="${index + 1}" ${index+1 > maximum ? 'disabled' : ''}>Freeze through: ${escapeHtml(label)}</option>`).join('');
         select.value = current;
+        for (let index=0;index<=6;index++) document.body.classList.toggle('freeze-cols-'+index,index===effective);
+      }
+
+      function getEffectiveFreezeColumns(requested) {
+        if (!data || innerWidth >= 900) return requested;
+        const style = getComputedStyle(byId('app'));
+        const keys = getLeftColumnKeys();
+        let width=0,count=0;
+        for (const key of keys.slice(0,requested)) {
+          const variable = key === 'item' ? 'item' : key === 'person' ? 'person' : key;
+          const next = parseFloat(style.getPropertyValue('--'+variable+'-w')) || COLUMN_WIDTH_DEFAULTS[key];
+          if (width+next > innerWidth*.6) break;
+          width+=next; count++;
+        }
+        return count;
       }
 
       function leftColumnMeta(key) {
@@ -3762,6 +4132,8 @@
       }
 
       function updateChecklistCell(rowId, previousScrollTop = 0) {
+        updateFilterControls(); refreshWorkspaceShell();
+        if (rowFilters.status !== 'all') { render(); return; }
         const row = findRowById(rowId);
         if (!row) return;
         const cell = document.querySelector(`.checklist-col[data-row-id="${cssEscape(rowId)}"]`);
@@ -3833,6 +4205,8 @@
       }
 
       function openProjectModal() {
+        showProjectSection('general');
+        setText('projectDialogCaption',data.projectCode || 'Local draft');
         const fields = { projectNameInput: data.projectName, projectCodeProjectInput: data.projectCode, projectOwnerInput: data.projectOwner, projectOwnerTitleInput: data.projectOwnerTitle, actionByLabelInput: data.actionByLabel, actionByPositionInput: data.actionByPosition, clientShowFreeColumnInput: data.clientShowFreeColumn ? 'yes' : 'no', eventStartInput: data.eventStartDate, eventEndInput: data.eventEndDate, versionInput: data.version, lastUpdateInput: data.lastUpdate, projectStartInput: data.startDate, projectEndInput: data.endDate, summaryInput: data.summary, notesInput: data.notes, holidaysInput: data.holidays.join(', '), holidayProxyInput: data.holidayProxyUrl, workColorInput: data.colors.work, weekendColorInput: data.colors.weekend, highlightColorInput: data.colors.highlight };
         Object.entries(fields).forEach(([id,value]) => setValue(id,value || ''));
         projectLogoDraft = data.logoDataUrl || '';
@@ -3879,6 +4253,7 @@
         const owner = (byId('projectOwnerInput')?.value || '').trim();
         if (!owner) {
           alert('Responsible Person is required.');
+          showProjectSection('general');
           byId('projectOwnerInput')?.focus();
           return;
         }
@@ -4092,39 +4467,47 @@
         return element ? element.closest('.timeline-edit-cell') : null;
       }
 
+      function paintTimelineRow(row) {
+        const cells = Array.from(byId('programmeWrap').querySelectorAll('.timeline-edit-cell[data-row-id="' + cssEscape(row.id) + '"]'));
+        const active = cells.map(cell => overlaps(row.start,row.end,cell.dataset.periodStart,cell.dataset.periodEnd));
+        const first = active.indexOf(true),last = active.lastIndexOf(true);
+        cells.forEach((cell,index) => {
+          cell.classList.toggle('workday',active[index]);
+          cell.classList.toggle('start',index===first);
+          cell.classList.toggle('end',index===last);
+          cell.innerHTML = active[index] ? (index===first ? '<span class="drag-handle left-handle" data-drag-action="resize-left"></span>' : '') + (index===last ? '<span class="drag-handle right-handle" data-drag-action="resize-right"></span>' : '') : '';
+        });
+      }
+
+      function applyTimelineDragTarget() {
+        if (!dragState?.pendingPeriodStart) return;
+        const row = findRowById(dragState.rowId);
+        if (!row) return;
+        const targetStart = dragState.pendingPeriodStart,targetEnd = dragState.pendingPeriodEnd;
+        const delta = dayDiff(dragState.originPeriodStart,targetStart);
+        if (dragState.action === 'move') {
+          row.start = addDays(dragState.originStart,delta); row.end = addDays(dragState.originEnd,delta);
+        } else if (dragState.action === 'resize-left') row.start = targetStart <= row.end ? targetStart : row.end;
+        else if (dragState.action === 'resize-right') row.end = targetEnd >= row.start ? targetEnd : row.start;
+        dragState.moved = row.start !== dragState.originStart || row.end !== dragState.originEnd;
+        paintTimelineRow(row);
+      }
+
       function onTimelineDragMove(event) {
         if (!dragState) return;
-        const targetCell = getCellFromPointer(event);
-        if (!targetCell || !targetCell.dataset.periodStart) return;
-        if (targetCell.dataset.periodStart === dragState.lastTargetStart) return;
-        dragState.lastTargetStart = targetCell.dataset.periodStart;
-        dragState.pendingPeriodStart = targetCell.dataset.periodStart;
-        dragState.pendingPeriodEnd = targetCell.dataset.periodEnd;
+        const target = getCellFromPointer(event);
+        if (!target?.dataset.periodStart || target.dataset.periodStart === dragState.lastTargetStart) return;
+        dragState.lastTargetStart = target.dataset.periodStart;
+        dragState.pendingPeriodStart = target.dataset.periodStart;
+        dragState.pendingPeriodEnd = target.dataset.periodEnd;
         if (dragRenderRequest) return;
         dragRenderRequest = window.requestAnimationFrame(() => {
-          dragRenderRequest = null;
-          if (!dragState) return;
-          const row = findRowById(dragState.rowId);
-          if (!row) return;
-          const targetStart = dragState.pendingPeriodStart;
-          const targetEnd = dragState.pendingPeriodEnd;
-          const deltaDays = dayDiff(dragState.originPeriodStart, targetStart);
-          if (dragState.action === 'move') {
-            row.start = addDays(dragState.originStart, deltaDays);
-            row.end = addDays(dragState.originEnd, deltaDays);
-          } else if (dragState.action === 'resize-left') {
-            row.start = targetStart <= row.end ? targetStart : row.end;
-          } else if (dragState.action === 'resize-right') {
-            row.end = targetEnd >= row.start ? targetEnd : row.start;
-          }
-          dragState.moved = true;
-          render();
-          const newCell = document.querySelector(`.timeline-edit-cell[data-row-id="${cssEscape(row.id)}"][data-period-start="${cssEscape(targetStart)}"]`);
-          safeClassAdd(newCell, 'drag-preview');
+          dragRenderRequest = null; applyTimelineDragTarget();
         });
       }
 
       function endTimelineDrag() {
+        applyTimelineDragTarget();
         if (dragRenderRequest) {
           window.cancelAnimationFrame(dragRenderRequest);
           dragRenderRequest = null;
@@ -4142,6 +4525,7 @@
         render();
         historyApplying = false;
         queueCloudSave();
+        settleRemoteAfterEditor();
       }
 
       function cssEscape(value) {
@@ -4331,106 +4715,213 @@
       function openItemsModal(rowId) {
         const row = findRowById(rowId);
         if (!row) return;
-        setValue('itemsRowId', row.id);
-        setText('itemsModalHint', `${row.category} / ${row.item}`);
+        setValue('itemsRowId',row.id);
+        setText('itemsModalHint',[row.category,row.item].filter(Boolean).join(' / '));
         editingItems = normalizeChecklist(row.checklist);
+        selectedEditingItemId = editingItems[0]?.id || '';
+        itemDraftUndo = [];
+        setValue('itemEditorSearch','');
         renderItemsEditor();
-        safeClassAdd(byId('itemsModal'), 'show');
+        safeClassAdd(byId('itemsModal'),'show');
         captureEditor('itemsModal');
+        refreshItemDraftStatus();
       }
 
       function closeItemsModal() {
-        safeClassRemove(byId('itemsModal'), 'show');
+        safeClassRemove(byId('itemsModal'),'show');
         editingItems = [];
+        selectedEditingItemId = '';
+        itemDraftUndo = [];
         settleRemoteAfterEditor();
+      }
+
+      function rememberItemsDraft() {
+        const snapshot = JSON.stringify(editingItems);
+        if (itemDraftUndo.at(-1) === snapshot) return;
+        itemDraftUndo.push(snapshot);
+        if (itemDraftUndo.length > 25) itemDraftUndo.shift();
+      }
+
+      function undoItemsDraft() {
+        const snapshot = itemDraftUndo.pop();
+        if (!snapshot) return;
+        editingItems = JSON.parse(snapshot);
+        if (!editingItems.some(item => item.id === selectedEditingItemId)) selectedEditingItemId = editingItems[0]?.id || '';
+        renderItemsEditor();
+      }
+
+      function itemMatchesEditorSearch(item) {
+        const query = (byId('itemEditorSearch')?.value || '').trim().toLowerCase();
+        return [item.text,item.remarks,...normalizeSubChecklistForEditor(item.subitems).map(sub => sub.text)].join(' ').toLowerCase().includes(query);
       }
 
       function renderItemsEditor() {
         const body = byId('itemsEditorBody');
         if (!body) return;
-        const wrap = body.closest('.row-editor-wrap');
-        const previousScrollTop = wrap ? wrap.scrollTop : 0;
-        body.innerHTML = editingItems.map((item, index) => `
-          <tr>
-            <td class="editor-order-cell"><span class="drag-order-handle" draggable="true" data-drag-index="${index}" title="Drag to reorder" role="button" tabindex="0" aria-label="Move item ${index + 1}">::</span><select class="move-position" data-move-index="${index}" aria-label="Move item ${index + 1} to position">${editingItems.map((_,position) => '<option value="' + position + '"' + (position === index ? ' selected' : '') + '>' + (position + 1) + '</option>').join('')}</select></td>
-            <td><input data-index="${index}" data-field="done" type="checkbox" ${isChecklistItemDone(item) ? 'checked' : ''}></td>
-            <td><textarea class="item-title-input" data-index="${index}" data-field="text" aria-label="Action item">${escapeHtml(item.text)}</textarea></td>
-            <td>
-              <div class="subitems-editor">
-                ${normalizeSubChecklistForEditor(item.subitems).map((subitem, subIndex) => `
-                  <div class="subitem-editor-row">
-                    <input data-index="${index}" data-sub-index="${subIndex}" data-field="subDone" type="checkbox" ${subitem.done ? 'checked' : ''}>
-                    <input data-index="${index}" data-sub-index="${subIndex}" data-field="subText" value="${escapeHtml(subitem.text)}">
-                    <button class="mini danger" data-action="deleteSubitem" data-index="${index}" data-sub-index="${subIndex}">Delete</button>
-                  </div>`).join('')}
-                <button class="mini light" data-action="addSubitem" data-index="${index}">Add Sub-item</button>
-              </div>
-            </td>
-            <td><textarea class="item-remark-input" data-index="${index}" data-field="remarks">${escapeHtml(item.remarks)}</textarea></td>
-            <td>
-              <div class="item-action-controls">
-                <button class="mini danger" data-action="deleteItem" data-index="${index}">Delete</button>
-              </div>
-            </td>
-          </tr>`).join('');
-        if (wrap) wrap.scrollTop = previousScrollTop;
-        body.querySelectorAll('input, textarea').forEach(input => {
-          input.addEventListener('input', updateEditingItemField);
-          input.addEventListener('change', updateEditingItemField);
-        });
+        const scroll = body.closest('.item-list-scroll');
+        const top = scroll?.scrollTop || 0;
+        if (!editingItems.some(item => item.id === selectedEditingItemId)) selectedEditingItemId = editingItems[0]?.id || '';
+        body.innerHTML = editingItems.map((item,index) => {
+          const subs = normalizeSubChecklistForEditor(item.subitems);
+          const meta = [subs.length ? subs.filter(sub => sub.done).length + '/' + subs.length + ' sub-items' : '',cleanRemark(item.remarks) ? 'Note' : ''].filter(Boolean).join(' / ');
+          return '<tr data-editor-item="' + escapeHtml(item.id) + '" class="' + (item.id === selectedEditingItemId ? 'is-selected' : '') + '"' + (itemMatchesEditorSearch(item) ? '' : ' hidden') + '><td class="drag-cell"><span class="drag-order-handle" draggable="true" data-drag-index="' + index + '" tabindex="0" role="button" aria-label="Reorder ' + escapeHtml(item.text || 'item') + '">' + uiIcon('grip-vertical') + '</span></td><td class="done-cell"><input data-index="' + index + '" data-field="done" type="checkbox" aria-label="Complete ' + escapeHtml(item.text || 'item') + '"' + (isChecklistItemDone(item) ? ' checked' : '') + '></td><td><button type="button" class="item-title-select" data-select-item="' + index + '"><span>' + escapeHtml(item.text || 'Untitled item') + '</span>' + (meta ? '<small>' + escapeHtml(meta) + '</small>' : '') + '</button></td><td class="row-action-cell"><button type="button" data-action="deleteItem" data-index="' + index + '" title="Delete item" aria-label="Delete item">' + uiIcon('trash-2') + '</button></td></tr>';
+        }).join('');
+        if (scroll) scroll.scrollTop = top;
         body.onclick = event => {
-          const button = event.target.closest('button[data-action]');
-          if (!button || !body.contains(button)) return;
-          handleItemButton({ currentTarget: button });
+          const command = event.target.closest('button[data-action]');
+          if (command) return handleItemButton({currentTarget:command});
+          const button = event.target.closest('[data-select-item]');
+          if (button) selectEditingItem(Number(button.dataset.selectItem));
         };
-        bindEditorDragOrder(body, 'items');
+        body.onchange = event => {
+          if (event.target.matches('[data-field=done]')) updateEditingItemField(event);
+        };
+        bindEditorDragOrder(body,'items');
         bindPositionMoves(body,'items');
+        renderItemDetails();
+        refreshItemDraftStatus();
+        const visible = editingItems.filter(itemMatchesEditorSearch).length;
+        setText('itemEditorCount',visible + ' of ' + editingItems.length + ' items');
+        byId('itemListEmpty').hidden = visible > 0;
+        const mobile = byId('mobileItemSelect');
+        if (mobile) {
+          mobile.innerHTML = editingItems.map((item,index) => '<option value="' + escapeHtml(item.id) + '">' + (index + 1) + '. ' + escapeHtml(item.text || 'Untitled item') + '</option>').join('');
+          mobile.value = selectedEditingItemId;
+        }
+      }
+
+      function selectEditingItem(index) {
+        if (!editingItems[index]) return;
+        selectedEditingItemId = editingItems[index].id;
+        byId('itemsEditorBody').querySelectorAll('tr[data-editor-item]').forEach(row => row.classList.toggle('is-selected',row.dataset.editorItem === selectedEditingItemId));
+        setValue('mobileItemSelect',selectedEditingItemId);
+        renderItemDetails();
+      }
+
+      function renderItemDetails() {
+        const pane = byId('itemDetails');
+        if (!pane) return;
+        const previousTop = pane.scrollTop;
+        const previousItem = pane.dataset.itemId;
+        const index = editingItems.findIndex(item => item.id === selectedEditingItemId);
+        const item = editingItems[index];
+        if (!item) {
+          pane.innerHTML = '<div class="empty-state">' + uiIcon('clipboard-list') + '<p>No action items yet</p><button data-add-first-item>' + uiIcon('plus') + 'Add item</button></div>';
+          pane.onclick = event => { if (event.target.closest('[data-add-first-item]')) addChecklistItem(); };
+          return;
+        }
+        const subs = normalizeSubChecklistForEditor(item.subitems);
+        pane.dataset.itemId = item.id;
+        pane.innerHTML = '<div class="item-detail-top"><label class="check-control"><input type="checkbox" data-index="' + index + '" data-field="done"' + (isChecklistItemDone(item) ? ' checked' : '') + '>Completed</label><div class="position-control"><span>Position</span><select class="move-position" data-move-index="' + index + '" aria-label="Move selected item to position">' + editingItems.map((_,position) => '<option value="' + position + '"' + (position === index ? ' selected' : '') + '>' + (position + 1) + '</option>').join('') + '</select><button class="icon-button light" data-action="duplicateItem" data-index="' + index + '" title="Duplicate item" aria-label="Duplicate item">' + uiIcon('copy') + '</button><button class="icon-button danger-ghost" data-action="deleteItem" data-index="' + index + '" title="Delete item" aria-label="Delete item">' + uiIcon('trash-2') + '</button></div></div><label class="form-field">Action item<textarea id="itemNameField" class="item-name-field" data-index="' + index + '" data-field="text" rows="2">' + escapeHtml(item.text) + '</textarea></label><label class="form-field">Remarks<textarea id="itemRemarksField" data-index="' + index + '" data-field="remarks" rows="4" placeholder="Add a note">' + escapeHtml(item.remarks) + '</textarea></label><div class="subtask-heading"><h3>Sub-checklist</h3><span id="selectedSubCount">' + subs.filter(sub => sub.done).length + ' of ' + subs.length + ' complete</span></div><div class="subtask-edit-list">' + subs.map((sub,subIndex) => '<div class="subtask-edit-line"><input type="checkbox" data-index="' + index + '" data-sub-index="' + subIndex + '" data-field="subDone" aria-label="Complete sub-item"' + (sub.done ? ' checked' : '') + '><input type="text" data-index="' + index + '" data-sub-index="' + subIndex + '" data-field="subText" value="' + escapeHtml(sub.text) + '" aria-label="Sub-item"><button data-action="deleteSubitem" data-index="' + index + '" data-sub-index="' + subIndex + '" title="Remove sub-item" aria-label="Remove sub-item">' + uiIcon('x') + '</button></div>').join('') + '</div><button class="add-subtask-button" data-action="addSubitem" data-index="' + index + '">' + uiIcon('plus') + 'Add sub-item</button>';
+        pane.oninput = event => {
+          if (event.target.matches('[data-field]:not([type=checkbox])')) updateEditingItemField(event);
+        };
+        pane.onfocusin = event => { delete event.target.dataset.draftCaptured; };
+        pane.onbeforeinput = event => {
+          if (!event.target.matches('[data-field]:not([type=checkbox])') || event.target.dataset.draftCaptured) return;
+          rememberItemsDraft(); event.target.dataset.draftCaptured='1';
+        };
+        pane.onchange = event => {
+          if (event.target.matches('input[type=checkbox][data-field]')) updateEditingItemField(event);
+        };
+        pane.onclick = event => {
+          const button = event.target.closest('button[data-action]');
+          if (button) handleItemButton({currentTarget:button});
+        };
+        pane.onkeydown = event => {
+          if (!event.isComposing && event.key === 'Enter' && !event.ctrlKey && !event.metaKey && event.target.dataset.field === 'subText') {
+            event.preventDefault();
+            handleItemButton({currentTarget:{dataset:{index:String(index),action:'addSubitem'}}});
+          }
+        };
+        bindPositionMoves(pane,'items');
+        pane.scrollTop = previousItem === item.id ? previousTop : 0;
+      }
+
+      function refreshItemDraftStatus() {
+        const done = editingItems.filter(isChecklistItemDone).length;
+        const changed = editorBaselines.has('itemsModal') && editorBaselines.get('itemsModal') !== JSON.stringify(editingItems);
+        setText('itemsDraftStatus',done + '/' + editingItems.length + ' complete' + (changed ? ' / Unapplied changes' : ''));
+        if (byId('undoItemsButton')) byId('undoItemsButton').disabled = !itemDraftUndo.length;
       }
 
       function updateEditingItemField(event) {
+        const inDetail = Boolean(event.target.closest('#itemDetails'));
         const index = Number(event.target.dataset.index);
         const field = event.target.dataset.field;
-        if (!editingItems[index]) return;
+        const item = editingItems[index];
+        if (!item) return;
+        if (field === 'done' || field === 'subDone') rememberItemsDraft();
         if (field === 'subDone' || field === 'subText') {
           const subIndex = Number(event.target.dataset.subIndex);
-          const subitems = normalizeSubChecklistForEditor(editingItems[index].subitems);
-          if (!subitems[subIndex]) return;
-          subitems[subIndex] = field === 'subDone' ? { ...subitems[subIndex], done: event.target.checked } : { ...subitems[subIndex], text: event.target.value };
-          editingItems[index].subitems = subitems;
-          editingItems[index].done = subitems.length ? subitems.every(subitem => subitem.done) : editingItems[index].done === true;
-          return;
-        }
-        editingItems[index][field] = field === 'done' ? event.target.checked : event.target.value;
-        if (field === 'done') {
-          editingItems[index].subitems = normalizeSubChecklistForEditor(editingItems[index].subitems).map(subitem => ({ ...subitem, done: event.target.checked }));
+          const subs = normalizeSubChecklistForEditor(item.subitems);
+          if (!subs[subIndex]) return;
+          subs[subIndex] = {...subs[subIndex],[field === 'subDone' ? 'done' : 'text']:field === 'subDone' ? event.target.checked : event.target.value};
+          item.subitems = subs;
+          item.done = subs.length ? subs.every(sub => sub.done) : item.done;
+          if (field === 'subDone') renderItemsEditor();
+        } else if (field === 'done') {
+          item.done = event.target.checked;
+          item.subitems = normalizeSubChecklistForEditor(item.subitems).map(sub => ({...sub,done:event.target.checked}));
           renderItemsEditor();
+        } else {
+          item[field] = event.target.value;
+          const row = byId('itemsEditorBody')?.querySelector('tr[data-editor-item="' + cssEscape(item.id) + '"]');
+          if (field === 'text' && row) row.querySelector('.item-title-select>span').textContent = item.text || 'Untitled item';
+        }
+        refreshItemDraftStatus();
+        if (field === 'done' || field === 'subDone') {
+          const selector = '[data-index="'+index+'"][data-field="'+field+'"]' + (field==='subDone' ? '[data-sub-index="'+event.target.dataset.subIndex+'"]' : '');
+          byId(inDetail ? 'itemDetails' : 'itemsEditorBody').querySelector(selector)?.focus({preventScroll:true});
         }
       }
 
       function handleItemButton(event) {
         const index = Number(event.currentTarget.dataset.index);
         const action = event.currentTarget.dataset.action;
+        const item = editingItems[index];
+        if (!item) return;
+        if (action === 'deleteItem' && !window.confirm('Delete action item "' + (item.text || 'Untitled item') + '"?')) return;
+        rememberItemsDraft();
         if (action === 'deleteItem') {
-          const itemName = editingItems[index]?.text || `Item ${index + 1}`;
-          if (!window.confirm(`Delete action item "${itemName}"?`)) return;
-          editingItems.splice(index, 1);
+          editingItems.splice(index,1);
+          if (selectedEditingItemId === item.id) selectedEditingItemId = editingItems[Math.min(index,editingItems.length - 1)]?.id || '';
         }
-        if (action === 'addSubitem' && editingItems[index]) {
-          const subitems = normalizeSubChecklistForEditor(editingItems[index].subitems);
-          subitems.push({ id: uid('subitem'), text: '', done: false, order: subitems.length });
-          editingItems[index].subitems = subitems;
+        if (action === 'duplicateItem') {
+          const duplicate = freshChecklist([item])[0];
+          duplicate.text = item.text + ' (copy)';
+          editingItems.splice(index + 1,0,duplicate);
+          selectedEditingItemId = duplicate.id;
         }
-        if (action === 'deleteSubitem' && editingItems[index]) {
-          const subIndex = Number(event.currentTarget.dataset.subIndex);
-          editingItems[index].subitems = normalizeSubChecklistForEditor(editingItems[index].subitems).filter((subitem, candidateIndex) => candidateIndex !== subIndex).map((subitem, order) => ({ ...subitem, order }));
+        if (action === 'addSubitem') {
+          selectedEditingItemId = item.id;
+          const subs = normalizeSubChecklistForEditor(item.subitems);
+          subs.push({id:uid('subitem'),text:'',done:false,order:subs.length});
+          item.subitems = subs;
+          item.done = false;
         }
-        editingItems = editingItems.map((item, order) => ({ ...item, order }));
+        if (action === 'deleteSubitem') {
+          item.subitems = normalizeSubChecklistForEditor(item.subitems).filter((_,subIndex) => subIndex !== Number(event.currentTarget.dataset.subIndex)).map((sub,order) => ({...sub,order}));
+          item.done = item.subitems.length ? item.subitems.every(sub => sub.done) : item.done;
+        }
+        editingItems.forEach((entry,order) => entry.order = order);
         renderItemsEditor();
+        if (action === 'addSubitem') {
+          const fields = byId('itemDetails').querySelectorAll('input[data-field=subText]');
+          fields[fields.length - 1]?.focus();
+        }
       }
 
       function addChecklistItem() {
-        editingItems.push({ id: uid('item'), text: '', remarks: '', done: false, subitems: [], order: editingItems.length });
+        rememberItemsDraft();
+        const item = {id:uid('item'),text:'',remarks:'',done:false,subitems:[],order:editingItems.length};
+        editingItems.push(item);
+        selectedEditingItemId = item.id;
+        setValue('itemEditorSearch','');
         renderItemsEditor();
+        byId('itemNameField')?.focus();
+        const row = byId('itemsEditorBody')?.querySelector('tr[data-editor-item="' + cssEscape(item.id) + '"]');
+        row?.scrollIntoView({block:'nearest'});
       }
 
       function applyItemsEditor() {
@@ -4439,7 +4930,8 @@
         const empty = editingItems.findIndex(item => !item.text.trim());
         if (empty >= 0) {
           alert('Enter an Action Item name, or delete the empty item.');
-          byId('itemsEditorBody')?.querySelector('[data-field="text"][data-index="' + empty + '"]')?.focus();
+          selectEditingItem(empty);
+          byId('itemNameField')?.focus();
           return;
         }
         row.checklist = normalizeChecklist(editingItems);
@@ -4449,7 +4941,9 @@
       }
 
       function openRowsModal() {
-        editingRows = data.rows.slice().sort((a, b) => a.order - b.order).map((row, order) => ({ ...row, order }));
+        editingRows = JSON.parse(JSON.stringify(data.rows)).sort((a,b) => a.order-b.order).map((row,order) => ({...row,order}));
+        selectedEditorRows.clear(); rowsDraftUndo = [];
+        setValue('rowsEditorSearch','');
         renderRowsEditor();
         safeClassAdd(byId('rowsModal'), 'show');
         captureEditor('rowsModal');
@@ -4460,59 +4954,107 @@
         settleRemoteAfterEditor();
       }
 
+      function rememberRowsDraft() {
+        if (JSON.stringify(rowsDraftUndo.at(-1)) === JSON.stringify(editingRows)) return;
+        rowsDraftUndo.push(JSON.parse(JSON.stringify(editingRows)));
+        if (rowsDraftUndo.length > 20) rowsDraftUndo.shift();
+      }
+
+      function matchesRowEditorSearch(row) {
+        const query = (byId('rowsEditorSearch')?.value || '').trim().toLowerCase();
+        return [row.category,row.item,row.action,row.actionBy].join(' ').toLowerCase().includes(query);
+      }
+
+      function filterRowsEditor() {
+        byId('rowsEditorBody').querySelectorAll('tr').forEach((node,index) => node.hidden = !matchesRowEditorSearch(editingRows[index]));
+        const visible = editingRows.filter(matchesRowEditorSearch);
+        const checked = visible.filter(row => selectedEditorRows.has(row.id)).length;
+        const select = byId('selectAllEditorRows');
+        select.checked = visible.length > 0 && checked === visible.length;
+        select.indeterminate = checked > 0 && checked !== visible.length;
+        setText('rowsEditorCount',editingRows.length + ' rows');
+        setText('selectedRowsCount',selectedEditorRows.size + ' selected');
+        byId('duplicateSelectedRowsButton').disabled = !selectedEditorRows.size;
+        byId('deleteSelectedRowsButton').disabled = !selectedEditorRows.size;
+        byId('undoRowsButton').disabled = !rowsDraftUndo.length;
+      }
+
       function renderRowsEditor() {
         const body = byId('rowsEditorBody');
         if (!body) return;
         const wrap = body.closest('.row-editor-wrap');
-        const previousScrollTop = wrap ? wrap.scrollTop : 0;
-        body.innerHTML = editingRows.map((row, index) => `
-          <tr data-drag-index="${index}">
-            <td><span class="drag-order-handle" draggable="true" data-drag-index="${index}" title="Drag to reorder row">Drag</span><div class="field-hint">#${index + 1}</div></td>
-            <td><input data-index="${index}" data-field="category" value="${escapeHtml(row.category)}"></td>
-            <td><input data-index="${index}" data-field="item" value="${escapeHtml(row.item)}"></td>
-            <td><textarea data-index="${index}" data-field="action">${escapeHtml(row.action)}</textarea></td>
-            <td><input data-index="${index}" data-field="actionBy" value="${escapeHtml(row.actionBy)}"></td>
-            <td><input data-index="${index}" data-field="start" type="date" value="${escapeHtml(row.start)}"></td>
-            <td><input data-index="${index}" data-field="end" type="date" value="${escapeHtml(row.end)}"></td>
-            <td><select data-index="${index}" data-field="highlight"><option value="NO" ${row.highlight ? '' : 'selected'}>NO</option><option value="YES" ${row.highlight ? 'selected' : ''}>YES</option></select></td>
-            <td>
-              <button class="mini light" data-action="up" data-index="${index}">Up</button>
-              <button class="mini light" data-action="down" data-index="${index}">Down</button>
-              <button class="mini danger" data-action="delete" data-index="${index}">Delete</button>
-            </td>
-          </tr>`).join('');
-        if (wrap) wrap.scrollTop = previousScrollTop;
-        body.querySelectorAll('input, select, textarea').forEach(input => {
-          input.addEventListener('input', updateEditingRowField);
-          input.addEventListener('change', updateEditingRowField);
+        const scrollTop = wrap.scrollTop;
+        body.innerHTML = editingRows.map((row,index) => '<tr data-drag-index="' + index + '">' +
+          '<td data-label="Select"><input type="checkbox" data-select-row="' + index + '" aria-label="Select row ' + (index+1) + '" ' + (selectedEditorRows.has(row.id) ? 'checked' : '') + '></td>' +
+          '<td data-label="Order"><div class="row-order-control"><span class="drag-order-handle" draggable="true" title="Drag to reorder">' + uiIcon('grip-vertical') + '</span><select class="move-position" data-move-index="' + index + '" aria-label="Row position">' + editingRows.map((_,position) => '<option value="' + position + '"' + (position===index ? ' selected' : '') + '>' + (position+1) + '</option>').join('') + '</select></div></td>' +
+          '<td data-label="Category"><input data-index="' + index + '" data-field="category" value="' + escapeHtml(row.category) + '" aria-label="Category"></td>' +
+          '<td data-label="Sub-Category"><input data-index="' + index + '" data-field="item" value="' + escapeHtml(row.item) + '" aria-label="Sub-Category"></td>' +
+          '<td data-label="Action"><textarea data-index="' + index + '" data-field="action" aria-label="Action">' + escapeHtml(row.action) + '</textarea></td>' +
+          '<td data-label="' + escapeHtml(data.actionByLabel) + '"><input data-index="' + index + '" data-field="actionBy" value="' + escapeHtml(row.actionBy) + '" aria-label="' + escapeHtml(data.actionByLabel) + '"></td>' +
+          '<td data-label="Start"><input data-index="' + index + '" data-field="start" type="date" value="' + escapeHtml(row.start) + '" aria-label="Start DD/MM/YYYY"></td>' +
+          '<td data-label="End"><input data-index="' + index + '" data-field="end" type="date" value="' + escapeHtml(row.end) + '" aria-label="End DD/MM/YYYY"></td>' +
+          '<td data-label="Highlight"><input type="checkbox" data-index="' + index + '" data-field="highlight" aria-label="Highlight row" ' + (row.highlight?'checked':'') + '></td>' +
+          '<td data-label="Actions"><div class="row-actions"><button class="icon-button light" data-action="duplicate" data-index="' + index + '" aria-label="Duplicate row" title="Duplicate row">' + uiIcon('copy') + '</button><button class="icon-button danger-ghost" data-action="delete" data-index="' + index + '" aria-label="Delete row" title="Delete row">' + uiIcon('trash-2') + '</button></div></td></tr>').join('');
+        wrap.scrollTop = scrollTop;
+        body.querySelectorAll('[data-field]').forEach(input => {
+          input.addEventListener(input.type === 'checkbox' ? 'change' : 'input',updateEditingRowField);
         });
-        body.querySelectorAll('button[data-action]').forEach(button => {
-          button.addEventListener('click', handleRowButton);
+        body.onfocusin = event => { delete event.target.dataset.draftCaptured; };
+        body.onbeforeinput = event => {
+          if (!event.target.matches('[data-field]:not([type=checkbox])') || event.target.dataset.draftCaptured) return;
+          rememberRowsDraft(); event.target.dataset.draftCaptured='1';
+        };
+        body.querySelectorAll('[data-select-row]').forEach(input => input.onchange = () => {
+          const row = editingRows[Number(input.dataset.selectRow)];
+          if (input.checked) selectedEditorRows.add(row.id); else selectedEditorRows.delete(row.id);
+          filterRowsEditor();
         });
-        bindEditorDragOrder(body, 'rows');
+        body.querySelectorAll('button[data-action]').forEach(button => button.onclick = handleRowButton);
+        bindEditorDragOrder(body,'rows');
         bindPositionMoves(body,'rows');
+        filterRowsEditor();
       }
 
       function updateEditingRowField(event) {
         const index = Number(event.target.dataset.index);
         const field = event.target.dataset.field;
         if (!editingRows[index]) return;
-        editingRows[index][field] = field === 'highlight' ? event.target.value === 'YES' : event.target.value;
+        if (field === 'highlight') rememberRowsDraft();
+        editingRows[index][field] = field === 'highlight' ? event.target.checked : event.target.value;
+        byId('undoRowsButton').disabled = !rowsDraftUndo.length;
+      }
+
+      function duplicateEditorRow(row) {
+        return {...JSON.parse(JSON.stringify(row)),id:uid('row'),checklist:freshChecklist(row.checklist)};
       }
 
       function handleRowButton(event) {
         const index = Number(event.currentTarget.dataset.index);
         const action = event.currentTarget.dataset.action;
-        if (action === 'delete') {
-          const row = editingRows[index];
-          const label = row?.action || row?.item || `Row ${index + 1}`;
-          if (!window.confirm(`Delete row "${label}"?`)) return;
-          editingRows.splice(index, 1);
-        }
-        if (action === 'up' && index > 0) [editingRows[index - 1], editingRows[index]] = [editingRows[index], editingRows[index - 1]];
-        if (action === 'down' && index < editingRows.length - 1) [editingRows[index + 1], editingRows[index]] = [editingRows[index], editingRows[index + 1]];
-        editingRows = editingRows.map((row, order) => ({ ...row, order }));
+        if (action === 'delete' && !window.confirm('Delete row "' + (editingRows[index]?.item || editingRows[index]?.action || index+1) + '" and its action items?')) return;
+        rememberRowsDraft();
+        if (action === 'delete') { selectedEditorRows.delete(editingRows[index].id); editingRows.splice(index,1); }
+        if (action === 'duplicate') editingRows.splice(index+1,0,duplicateEditorRow(editingRows[index]));
+        if (action === 'up' && index > 0) [editingRows[index-1],editingRows[index]] = [editingRows[index],editingRows[index-1]];
+        if (action === 'down' && index < editingRows.length-1) [editingRows[index+1],editingRows[index]] = [editingRows[index],editingRows[index+1]];
+        editingRows.forEach((row,order) => row.order = order);
         renderRowsEditor();
+      }
+
+      function duplicateSelectedRows() {
+        if (!selectedEditorRows.size) return;
+        rememberRowsDraft();
+        editingRows = editingRows.flatMap(row => selectedEditorRows.has(row.id) ? [row,duplicateEditorRow(row)] : [row]);
+        editingRows.forEach((row,order) => row.order=order);
+        selectedEditorRows.clear(); renderRowsEditor();
+      }
+
+      function deleteSelectedRows() {
+        if (!selectedEditorRows.size || !window.confirm('Delete ' + selectedEditorRows.size + ' selected rows and their action items?')) return;
+        rememberRowsDraft();
+        editingRows = editingRows.filter(row => !selectedEditorRows.has(row.id));
+        editingRows.forEach((row,order) => row.order=order);
+        selectedEditorRows.clear(); renderRowsEditor();
       }
 
       function bindEditorDragOrder(body, type) {
@@ -4556,6 +5098,8 @@
       }
 
       function addRow() {
+        rememberRowsDraft();
+        setValue('rowsEditorSearch','');
         const last = editingRows[editingRows.length - 1];
         editingRows.push(normalizeRow({
           category: last ? last.category : '',
@@ -4568,12 +5112,15 @@
           order: editingRows.length
         }, editingRows.length, data.startDate));
         renderRowsEditor();
+        byId('rowsEditorBody').lastElementChild?.scrollIntoView({block:'nearest'});
+        byId('rowsEditorBody').lastElementChild?.querySelector('[data-field=item]')?.focus();
       }
 
       function duplicateLastRow() {
         const last = editingRows[editingRows.length - 1];
         if (!last) return addRow();
-        editingRows.push({ ...last, id: uid(), order: editingRows.length });
+        rememberRowsDraft();
+        editingRows.push({ ...duplicateEditorRow(last), order: editingRows.length });
         renderRowsEditor();
       }
 
@@ -4885,6 +5432,8 @@ ${visualRows}
       function moveEditorEntry(type, from, to) {
         const list = type === 'items' ? editingItems : editingRows;
         if (from < 0 || to < 0 || from >= list.length || to >= list.length || from === to) return;
+        if (type === 'items') rememberItemsDraft();
+        else rememberRowsDraft();
         const [entry] = list.splice(from,1);
         list.splice(to,0,entry);
         list.forEach((candidate,index) => candidate.order = index);
@@ -4925,9 +5474,10 @@ ${visualRows}
         select.innerHTML = Object.keys(library).sort().map(name => '<option value="' + escapeHtml(name) + '">' + escapeHtml(name) + '</option>').join('');
         if (library[selected]) select.value = selected;
         const items = normalizeChecklist(library[select.value]?.items);
-        setText('libraryPreview', items.length ? items.map((item,index) => (index + 1) + '. ' + item.text + (item.remarks ? '\n   ' + item.remarks : '') + item.subitems.map(subitem => '\n   - ' + subitem.text).join('')).join('\n\n') : 'No saved checklist.');
+        setHtml('libraryPreview',items.length ? '<div class="library-preview-heading"><h3>' + escapeHtml(select.value) + '</h3><span>' + items.length + ' items</span></div>' + items.map((item,index) => '<article class="library-preview-item"><strong><span class="library-item-number">' + (index+1) + '</span>' + escapeHtml(item.text) + '</strong>' + (item.remarks ? '<p>' + escapeHtml(item.remarks).replace(/\n/g,'<br>') + '</p>' : '') + (item.subitems.length ? '<ul>' + item.subitems.map(sub => '<li>' + escapeHtml(sub.text) + '</li>').join('') + '</ul>' : '') + '</article>').join('') : '<div class="empty-state">No saved checklists yet</div>');
         byId('libraryAppendButton').disabled = !items.length;
         byId('libraryReplaceButton').disabled = !items.length;
+        byId('libraryDeleteButton').disabled = !items.length;
       }
 
       function loadLibraryItems(replace) {
@@ -4935,6 +5485,7 @@ ${visualRows}
         if (!set) return;
         if (replace && editingItems.length && !window.confirm('Replace the editor checklist?')) return;
         const names = new Set(editingItems.map(item => item.text.trim().toLowerCase()));
+        rememberItemsDraft();
         const fresh = freshChecklist(set.items).filter(item => replace || !byId('librarySkipDuplicates').checked || !names.has(item.text.trim().toLowerCase()));
         editingItems = (replace ? [] : editingItems).concat(fresh).map((item,order) => ({...item,order}));
         renderItemsEditor();
@@ -4975,10 +5526,15 @@ ${visualRows}
         const styles = document.querySelector('style').textContent;
         const paper = byId('outputPaper').value === 'A4' ? 'A4' : 'A3';
         const previewStyle = ':root{--work:' + data.colors.work + ';--weekend:' + data.colors.weekend + ';--highlight:' + data.colors.highlight + '}body{background:white} .app{padding:12px} .programme-wrap{max-height:none;overflow:visible} .sheet{box-shadow:none;overflow:visible} .checklist-list,.remarks-list{max-height:none!important;height:auto!important;overflow:visible!important}.column-resize-handle,.edit-items-button,.row-expand-toggle,.subcheck-toggle-button,.drag-handle{display:none!important}.programme [data-left-index]{position:static!important;left:auto!important} @page{size:' + paper + ' landscape;margin:6mm}';
+        const outputRows = byId('outputAllRows').checked ? data.rows : visibleRows();
+        setText('outputSummary',outputRows.length + ' rows · ' + outputRows.reduce((sum,row) => sum+normalizeChecklist(row.checklist).length,0) + ' action items · ' + paper + ' landscape');
+        byId('outputFree').disabled = previewData.audienceMode !== 'client';
         const frame = byId('outputFrame');
         frame.onload = () => {
           const doc = frame.contentDocument;
           if (!doc) return;
+          doc.addEventListener('click',event => { if (event.target.closest('input,button')) event.preventDefault(); });
+          doc.querySelectorAll('input,button').forEach(control => control.tabIndex=-1);
           const align = () => alignPreviewEntries(doc);
           frame.contentWindow.addEventListener('beforeprint',align);
           align();
@@ -5002,7 +5558,7 @@ ${visualRows}
       }
 
       function installWorkspaceFeatures() {
-        document.documentElement.dataset.build = '20261104-workspace-v3';
+        document.documentElement.dataset.build = '20261104-workspace-v4';
         document.querySelectorAll('.modal').forEach(modal => {
           modal.setAttribute('role','dialog');
           modal.setAttribute('aria-modal','true');
@@ -5085,9 +5641,11 @@ ${visualRows}
         bind('mergeApplyButton','click',() => {
           const choices = {};
           byId('mergeBody').querySelectorAll('select[data-merge-path]').forEach(select => choices[select.dataset.mergePath] = select.value);
-          processRemotePayload(choices);
+          if (isLocalMergeDialog) processLocalVersion(choices);
+          else processRemotePayload(choices);
         });
         bind('mergePauseButton','click',() => {
+          if (isLocalMergeDialog) { const choices={}; byId('mergeBody').querySelectorAll('[data-merge-path]').forEach(select => choices[select.dataset.mergePath]='local'); processLocalVersion(choices); return; }
           recordRecovery(data,'Local version before stopping conflict sync');
           if (pendingRemotePayload?.data) recordRecovery(pendingRemotePayload.data,'Cloud version at conflict');
           stopCloudSyncSilently(); safeClassRemove(byId('mergeModal'),'show');
@@ -5107,6 +5665,7 @@ ${visualRows}
           frame.contentWindow.focus(); frame.contentWindow.print();
         });
         window.addEventListener('resize',scheduleAlignment);
+        window.addEventListener('resize',() => { if (data) populateFreezeColumnOptions(); });
         window.addEventListener('beforeprint',() => alignPreviewEntries(document));
         window.addEventListener('afterprint',scheduleAlignment);
         window.addEventListener('beforeunload',event => {
@@ -5128,10 +5687,257 @@ ${visualRows}
         });
       }
 
+      function uiIcon(name) {
+        const nodes = WORKSPACE_ICONS[name] || WORKSPACE_ICONS.ellipsis;
+        return '<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+          nodes.map(([tag,attrs]) => '<' + tag + ' ' + Object.entries(attrs).filter(([key]) => key !== 'key').map(([key,value]) => key + '="' + escapeHtml(value) + '"').join(' ') + '></' + tag + '>').join('') + '</svg>';
+      }
+
+      function hydrateIcons(root = document) {
+        root.querySelectorAll('i[data-icon]').forEach(node => node.outerHTML = uiIcon(node.dataset.icon));
+      }
+
+      function showToast(message) {
+        setText('toastMessage',message);
+        byId('toastMessage').hidden = false;
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(() => byId('toastMessage').hidden = true,3500);
+      }
+
+      function showToolSection(section) {
+        drawerSection = section;
+        document.querySelectorAll('[data-tool-tab]').forEach(tab => tab.setAttribute('aria-selected',String(tab.dataset.toolTab === section)));
+        document.querySelectorAll('[data-tool-panel]').forEach(panel => panel.hidden = panel.dataset.toolPanel !== section);
+        setText('drawerTitle',({view:'View settings',project:'Project',templates:'Templates',cloud:'Cloud sync',files:'Import & export'})[section] || 'Tools');
+      }
+
+      function toggleToolsDrawer(section) {
+        const drawer = byId('toolsDrawer');
+        const open = Boolean(section) || drawer.hidden;
+        drawer.hidden = !open;
+        byId('drawerBackdrop').hidden = !open;
+        byId('hideToolbarButton').setAttribute('aria-expanded',String(open));
+        if (open) showToolSection(section || drawerSection);
+      }
+
+      function closeToolsDrawer() {
+        byId('toolsDrawer').hidden = true;
+        byId('drawerBackdrop').hidden = true;
+        byId('hideToolbarButton')?.setAttribute('aria-expanded','false');
+      }
+
+      function showProjectSection(section) {
+        document.querySelectorAll('[data-project-section]').forEach(tab => tab.setAttribute('aria-selected',String(tab.dataset.projectSection === section)));
+        document.querySelectorAll('[data-project-form]').forEach(panel => panel.hidden = panel.dataset.projectForm !== section);
+      }
+
+      function refreshWorkspaceShell() {
+        if (!data) return;
+        setText('navProjectName',data.projectName);
+        setText('navProjectCode',data.projectCode || 'Local draft');
+        setText('cloudProjectLabel',data.projectCode || 'No project code');
+        const items = data.rows.flatMap(row => normalizeChecklist(row.checklist));
+        const complete = items.filter(isChecklistItemDone).length;
+        setText('workspaceProgress',items.length ? complete + ' / ' + items.length + ' complete' : data.rows.length + ' rows');
+        let status = 'Local only';
+        if (activeCloudProjectCode) status = !navigator.onLine ? 'Offline · pending' : cloudConflictPending ? 'Review changes' : cloudSaveInFlight ? 'Syncing…' : pendingRemotePayload || cloudDataJson() !== cloudBaseJson ? 'Sync pending' : 'Synced';
+        else if (isCloudUnlocked()) status = 'Cloud unlocked';
+        if (activeCloudProjectCode && byId('cloudStatus')?.classList.contains('error')) status = 'Sync error';
+        setText('workspaceSync',status);
+        const connection = byId('connectionButton');
+        if (connection) {
+          connection.title = byId('cloudStatus')?.textContent || status;
+          connection.classList.toggle('is-synced',Boolean(activeCloudProjectCode && status === 'Synced'));
+          connection.classList.toggle('needs-review',status === 'Sync error' || cloudConflictPending || (Boolean(activeCloudProjectCode) && !navigator.onLine));
+        }
+        const actionsOnly = data.audienceMode === 'actions';
+        byId('viewInput').disabled = actionsOnly;
+        byId('todayButton').hidden = actionsOnly;
+        document.querySelector('.legend').hidden = actionsOnly;
+      }
+
+      function scrollToToday() {
+        const date = todayISO();
+        const periods = buildPeriods(getResolvedViewMode());
+        const index = periods.findIndex(period => date >= period.start && date <= period.end);
+        const wrap = byId('programmeWrap');
+        const cell = wrap.querySelectorAll('tbody tr:first-child .timeline-edit-cell')[index];
+        if (!cell) return showToast('Today is outside this project period.');
+        const frozen = Math.min(uiState.freezeColumns,getLeftColumnKeys().length);
+        const width = Array.from(wrap.querySelectorAll('.left-head')).slice(0,frozen).reduce((sum,node) => sum + node.getBoundingClientRect().width,0);
+        wrap.scrollTo({left:Math.max(0,cell.offsetLeft-width-12),behavior:'smooth'});
+      }
+
+      function fitWorkspaceTable() {
+        const wrap = byId('programmeWrap');
+        if (!wrap) return;
+        const below = ['.legend','.notes','.workspace-footer'].reduce((sum,selector) => sum+(document.querySelector(selector)?.getBoundingClientRect().height || 0),0);
+        const top = wrap.getBoundingClientRect().top+window.scrollY;
+        wrap.style.maxHeight = Math.max(180,innerHeight-top-below-20)+'px';
+      }
+
+      function setAllDetailsExpanded(expand) {
+        visibleRows().forEach(row => {
+          if (expand) expandedChecklistRows.add(row.id); else expandedChecklistRows.delete(row.id);
+          normalizeChecklist(row.checklist).forEach(item => {
+            const key = row.id + ':' + item.id;
+            if (expand) expandedSubitems.add(key); else expandedSubitems.delete(key);
+          });
+        });
+        render();
+      }
+
+      function scheduleCloudRetry(code,session) {
+        window.clearTimeout(cloudRetryTimer);
+        const delay = Math.min(30000,1500 * Math.pow(2,Math.min(cloudRetryCount++,5)));
+        cloudRetryTimer = window.setTimeout(() => {
+          if (session !== cloudSessionEpoch || code !== activeCloudProjectCode || code !== data.projectCode) return;
+          if (!navigator.onLine) return scheduleCloudRetry(code,session);
+          queueCloudSave();
+        },delay);
+      }
+
+      function receiveLocalVersion(incoming) {
+        if (!incoming || activeCloudProjectCode || incoming.projectCode !== data.projectCode) return;
+        const snapshot = contentData(incoming);
+        if (JSON.stringify(snapshot) === JSON.stringify(contentData(data))) { localSharedBase = snapshot; return; }
+        pendingLocalVersion = snapshot;
+        if (hasOpenEditorModal() || dragState) {
+          setSaveStatus('Another tab has changes. Your editor draft is preserved.','warning');
+          return;
+        }
+        processLocalVersion();
+      }
+
+      function processLocalVersion(choices) {
+        if (!pendingLocalVersion || pendingLocalVersion.projectCode !== data.projectCode || activeCloudProjectCode) return;
+        if (hasOpenEditorModal() && !choices && !isLocalMergeDialog) return;
+        const incoming = pendingLocalVersion;
+        const remoteJson = JSON.stringify(incoming);
+        const reviewed = Boolean(choices) && localMergeDialogVersion === remoteJson;
+        const result = mergeVersions(localSharedBase || lastSavedSnapshot || contentData(data),contentData(data),incoming,reviewed ? choices : {});
+        if (result.conflicts.length && !reviewed) {
+          isLocalMergeDialog = true;
+          localMergeDialogVersion = remoteJson;
+          recordRecovery(data,'Local draft before tab conflict');
+          recordRecovery(incoming,'Other tab at conflict');
+          showMergeReview(result.conflicts,'Other tab','Save merged version','Keep my conflicted values');
+          setSaveStatus('Another tab edited the same fields. Review both versions.','warning');
+          return;
+        }
+        recordRecovery(data,'Before merging another browser tab');
+        rebaseHistoryAfterRemote(localSharedBase || lastSavedSnapshot || contentData(data),incoming,result.value);
+        const view = {audienceMode:data.audienceMode,viewMode:data.viewMode,weekLabelMode:data.weekLabelMode};
+        localSharedBase = incoming;
+        pendingLocalVersion = null;
+        isLocalMergeDialog = false;
+        data = normalizeData({...result.value,...view});
+        if (data.updatedAtISO && !Number.isNaN(Date.parse(data.updatedAtISO))) data.lastUpdate = 'Last update: '+formatDisplayDateTime(new Date(data.updatedAtISO));
+        applyingLocalMerge = true;
+        const previousHistoryApplying = historyApplying;
+        historyApplying = true;
+        try { render(); } finally { applyingLocalMerge = false; historyApplying = previousHistoryApplying; }
+        safeClassRemove(byId('mergeModal'),'show');
+        showToast('Changes from the other tab merged.');
+      }
+
+      function showMergeReview(conflicts,remoteLabel,applyLabel,pauseLabel) {
+        setText('mergeRemoteHeading',remoteLabel);
+        setText('mergeApplyButton',applyLabel);
+        setText('mergePauseButton',pauseLabel);
+        setHtml('mergeBody',conflicts.map(conflict => '<tr><td>' + escapeHtml(mergeFieldLabel(conflict.path)) + '</td><td><pre>' + escapeHtml(JSON.stringify(conflict.local ?? '(deleted)')) + '</pre></td><td><pre>' + escapeHtml(JSON.stringify(conflict.remote ?? '(deleted)')) + '</pre></td><td><select data-merge-path="' + escapeHtml(conflict.path) + '"><option value="local">Keep mine</option><option value="remote">Use ' + escapeHtml(remoteLabel.toLowerCase()) + '</option></select></td></tr>').join(''));
+        safeClassAdd(byId('mergeModal'),'show');
+      }
+
+      function installLocalCoordination() {
+        window.addEventListener('storage',event => {
+          if (!data || event.key !== localProjectStorageKey(data.projectCode)) return;
+          if (!event.newValue) {
+            recordRecovery(data,'Project removed in another tab');
+            showToast('Project removed in another tab. This open copy is retained.');
+            return;
+          }
+          try { receiveLocalVersion(JSON.parse(event.newValue)); } catch (_) {}
+        });
+        window.addEventListener('online',() => {
+          refreshWorkspaceShell();
+          if (!activeCloudProjectCode) return;
+          window.clearTimeout(cloudRetryTimer);
+          cloudRetryCount = 0;
+          subscribeCloudProject(activeCloudProjectCode);
+          queueCloudSave();
+        });
+        window.addEventListener('offline',() => {
+          if (activeCloudProjectCode) setCloudStatus('Offline: edits are saved locally. Auto Sync resumes when connected.','warning');
+          refreshWorkspaceShell();
+        });
+      }
+
+      function installRedesignFeatures() {
+        installLocalCoordination();
+        hydrateIcons();
+        window.addEventListener('resize',fitWorkspaceTable);
+        document.querySelectorAll('[data-tool-tab]').forEach(tab => tab.onclick = () => showToolSection(tab.dataset.toolTab));
+        document.querySelectorAll('[data-open-tool]').forEach(button => button.onclick = () => toggleToolsDrawer(button.dataset.openTool));
+        document.querySelectorAll('[data-project-section]').forEach(tab => tab.onclick = () => showProjectSection(tab.dataset.projectSection));
+        document.querySelectorAll('[data-command]').forEach(button => button.onclick = () => {
+          if (button.dataset.command === 'details') openProjectModal();
+          if (button.dataset.command === 'projects') openProjectListModal();
+        });
+        document.querySelectorAll('[data-cancel-editor]').forEach(button => button.onclick = () => {
+          const id = button.dataset.cancelEditor;
+          const close = {projectModal:closeProjectModal,rowsModal:closeRowsModal,itemsModal:closeItemsModal,newProjectModal:closeNewProjectModal,quickRowModal:closeQuickRowModal}[id];
+          if (close) requestEditorClose(id,close);
+        });
+        bind('closeDrawerButton','click',closeToolsDrawer);
+        bind('listUnlockCloudButton','click',() => { closeProjectListModal(); toggleToolsDrawer('cloud'); byId('cloudPasswordInput').focus(); });
+        bind('drawerBackdrop','click',closeToolsDrawer);
+        bind('focusWorkspaceButton','click',() => setToolbarHidden(!uiState.toolbarHidden));
+        bind('todayButton','click',scrollToToday);
+        bind('expandDetailsButton','click',() => setAllDetailsExpanded(true));
+        bind('collapseDetailsButton','click',() => setAllDetailsExpanded(false));
+        bind('stickyHeaderInput','change',event => {
+          uiState.stickyHeaders = event.target.checked;
+          document.body.classList.toggle('keep-table-headers',uiState.stickyHeaders);
+          saveUiState();
+        });
+        bind('itemEditorSearch','input',() => renderItemsEditor());
+        bind('mobileItemSelect','change',event => selectEditingItem(editingItems.findIndex(item => item.id === event.target.value)));
+        bind('undoItemsButton','click',undoItemsDraft);
+        bind('completeAllItemsButton','click',() => {
+          if (!editingItems.length || !window.confirm('Mark all action items and sub-items complete?')) return;
+          rememberItemsDraft();
+          editingItems = editingItems.map(item => ({...item,done:true,subitems:item.subitems.map(sub => ({...sub,done:true}))}));
+          renderItemsEditor();
+        });
+        bind('rowsEditorSearch','input',filterRowsEditor);
+        bind('selectAllEditorRows','change',event => {
+          editingRows.filter(matchesRowEditorSearch).forEach(row => event.target.checked ? selectedEditorRows.add(row.id) : selectedEditorRows.delete(row.id));
+          renderRowsEditor();
+        });
+        bind('duplicateSelectedRowsButton','click',duplicateSelectedRows);
+        bind('deleteSelectedRowsButton','click',deleteSelectedRows);
+        bind('undoRowsButton','click',() => {
+          const previous = rowsDraftUndo.pop();
+          if (!previous) return;
+          editingRows = previous; selectedEditorRows.clear(); renderRowsEditor();
+        });
+        document.addEventListener('keydown',event => {
+          const modal = Array.from(document.querySelectorAll('.modal.show')).at(-1);
+          if (!modal && event.key === 'Escape') closeToolsDrawer();
+          if (event.isComposing || !(event.ctrlKey || event.metaKey) || event.key !== 'Enter') return;
+          const apply = {projectModal:applyProjectEditor,itemsModal:applyItemsEditor,rowsModal:applyRowsEditor,quickRowModal:applyQuickRowEditor,newProjectModal:() => createProject(byId('newProjectMode').value)}[modal?.id];
+          if (apply) { event.preventDefault(); apply(); }
+        });
+      }
+
       function init() {
         installWorkspaceFeatures();
+        installRedesignFeatures();
         cloudClientId = getCloudClientId();
         uiState = loadUiState();
+        document.body.classList.toggle('keep-table-headers',uiState.stickyHeaders === true);
+        byId('stickyHeaderInput').checked = uiState.stickyHeaders === true;
         setToolbarHidden(uiState.toolbarHidden);
         setFreezeColumns(uiState.freezeColumns);
         deletedTemplateNames = loadDeletedTemplateNames();
@@ -5144,7 +5950,7 @@ ${visualRows}
         restoreView();
         setValue('densityInput',uiState.density || 'compact');
         initFirebaseWhenReady();
-        bind('hideToolbarButton', 'click', () => setToolbarHidden(true));
+        bind('hideToolbarButton', 'click', () => toggleToolsDrawer());
         bind('showToolbarButton', 'click', () => setToolbarHidden(false));
         bind('cloudSignInButton', 'click', toggleCloudSignIn);
         bind('cloudSyncButton', 'click', toggleExplicitCloudSync);
@@ -5167,7 +5973,7 @@ ${visualRows}
           if (deleteButton) deleteProjectFromList(deleteButton.dataset.code || '');
         });
         bind('cancelNewProjectButton', 'click', () => requestEditorClose('newProjectModal',closeNewProjectModal));
-        bind('createBlankProjectButton', 'click', () => createProject('blank'));
+        bind('createBlankProjectButton', 'click', () => createProject(byId('newProjectMode')?.value || 'blank'));
         bind('createFromCurrentButton', 'click', () => createProject('current'));
         bind('projectListModal', 'click', event => {
           if (event.target.id === 'projectListModal') closeProjectListModal();
