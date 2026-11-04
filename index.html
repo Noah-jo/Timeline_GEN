@@ -1036,6 +1036,66 @@
       body.week-view .day-cell, body.month-view .day-cell { white-space: normal !important; font-size: 8px; line-height: 1.12; }
       @page { size: A3 landscape; margin: 6mm; }
     }
+    .toolbar-actions { align-items: stretch; }
+    .toolbar-group { border-radius: 8px; }
+    .toolbar h1 { letter-spacing: 0; }
+    .workspace-strip, .filter-bar { display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding:10px 0; }
+    .workspace-strip { justify-content:space-between; }
+    .workspace-strip .commands { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+    .workspace-strip strong { font-size:13px; overflow-wrap:anywhere; }
+    .filter-bar { border:1px solid #cbd5e1; border-bottom:0; padding:9px 12px; background:#fff; }
+    .filter-bar input { width:240px; max-width:100%; }
+    .filter-bar select { max-width:200px; }
+    .filter-count { margin-left:auto; color:#475569; font-size:12px; }
+    .modal-card { display:flex; flex-direction:column; gap:8px; min-height:0; }
+    .modal-card > .row-editor-wrap { flex:1; min-height:0; }
+    .modal-actions { flex-wrap:wrap; flex-shrink:0; margin-top:0; }
+    #projectModal table.row-editor, #newProjectModal table.row-editor, .compact-table { min-width:0; }
+    #projectModal .color-grid { grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); }
+    #projectModal .row-editor th { width:190px; text-align:left; }
+    .editor-order-cell { width:62px; text-align:center; }
+    .editor-order-cell .drag-order-handle { width:32px; height:30px; padding:0; border:0; background:transparent; font-size:20px; }
+    .move-position { display:block; width:100%; margin-top:5px; padding:4px !important; font-size:11px; }
+    .row-editor input[type=checkbox] { width:16px; height:16px; margin:0; }
+    .row-editor tr.drag-after-row td { box-shadow:inset 0 -3px 0 #0f766e; }
+    .item-title-input { min-height:48px !important; }
+    .tab-strip { display:flex; gap:5px; flex-wrap:wrap; align-items:center; }
+    .tab-strip button[aria-selected=true] { background:#0f766e; color:white; }
+    .tab-strip input { margin-left:auto; min-width:170px; }
+    .preview-frame { width:100%; height:62vh; border:1px solid #cbd5e1; background:#fff; }
+    #mergeModal pre { white-space:pre-wrap; overflow-wrap:anywhere; max-height:160px; overflow:auto; font:12px/1.5 inherit; }
+    #mergeModal .modal-card { width:min(1200px,96vw); }
+    #libraryPreview { white-space:pre-wrap; max-height:220px; overflow:auto; font:12px/1.5 inherit; border:1px solid #cbd5e1; padding:10px; }
+    button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible { outline:2px solid #0f766e; outline-offset:2px; }
+    button:disabled { opacity:0.45; cursor:default; }
+    .modal { overscroll-behavior:contain; }
+    .print-extra-subitems { display:none; }
+    @media(max-width:620px) {
+      .workspace-strip, .filter-bar { align-items:stretch; }
+      .filter-bar input, .filter-bar select { width:100%; max-width:none; }
+      .filter-count { margin-left:0; }
+      .modal-card { padding:10px; width:98vw; max-height:96vh; border-radius:8px; }
+      #projectModal .row-editor th { width:125px; }
+      .date-pair { grid-template-columns:1fr; }
+      .project-meta { overflow-wrap:anywhere; }
+    }
+    @media print {
+      .workspace-strip, .filter-bar, .toolbar-toggle, .column-resize-handle,
+      .edit-items-button, .row-expand-toggle, .subcheck-toggle-button, .drag-handle { display:none !important; }
+      .checklist-list, .remarks-list { max-height:none !important; height:auto !important; overflow:visible !important; padding-right:0 !important; }
+      .print-extra-subitems { display:block; }
+      .programme thead { display:table-header-group; }
+      .programme tfoot { display:table-footer-group; }
+      .programme tr { break-inside:auto; }
+      .programme th { break-after:avoid; }
+      .programme .checklist-entry, .programme .remarks-entry { break-inside:avoid; }
+      .checklist-progress { display:block; position:static; }
+      .progress-label { white-space:nowrap; }
+      .progress-track { margin-top:4px; }
+      .programme-wrap { max-height:none !important; overflow:visible !important; }
+      .sheet { overflow:visible; }
+      .programme [data-left-index] { position:static !important; left:auto !important; }
+    }
   </style>
 </head>
 <body>
@@ -1120,6 +1180,15 @@
         <button class="light" id="hideToolbarButton" type="button">Hide Tools</button>
       </div>
     </div>
+    <div class="workspace-strip">
+      <strong id="workspaceProject"></strong>
+      <div class="commands">
+        <span id="workspaceSync" class="status-pill" role="status" aria-live="polite">Local only</span>
+        <button id="undoButton" class="light mini" title="Undo last edit" aria-label="Undo last edit">&#8630;</button>
+        <button id="redoButton" class="light mini" title="Redo" aria-label="Redo">&#8631;</button>
+        <button id="historyButton" class="light mini">Local History</button>
+      </div>
+    </div>
     <section class="sheet">
       <div class="sheet-head">
         <div class="logo-box"><img id="companyLogo" class="brand-logo" alt="Company Logo"></div>
@@ -1138,6 +1207,14 @@
         </div>
       </div>
       <div class="client-summary" id="clientSummary"></div>
+      <div class="filter-bar">
+        <input id="rowSearchInput" type="search" placeholder="Search actions, items or remarks" aria-label="Search actions, items or remarks">
+        <select id="categoryFilter" aria-label="Filter category"><option value="">All categories</option></select>
+        <select id="personFilter" aria-label="Filter free column"><option value="">All people / teams</option></select>
+        <select id="completionFilter" aria-label="Completion filter"><option value="all">All actions</option><option value="incomplete">With unfinished items</option><option value="complete">Completed items</option><option value="empty">No checklist</option></select>
+        <button id="clearFiltersButton" class="light mini">Clear</button>
+        <span id="filterSummary" class="filter-count" role="status"></span>
+      </div>
       <div class="programme-wrap" id="programmeWrap"></div>
       <div class="legend">
         <span class="legend-item"><span class="swatch work"></span> Scheduled working period</span>
@@ -1205,7 +1282,13 @@
   </div>
   <div class="modal" id="projectListModal">
     <div class="modal-card">
-      <h2>Cloud Project List</h2>
+      <h2>Projects</h2>
+      <div class="tab-strip" role="tablist" aria-label="Project source">
+        <button class="light" data-project-tab="local" role="tab" aria-selected="true">Local</button>
+        <button class="light" data-project-tab="cloud" role="tab" aria-selected="false">Cloud</button>
+        <button class="light" data-project-tab="trash" role="tab" aria-selected="false">Recycle Bin</button>
+        <input id="projectSearchInput" type="search" placeholder="Project code or name" aria-label="Search projects">
+      </div>
       <div id="projectListStatus" class="status-pill">Unlock cloud sync first</div>
       <div class="row-editor-wrap" style="margin-top:10px">
         <table class="project-list-table">
@@ -1302,6 +1385,7 @@
       <div class="editor-actions">
         <button class="light" id="useClickedAsStartButton">Use clicked period as Start</button>
         <button class="light" id="useClickedAsEndButton">Use clicked period as End</button>
+        <button class="light" id="quickEditItemsButton">Apply &amp; Edit Items</button>
       </div>
       <div class="modal-actions">
         <button class="danger" id="deleteQuickRowButton">Delete Row</button>
@@ -1317,12 +1401,14 @@
       <input id="itemsRowId" type="hidden">
       <div class="editor-actions">
         <button id="addChecklistItemButton">＋ Add Item</button>
+        <button id="openLibraryButton" class="light">Checklist Library</button>
       </div>
       <div class="row-editor-wrap">
         <table class="row-editor">
           <thead>
             <tr>
-              <th style="width:60px">Done</th>
+              <th style="width:62px">Order</th>
+              <th style="width:48px">Done</th>
               <th>Action Item</th>
               <th style="width:280px">Sub Checklist</th>
               <th>Remarks</th>
@@ -1347,6 +1433,47 @@
         <button class="light" id="cancelEditButton">Cancel</button>
         <button id="applyEditButton">Apply</button>
       </div>
+    </div>
+  </div>
+  <div class="modal" id="historyModal" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
+    <div class="modal-card"><h2 id="historyTitle">Local History</h2>
+      <div class="row-editor-wrap"><table class="project-list-table"><thead><tr><th>Saved</th><th>Reason</th><th>Action</th></tr></thead><tbody id="historyBody"></tbody></table></div>
+      <div class="modal-actions"><button class="light" data-close-modal="historyModal">Close</button></div>
+    </div>
+  </div>
+  <div class="modal" id="mergeModal" role="dialog" aria-modal="true" aria-labelledby="mergeTitle">
+    <div class="modal-card"><h2 id="mergeTitle">Review simultaneous edits</h2>
+      <div class="row-editor-wrap"><table class="project-list-table"><thead><tr><th>Field</th><th>Your version</th><th>Cloud version</th><th>Keep</th></tr></thead><tbody id="mergeBody"></tbody></table></div>
+      <div class="modal-actions"><button class="light" id="mergePauseButton">Keep local, stop sync</button><button id="mergeApplyButton">Apply Choices &amp; Sync</button></div>
+    </div>
+  </div>
+  <div class="modal" id="csvImportModal" role="dialog" aria-modal="true" aria-labelledby="csvImportTitle">
+    <div class="modal-card"><h2 id="csvImportTitle">Review CSV Import</h2>
+      <div id="csvImportSummary" role="status"></div>
+      <div class="row-editor-wrap"><table class="project-list-table"><thead><tr><th>Category</th><th>Sub-Category</th><th>Action</th><th>Period</th></tr></thead><tbody id="csvPreviewBody"></tbody></table></div>
+      <div class="modal-actions"><button class="light" data-close-modal="csvImportModal">Cancel</button><button class="light" id="csvAppendButton">Append Rows</button><button id="csvReplaceButton">Replace Rows</button></div>
+    </div>
+  </div>
+  <div class="modal" id="libraryModal" role="dialog" aria-modal="true" aria-labelledby="libraryTitle">
+    <div class="modal-card"><h2 id="libraryTitle">Checklist Library</h2>
+      <div class="editor-actions"><input id="libraryNameInput" placeholder="Checklist name" aria-label="Checklist name"><button id="librarySaveButton">Save Editor Items</button></div>
+      <select id="librarySelect" aria-label="Saved checklist"></select><pre id="libraryPreview"></pre>
+      <label><input id="librarySkipDuplicates" type="checkbox" checked> Skip matching item names</label>
+      <div class="editor-actions"><button class="light" id="libraryExportButton">Export Library</button><button class="light" id="libraryImportButton">Import Library</button><button class="danger" id="libraryDeleteButton">Delete Set</button><input type="file" id="libraryFileInput" accept=".json,application/json" hidden></div>
+      <div class="modal-actions"><button class="light" data-close-modal="libraryModal">Cancel</button><button class="light" id="libraryAppendButton">Append Items</button><button id="libraryReplaceButton">Replace Items</button></div>
+    </div>
+  </div>
+  <div class="modal" id="outputModal" role="dialog" aria-modal="true" aria-labelledby="outputTitle">
+    <div class="modal-card"><h2 id="outputTitle">PDF Preview</h2>
+      <div class="editor-actions">
+        <select id="outputAudience" aria-label="Output view"><option value="client">Client</option><option value="internal">Internal</option><option value="actions">Actions Only</option></select>
+        <select id="outputPeriod" aria-label="Timeline scale"><option value="auto">Auto</option><option value="day">Day</option><option value="week">Week</option><option value="month">Month</option></select>
+        <select id="outputPaper" aria-label="Paper"><option value="A3">A3 Landscape</option><option value="A4">A4 Landscape</option></select>
+        <label><input id="outputFree" type="checkbox"> Free Column</label>
+        <label><input id="outputAllRows" type="checkbox" checked> All Rows</label>
+      </div>
+      <iframe id="outputFrame" class="preview-frame" title="PDF preview" sandbox="allow-same-origin allow-modals"></iframe>
+      <div class="modal-actions"><button class="light" data-close-modal="outputModal">Cancel</button><button id="outputPrintButton">Save PDF</button></div>
     </div>
   </div>
   <script type="module">
@@ -1416,6 +1543,7 @@
       let dragState = null;
       let dragRenderRequest = null;
       let lastAutoHolidayFetchKey = '';
+      let holidayRequest = 0;
       let lastSaveError = false;
       let uiState = { toolbarHidden: false, freezeColumns: 4, columnWidths: {} };
       let firebaseApi = null;
@@ -1429,6 +1557,29 @@
       let cloudBaseJson = '';
       let cloudConflictPending = false;
       let cloudConflictPromptOpen = false;
+      let cloudSessionEpoch = 0;
+      let cloudSaveInFlight = false;
+      let cloudSaveAgain = false;
+      let pendingRemotePayload = null;
+      let processingRemote = false;
+      let mergeDialogRevision = 0;
+      let projectListMode = 'local';
+      let cachedCloudProjects = [];
+      let projectLogoDraft = '';
+      let projectLogoRead = 0;
+      let editorBaselines = new Map();
+      let historyApplying = false;
+      let lastSavedContent = '';
+      let lastSavedSnapshot = null;
+      let undoEntries = [];
+      let redoEntries = [];
+      let pendingCsvRows = [];
+      let outputWindow = null;
+      const HISTORY_KEY = 'noah_project_history_v1';
+      const TRASH_KEY = 'noah_project_trash_v1';
+      const LIBRARY_KEY = 'noah_checklist_library_v1';
+      let rowFilters = { search: '', category: '', person: '', status: 'all' };
+      let alignFrame = 0;
       let pendingUnlockCloudCode = '';
       let pendingUnlockCloudPayload = null;
       let expandedSubitems = new Set();
@@ -1606,6 +1757,8 @@
         if (!element) return;
         element.textContent = message;
         element.className = `status-pill ${type}`.trim();
+        setText('workspaceSync', message);
+        if (byId('workspaceSync')) byId('workspaceSync').className = `status-pill ${type}`.trim();
       }
 
       function setProjectListStatus(message, type = '') {
@@ -1616,15 +1769,7 @@
       }
 
       function getCloudClientId() {
-        try {
-          const saved = localStorage.getItem(CLOUD_CLIENT_KEY);
-          if (saved) return saved;
-          const created = `device-${uid('').replace(/^_/, '')}`;
-          localStorage.setItem(CLOUD_CLIENT_KEY, created);
-          return created;
-        } catch (error) {
-          return `device-${uid('').replace(/^_/, '')}`;
-        }
+        return 'tab-' + uid('client');
       }
 
       function cloudDisplayName() {
@@ -1632,7 +1777,7 @@
       }
 
       function cloudDataJson(projectData = data, projectCode = activeCloudProjectCode || getProjectCode()) {
-        return JSON.stringify(normalizeData({ ...projectData, projectCode: normalizeProjectCode(projectCode || projectData?.projectCode || '') }));
+        return JSON.stringify(contentData({ ...projectData, projectCode: normalizeProjectCode(projectCode || projectData?.projectCode || '') }));
       }
 
       function setCloudBaseFromPayload(payload, projectCode) {
@@ -1642,7 +1787,7 @@
       }
 
       function hasOpenEditorModal() {
-        return ['projectModal', 'rowsModal', 'itemsModal', 'dataModal', 'quickRowModal', 'newProjectModal'].some(id => byId(id)?.classList.contains('show'));
+        return Boolean(document.querySelector('.cell-editing')) || ['projectModal', 'rowsModal', 'itemsModal', 'dataModal', 'quickRowModal', 'newProjectModal', 'csvImportModal', 'mergeModal'].some(id => byId(id)?.classList.contains('show'));
       }
 
       function isCloudUnlocked() {
@@ -1753,9 +1898,16 @@
           return;
         }
         setCloudStatus(`Cloud: comparing local and cloud ${code}...`, 'loading');
+        const epoch = cloudSessionEpoch;
+        const before = cloudDataJson(data,data.projectCode);
         try {
           const snap = await api.getDoc(cloudDocRef(code));
-          if (!snap.exists() || snap.data()?.deleted === true) {
+          if (epoch !== cloudSessionEpoch || data.projectCode !== code || before !== cloudDataJson(data,code)) return setCloudStatus('Project changed during comparison. Press Sync Cloud again.', 'warning');
+          if (snap.exists() && snap.data()?.deleted === true) {
+            await restoreCloudProjectFromLocal(code);
+            return;
+          }
+          if (!snap.exists()) {
             if (!window.confirm(`Cloud project ${code} does not exist. Create it from the current local project and start Auto Sync?`)) {
               setCloudStatus(`Cloud unlocked: ${code} remains local only`, 'success');
               return;
@@ -1763,6 +1915,7 @@
             cloudRevision = 0;
             cloudBaseJson = '';
             cloudConflictPending = false;
+            subscribeCloudProject(code);
             await saveCloudProjectNow(code);
             return;
           }
@@ -1802,6 +1955,7 @@
         setCloudBaseFromPayload(payload, code);
         saveData();
         setCloudStatus(`Cloud: saving local version to ${code}...`, 'loading');
+        subscribeCloudProject(code);
         await saveCloudProjectNow(code);
       }
 
@@ -1811,12 +1965,37 @@
         setCloudStatus(`Cloud unlocked: local only${code ? ` (${code} not syncing)` : ''}`, 'success');
       }
 
+      async function restoreCloudProjectFromLocal(code) {
+        if (!window.confirm('Cloud project ' + code + ' was deleted. Restore it using this local version and start Auto Sync?')) return;
+        const api = getFirebaseApi();
+        const epoch = cloudSessionEpoch;
+        const snapshot = contentData(data);
+        const json = cloudDataJson(snapshot,code);
+        try {
+          const revision = await api.runTransaction(api.db,async transaction => {
+            const ref = cloudDocRef(code);
+            const existing = await transaction.get(ref);
+            if (!existing.exists() || existing.data()?.deleted !== true) throw new Error('Cloud project changed. Press Sync Cloud to compare again.');
+            if (epoch !== cloudSessionEpoch || code !== data.projectCode || json !== cloudDataJson(data,code)) throw new Error('Local project changed. Start restore again.');
+            const next = Number(existing.data().revision || 0) + 1;
+            transaction.set(ref,{data:snapshot,deleted:false,revision:next,projectCode:code,updatedAt:api.serverTimestamp(),updatedBy:cloudDisplayName(),updatedByClientId:cloudClientId},{merge:true});
+            return next;
+          });
+          if (epoch !== cloudSessionEpoch || code !== data.projectCode) return;
+          setCloudBaseFromPayload({data:snapshot,revision},code);
+          subscribeCloudProject(code);
+          setCloudStatus('Cloud project restored: ' + code,'success');
+          if (cloudDataJson(data,code) !== json) queueCloudSave();
+        } catch (error) { setCloudStatus('Restore failed: ' + error.message,'error'); }
+      }
+
       function stopCloudSync() {
         stopCloudSyncSilently();
         setCloudStatus('Cloud unlocked: Auto Sync stopped. Local only.', 'success');
       }
 
       function stopCloudSyncSilently() {
+        cloudSessionEpoch += 1;
         window.clearTimeout(cloudSaveTimer);
         if (cloudUnsubscribe) cloudUnsubscribe();
         cloudUnsubscribe = null;
@@ -1824,6 +2003,8 @@
         cloudRevision = 0;
         cloudBaseJson = '';
         cloudConflictPending = false;
+        pendingRemotePayload = null;
+        cloudSaveAgain = false;
         updateCloudSyncButton();
       }
 
@@ -1848,20 +2029,27 @@
           body.innerHTML = '<tr><td colspan="4"><div class="project-list-empty">No cloud projects found.</div></td></tr>';
           return;
         }
-        body.innerHTML = projects.map(project => `
+        const query = (byId('projectSearchInput')?.value || '').trim().toLowerCase();
+        body.innerHTML = projects.filter(project => `${project.code} ${project.name}`.toLowerCase().includes(query)).map(project => `
           <tr>
             <td><strong>${escapeHtml(project.code)}</strong></td>
             <td>${escapeHtml(project.name || 'Untitled Project')}</td>
             <td>${escapeHtml(project.period || '')}</td>
             <td>
-              <button class="mini project-list-load-button" type="button" data-code="${escapeHtml(project.code)}">Load</button>
-              <button class="mini danger project-list-delete-button" type="button" data-code="${escapeHtml(project.code)}">Delete</button>
+              <button class="mini project-list-load-button" type="button" data-code="${escapeHtml(project.code)}">${projectListMode === 'trash' ? 'Restore' : 'Load'}</button>
+              ${projectListMode === 'trash' ? '' : `<button class="mini danger project-list-delete-button" type="button" data-code="${escapeHtml(project.code)}">Delete</button>`}
             </td>
           </tr>
         `).join('');
       }
 
       async function refreshProjectList() {
+        if (projectListMode !== 'cloud') {
+          const projects = projectListMode === 'trash' ? readStore(TRASH_KEY, []).map(entry => ({code: entry.id, name: entry.data.projectName, period: entry.data.projectCode + ' / ' + new Date(entry.at).toLocaleString()})) : listLocalProjects();
+          renderProjectList(projects);
+          setProjectListStatus(`${projects.length} ${projectListMode === 'trash' ? 'deleted' : 'local'} project(s)`, 'success');
+          return;
+        }
         const api = getFirebaseApi();
         if (!api) return setProjectListStatus('Cloud: Firebase unavailable', 'error');
         if (!cloudUser || !isCloudUnlocked()) {
@@ -1886,6 +2074,7 @@
             });
           });
           projects.sort((a, b) => a.code.localeCompare(b.code));
+          cachedCloudProjects = projects;
           renderProjectList(projects);
           setProjectListStatus(`Loaded ${projects.length} project${projects.length === 1 ? '' : 's'}`, 'success');
         } catch (error) {
@@ -1900,6 +2089,12 @@
       }
 
       function loadProjectFromList(code) {
+        if (projectListMode === 'trash') { restoreTrashedProject(code); return; }
+        if (projectListMode === 'local') {
+          const project = readStore(localProjectStorageKey(code), null);
+          if (project) { replaceCurrentProject(project, 'Load local project'); closeProjectListModal(); }
+          return;
+        }
         const projectCode = normalizeProjectCode(code);
         if (!projectCode) return;
         const currentCode = normalizeProjectCode(data?.projectCode || '');
@@ -1925,6 +2120,7 @@
         setValue('newEventStartInput', data?.eventStartDate || start);
         setValue('newEventEndInput', data?.eventEndDate || start);
         safeClassAdd(byId('newProjectModal'), 'show');
+        captureEditor('newProjectModal');
       }
 
       function buildNewProjectData(mode) {
@@ -1957,19 +2153,7 @@
       }
 
       function applyLocalNewProject(projectData) {
-        if (cloudUnsubscribe) cloudUnsubscribe();
-        cloudUnsubscribe = null;
-        activeCloudProjectCode = '';
-        cloudRevision = 0;
-        cloudBaseJson = '';
-        cloudConflictPending = false;
-        updateCloudSyncButton();
-        data = normalizeData(projectData);
-        resetProjectCodeInputs(data.projectCode);
-        suppressCloudSave = true;
-        render();
-        suppressCloudSave = false;
-        setCloudStatus('Local project created; cloud sync is locked', 'warning');
+        replaceCurrentProject(projectData, 'New project');
       }
 
       async function createProject(mode = 'blank') {
@@ -1988,6 +2172,16 @@
           byId('newProjectOwnerInput')?.focus();
           return;
         }
+        const existing = readStore(localProjectStorageKey(projectData.projectCode), null);
+        if (existing) {
+          if (window.confirm(`Project ${projectData.projectCode} already exists locally. Load it? Choose Cancel to use a different code.`)) {
+            replaceCurrentProject(existing, 'Load existing project');
+            closeNewProjectModal();
+          }
+          return;
+        }
+        if (!window.confirm(`Create ${projectData.projectCode}${mode === 'current' ? ' as a copy of this project' : ''}?`)) return;
+        if (!saveData()) return;
         closeNewProjectModal();
         closeProjectListModal();
         applyLocalNewProject(projectData);
@@ -2007,12 +2201,14 @@
         }
         setProjectListStatus(`Deleting ${projectCode}...`, 'loading');
         try {
+          const existing = await api.getDoc(cloudDocRef(projectCode));
+          if (existing.exists() && existing.data()?.data) archiveProject(existing.data().data, 'Deleted cloud project');
           await api.setDoc(cloudDocRef(projectCode), {
             deleted: true,
             deletedAt: api.serverTimestamp(),
             updatedBy: 'team',
             projectCode
-          }, { merge: false });
+          }, { merge: true });
           if (activeCloudProjectCode === projectCode) {
             window.clearTimeout(cloudSaveTimer);
             if (cloudUnsubscribe) cloudUnsubscribe();
@@ -2034,6 +2230,10 @@
           setCloudStatus('Local delete cancelled', 'warning');
           return;
         }
+        try { archiveProject(data, 'Deleted local project'); } catch (error) { alert(error.message); return; }
+        stopCloudSyncSilently();
+        undoEntries = []; redoEntries = [];
+        lastSavedContent = ''; lastSavedSnapshot = null;
         const localKey = localProjectStorageKey(projectCode);
         if (localKey) {
           try { localStorage.removeItem(localKey); } catch (error) {}
@@ -2061,6 +2261,18 @@
         deleteLocalProjectOnly(getProjectCode());
       }
 
+      function deleteProjectFromList(code) {
+        if (projectListMode === 'cloud') { deleteCloudProject(code); return; }
+        if (code === data.projectCode) { deleteLocalProjectOnly(code); refreshProjectList(); return; }
+        const project = readStore(localProjectStorageKey(code),null);
+        if (!project || !window.confirm('Move local project ' + code + ' to Recycle Bin?')) return;
+        try {
+          archiveProject(project,'Deleted from local list');
+          localStorage.removeItem(localProjectStorageKey(code));
+          refreshProjectList();
+        } catch (error) { alert(error.message); }
+      }
+
       function resetProjectCodeInputs(code = data?.projectCode || activeCloudProjectCode || '') {
         const normalized = normalizeProjectCode(code);
         if (data) data.projectCode = normalized;
@@ -2075,7 +2287,22 @@
           setCloudStatus('Cloud: enter Project Code first', 'warning');
           return;
         }
-        if (activeCloudProjectCode && code !== activeCloudProjectCode) stopCloudSyncSilently();
+        const stored = code !== data.projectCode ? readStore(localProjectStorageKey(code), null) : null;
+        if (stored) {
+          resetProjectCodeInputs(data.projectCode);
+          if (window.confirm(`${code} already exists locally. Load that project?`)) replaceCurrentProject(stored, 'Load existing project');
+          return;
+        }
+        if (code !== data.projectCode) {
+          if (data.projectCode && !window.confirm('Keep the current data under new local code ' + code + '? The old code is retained.')) {
+            resetProjectCodeInputs(data.projectCode); return;
+          }
+          if (!saveData()) { resetProjectCodeInputs(data.projectCode); return; }
+          recordRecovery(data,'Before changing project code');
+          stopCloudSyncSilently();
+          undoEntries = []; redoEntries = [];
+          lastSavedContent = ''; lastSavedSnapshot = null;
+        }
         resetProjectCodeInputs(code);
         setText('projectCodeText', `Project Code: ${code}`);
         saveData();
@@ -2084,45 +2311,26 @@
 
       async function loadCloudProject(projectCode = getProjectCode(), options = {}) {
         const api = getFirebaseApi();
-        if (!api) return setCloudStatus('Cloud: Firebase unavailable', 'error');
-        if (!cloudUser || !isCloudUnlocked()) return setCloudStatus('Cloud: unlock sync first', 'warning');
+        if (!api || !cloudUser || !isCloudUnlocked()) return setCloudStatus('Unlock Cloud first', 'warning');
         const code = normalizeProjectCode(projectCode);
-        if (!code || code.length < 3) return setCloudStatus('Cloud: enter Project Code first', 'warning');
-        setCloudStatus(`Cloud: loading ${code}...`, 'loading');
+        if (code.length < 3) return;
+        const epoch = cloudSessionEpoch;
+        const before = cloudDataJson(data, data.projectCode);
+        setCloudStatus('Cloud: loading ' + code + '...', 'loading');
         try {
           const snap = await api.getDoc(cloudDocRef(code));
-          if (!snap.exists()) {
-            setCloudStatus(`Cloud project ${code} does not exist`, 'warning');
-            return;
-          }
+          if (epoch !== cloudSessionEpoch) return;
+          if (!snap.exists() || snap.data()?.deleted) return setCloudStatus('Cloud project is missing or deleted', 'warning');
           const payload = snap.data();
-          if (payload?.deleted === true) {
-            window.clearTimeout(cloudSaveTimer);
-            if (cloudUnsubscribe) cloudUnsubscribe();
-            cloudUnsubscribe = null;
-            activeCloudProjectCode = '';
-            setCloudStatus(`Cloud: project ${code} was deleted`, 'warning');
-            return;
-          }
-          if (!payload || !payload.data || !Array.isArray(payload.data.rows)) throw new Error('Bad cloud project data');
-          suppressCloudSave = true;
-          data = normalizeData({ ...payload.data, projectCode: code });
+          if (!payload?.data || !Array.isArray(payload.data.rows)) throw new Error('Invalid project');
+          if (cloudDataJson(data, data.projectCode) !== before) return setCloudStatus('Local project changed while loading. Load again when ready.', 'warning');
+          if (!replaceCurrentProject({ ...payload.data, projectCode: code }, 'Before cloud load')) return;
           setCloudBaseFromPayload(payload, code);
-          setValue('projectCodeInput', code);
-          render();
-          suppressCloudSave = false;
           saveLocalSyncMeta(code, payload);
-          saveData();
-          if (options.startSync) {
-            subscribeCloudProject(code);
-            setCloudStatus(`Auto Sync active: ${code}`, 'success');
-          } else {
-            stopCloudSyncSilently();
-            setCloudStatus(`Cloud: loaded ${code} as local only`, 'success');
-          }
+          if (options.startSync) subscribeCloudProject(code);
+          setCloudStatus(options.startSync ? 'Auto Sync active: ' + code : 'Cloud loaded: local editing only', 'success');
         } catch (error) {
-          suppressCloudSave = false;
-          setCloudStatus(`Cloud load failed: ${error.code || error.message}`, 'error');
+          setCloudStatus('Cloud load failed: ' + (error.code || error.message), 'error');
         }
       }
 
@@ -2132,12 +2340,17 @@
         if (!cloudUser || !isCloudUnlocked()) return setCloudStatus('Cloud: unlock sync first', 'warning');
         const code = normalizeProjectCode(projectCode);
         if (!code || code.length < 3) return setCloudStatus('Cloud: enter Project Code first', 'warning');
-        data.projectCode = code;
-        setValue('projectCodeInput', code);
-        setValue('projectCodeProjectInput', code);
+        if (code !== data.projectCode || code !== activeCloudProjectCode) return;
+        if (cloudSaveInFlight) { cloudSaveAgain = true; return; }
+        if (pendingRemotePayload) { processRemotePayload(); return; }
+        const session = cloudSessionEpoch;
+        const baseRevision = cloudRevision;
+        const baseJson = cloudBaseJson;
+        cloudSaveInFlight = true;
+        setCloudStatus(`Cloud: saving ${code}...`, 'loading');
         try {
           const ref = cloudDocRef(code);
-          const nextData = normalizeData(data);
+          const nextData = contentData(data);
           const nextJson = cloudDataJson(nextData, code);
           const savedRevision = await api.runTransaction(api.db, async transaction => {
             const existing = await transaction.get(ref);
@@ -2145,7 +2358,8 @@
             if (payload?.deleted === true) throw new Error('deleted-project');
             const remoteRevision = Number(payload?.revision || 0);
             const remoteJson = payload?.data ? cloudDataJson(payload.data, code) : '';
-            if (remoteRevision > cloudRevision && remoteJson && remoteJson !== cloudBaseJson) {
+            if (session !== cloudSessionEpoch || activeCloudProjectCode !== code || data.projectCode !== code) throw new Error('cancelled-session');
+            if (remoteRevision > baseRevision && remoteJson && remoteJson !== baseJson) {
               throw new Error('cloud-conflict');
             }
             const nextRevision = remoteRevision + 1;
@@ -2159,12 +2373,14 @@
             }, { merge: true });
             return nextRevision;
           });
+          if (session !== cloudSessionEpoch || data.projectCode !== code || activeCloudProjectCode !== code) return;
           cloudRevision = savedRevision;
           cloudBaseJson = nextJson;
           cloudConflictPending = false;
           setCloudStatus(`Cloud: saved ${code} (v${cloudRevision})`, 'success');
-          subscribeCloudProject(code);
+          if (cloudDataJson(data, code) !== nextJson) cloudSaveAgain = true;
         } catch (error) {
+          if (session !== cloudSessionEpoch || error.message === 'cancelled-session') return;
           if (error.message === 'deleted-project') {
             window.clearTimeout(cloudSaveTimer);
             if (cloudUnsubscribe) cloudUnsubscribe();
@@ -2175,32 +2391,29 @@
           }
           if (error.message === 'cloud-conflict') {
             cloudConflictPending = true;
-            setCloudStatus('Cloud conflict: teammate saved newer data. Load latest before saving.', 'warning');
-            if (cloudConflictPromptOpen) return;
-            cloudConflictPromptOpen = true;
-            const loadLatest = window.confirm('Cloud has newer data from a teammate. Press OK to load the latest cloud version. Press Cancel to keep your local screen and export it first if needed.');
-            if (loadLatest) {
-              loadCloudProject(code, { startSync: true }).finally(() => {
-                cloudConflictPromptOpen = false;
-              });
-            } else {
-              cloudConflictPromptOpen = false;
-            }
+            const latest = await api.getDoc(cloudDocRef(code));
+            if (session === cloudSessionEpoch && latest.exists()) receiveRemotePayload(latest.data(), code);
             return;
           }
           setCloudStatus(`Cloud save failed: ${error.code || error.message}`, 'error');
+        } finally {
+          cloudSaveInFlight = false;
+          if (pendingRemotePayload && activeCloudProjectCode) window.setTimeout(processRemotePayload,0);
+          if (cloudSaveAgain && activeCloudProjectCode) {
+            cloudSaveAgain = false;
+            queueCloudSave();
+          }
         }
       }
 
       function queueCloudSave() {
-        if (suppressCloudSave || !cloudUser || !isCloudUnlocked() || !activeCloudProjectCode) return;
+        if (suppressCloudSave || !cloudUser || !isCloudUnlocked() || !activeCloudProjectCode || dragState) return;
         window.clearTimeout(cloudSaveTimer);
-        if (cloudConflictPending) {
-          if (cloudConflictPromptOpen) return;
-          saveCloudProjectNow(activeCloudProjectCode);
-          return;
-        }
-        cloudSaveTimer = window.setTimeout(() => saveCloudProjectNow(activeCloudProjectCode), 900);
+        if (pendingRemotePayload) { processRemotePayload(); return; }
+        if (cloudConflictPending || hasOpenEditorModal()) return;
+        const session = cloudSessionEpoch;
+        const code = activeCloudProjectCode;
+        cloudSaveTimer = window.setTimeout(() => { if (session === cloudSessionEpoch) saveCloudProjectNow(code); }, 900);
       }
 
       function subscribeCloudProject(projectCode) {
@@ -2208,8 +2421,10 @@
         if (!api || !cloudUser || !isCloudUnlocked() || !projectCode) return;
         if (cloudUnsubscribe) cloudUnsubscribe();
         activeCloudProjectCode = normalizeProjectCode(projectCode);
+        const session = cloudSessionEpoch;
         updateCloudSyncButton();
         cloudUnsubscribe = api.onSnapshot(cloudDocRef(projectCode), snap => {
+          if (session !== cloudSessionEpoch || activeCloudProjectCode !== projectCode || data.projectCode !== projectCode) return;
           if (!snap.exists()) return;
           const payload = snap.data();
           if (payload?.deleted === true) {
@@ -2222,26 +2437,18 @@
             return;
           }
           if (!payload || !payload.data || !Array.isArray(payload.data.rows)) return;
-          const incoming = JSON.stringify(normalizeData({ ...payload.data, projectCode }));
-          const current = JSON.stringify(normalizeData(data));
+          const incoming = cloudDataJson(payload.data, projectCode);
+          const current = cloudDataJson(data, projectCode);
           const incomingRevision = Number(payload.revision || 0);
+          if (incomingRevision < cloudRevision) return;
           if (incoming === current) {
             setCloudBaseFromPayload(payload, projectCode);
+            pendingRemotePayload = null;
             return;
           }
-          if (payload.updatedByClientId !== cloudClientId && (cloudConflictPending || hasOpenEditorModal())) {
-            cloudConflictPending = true;
-            cloudRevision = Math.max(cloudRevision, incomingRevision - 1);
-            setCloudStatus('Cloud changed by teammate while you are editing. Apply/cancel, then load latest before saving.', 'warning');
-            return;
-          }
-          suppressCloudSave = true;
-          data = normalizeData({ ...payload.data, projectCode });
-          setCloudBaseFromPayload(payload, projectCode);
-          setValue('projectCodeInput', projectCode);
-          render();
-          suppressCloudSave = false;
-          setCloudStatus(`Cloud: updated from ${payload.updatedBy || 'team'}`, 'success');
+          if (incomingRevision < cloudRevision) return;
+          if (payload.updatedByClientId === cloudClientId && current !== incoming) return;
+          receiveRemotePayload(payload, projectCode);
         }, error => {
           setCloudStatus(`Cloud listener failed: ${error.code || error.message}`, 'error');
         });
@@ -2255,7 +2462,9 @@
             return {
               toolbarHidden: saved.toolbarHidden === true,
               freezeColumns: Number.isInteger(freezeColumns) && freezeColumns >= 0 && freezeColumns <= 6 ? freezeColumns : 4,
-              columnWidths: normalizeColumnWidths(saved.columnWidths)
+              columnWidths: normalizeColumnWidths(saved.columnWidths),
+              projectViews: saved.projectViews && typeof saved.projectViews === 'object' ? saved.projectViews : {},
+              density: saved.density === 'normal' ? 'normal' : 'compact'
             };
           }
         } catch (error) {}
@@ -2442,6 +2651,236 @@
         return normalizeData(defaultData);
       }
 
+      function contentData(value) {
+        const result = normalizeData(value);
+        delete result.viewMode;
+        delete result.audienceMode;
+        delete result.weekLabelMode;
+        delete result.holidayStatusText;
+        delete result.holidayStatusType;
+        return result;
+      }
+
+      function readStore(key, fallback) {
+        try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch (_) { return fallback; }
+      }
+
+      function writeBounded(key, entries, limit = 20) {
+        const kept = entries.slice(-limit);
+        while (kept.length > 1 && JSON.stringify(kept).length > 1300000) kept.shift();
+        try { localStorage.setItem(key, JSON.stringify(kept)); return true; }
+        catch (_) { return false; }
+      }
+
+      function recordRecovery(project, reason) {
+        if (!project || !Array.isArray(project.rows)) return;
+        const entries = readStore(HISTORY_KEY, []);
+        entries.push({ id: uid('version'), at: new Date().toISOString(), reason, code: project.projectCode || '', data: contentData(project) });
+        writeBounded(HISTORY_KEY, entries);
+      }
+
+      function archiveProject(project, reason) {
+        const entries = readStore(TRASH_KEY, []);
+        entries.push({ id: uid('trash'), at: new Date().toISOString(), reason, data: contentData(project) });
+        if (!writeBounded(TRASH_KEY, entries, 10)) throw new Error('Cannot back up deleted project. Export JSON first.');
+        recordRecovery(project, reason);
+      }
+
+      function listLocalProjects() {
+        const projects = [];
+        for (let index = 0; index < localStorage.length; index++) {
+          const key = localStorage.key(index);
+          if (!key?.startsWith(LOCAL_PROJECT_PREFIX)) continue;
+          const project = readStore(key, null);
+          if (project && Array.isArray(project.rows)) projects.push({
+            code: project.projectCode || decodeURIComponent(key.slice(LOCAL_PROJECT_PREFIX.length)),
+            name: project.projectName,
+            period: formatOptionalDateRange(project.startDate, project.endDate, '')
+          });
+        }
+        return projects.sort((a,b) => a.code.localeCompare(b.code));
+      }
+
+      function replaceCurrentProject(project, reason) {
+        if (data && !saveData()) return false;
+        if (data) recordRecovery(data, reason);
+        stopCloudSyncSilently();
+        data = normalizeData(project);
+        lastSavedContent = '';
+        lastSavedSnapshot = null;
+        undoEntries = [];
+        redoEntries = [];
+        rowFilters = { search: '', category: '', person: '', status: 'all' };
+        restoreView();
+        resetProjectCodeInputs(data.projectCode);
+        render();
+        return true;
+      }
+
+      function restoreTrashedProject(id) {
+        const entries = readStore(TRASH_KEY, []);
+        const entry = entries.find(candidate => candidate.id === id);
+        if (!entry) return;
+        if (!window.confirm('Restore ' + entry.data.projectName + ' as a local project?')) return;
+        const existing = readStore(localProjectStorageKey(entry.data.projectCode), null);
+        if (existing && !window.confirm('This code exists locally. Back it up and replace it?')) return;
+        if (existing) recordRecovery(existing, 'Before restoring deleted project');
+        if (replaceCurrentProject(entry.data, 'Restore project')) {
+          writeBounded(TRASH_KEY, entries.filter(candidate => candidate.id !== id), 10);
+          closeProjectListModal();
+        }
+      }
+
+      function rememberView() {
+        uiState.projectViews = uiState.projectViews || {};
+        uiState.projectViews[data.projectCode || '_draft'] = { audienceMode: data.audienceMode, viewMode: data.viewMode, weekLabelMode: data.weekLabelMode };
+        saveUiState();
+      }
+
+      function restoreView() {
+        const view = uiState.projectViews?.[data.projectCode || '_draft'];
+        if (view) Object.assign(data, view);
+      }
+
+      function undoProject(redo = false) {
+        const stack = redo ? redoEntries : undoEntries;
+        const next = stack.pop();
+        if (!next) return;
+        (redo ? undoEntries : redoEntries).push(contentData(data));
+        historyApplying = true;
+        const view = { audienceMode: data.audienceMode, viewMode: data.viewMode, weekLabelMode: data.weekLabelMode };
+        data = normalizeData({ ...next, ...view });
+        touchLastUpdate();
+        render();
+        historyApplying = false;
+      }
+
+      function openHistory() {
+        const entries = readStore(HISTORY_KEY, []).filter(entry => entry.code === data.projectCode).reverse();
+        setHtml('historyBody', entries.length ? entries.map(entry => '<tr><td>' + escapeHtml(new Date(entry.at).toLocaleString()) + '</td><td>' + escapeHtml(entry.reason) + '</td><td><button class="mini light" data-history-id="' + escapeHtml(entry.id) + '">Restore</button></td></tr>').join('') : '<tr><td colspan="3">No local versions yet.</td></tr>');
+        safeClassAdd(byId('historyModal'), 'show');
+      }
+
+      function captureEditor(id) {
+        editorBaselines.set(id, editorSignature(id));
+      }
+
+      function editorSignature(id) {
+        const modal = byId(id);
+        const fields = Array.from(modal?.querySelectorAll('input, textarea, select') || []).map(field => [field.id || field.dataset.field, field.type === 'checkbox' ? field.checked : field.value]);
+        if (id === 'projectModal') fields.push(['logo', projectLogoDraft]);
+        if (id === 'itemsModal') fields.push(['items', editingItems]);
+        if (id === 'rowsModal') fields.push(['rows', editingRows]);
+        return JSON.stringify(fields);
+      }
+
+      function requestEditorClose(id, close) {
+        const baseline = editorBaselines.get(id);
+        if (baseline && baseline !== editorSignature(id) && !window.confirm('Discard unapplied changes?')) return;
+        close();
+      }
+
+      function settleRemoteAfterEditor() {
+        window.setTimeout(() => {
+          if (!hasOpenEditorModal()) {
+            if (pendingRemotePayload) processRemotePayload();
+            else if (activeCloudProjectCode && cloudDataJson() !== cloudBaseJson) queueCloudSave();
+          }
+        }, 0);
+      }
+
+      // Merge objects and ID-based checklist arrays against the last shared version.
+      function mergeVersions(base, local, remote, choices = {}, path = '') {
+        const conflicts = [];
+        const equal = (a,b) => JSON.stringify(a) === JSON.stringify(b);
+        function merge(b,l,r,p) {
+          if (equal(l,r)) return l;
+          if (equal(l,b)) return r;
+          if (equal(r,b)) return l;
+          if ([b,l,r].every(Array.isArray) && [...b,...l,...r].every(value => typeof value !== 'object')) {
+            return Array.from(new Set([...l,...r])).filter(value => !b.includes(value) || (l.includes(value) && r.includes(value))).sort();
+          }
+          if (Array.isArray(b) && Array.isArray(l) && Array.isArray(r) && [...b,...l,...r].every(entry => entry && typeof entry === 'object' && entry.id)) {
+            const maps = [b,l,r].map(list => new Map(list.map(entry => [entry.id,entry])));
+            return Array.from(new Set([...maps[1].keys(),...maps[2].keys()])).map(id => merge(maps[0].get(id),maps[1].get(id),maps[2].get(id),p + '/' + id)).filter(Boolean).sort((a,c) => (a.order || 0) - (c.order || 0));
+          }
+          if (b && l && r && !Array.isArray(l) && !Array.isArray(r) && typeof l === 'object' && typeof r === 'object') {
+            const output = {};
+            new Set([...Object.keys(b),...Object.keys(l),...Object.keys(r)]).forEach(key => {
+              const value = merge(b[key],l[key],r[key],p + '/' + key);
+              if (value !== undefined) output[key] = value;
+            });
+            return output;
+          }
+          if (p === '/lastUpdate' || p === '/updatedAtISO') return [l,r].sort().at(-1);
+          conflicts.push({ path:p, local:l, remote:r });
+          return choices[p] === 'remote' ? r : l;
+        }
+        return { value:merge(base,local,remote,path), conflicts };
+      }
+
+      function receiveRemotePayload(payload, code) {
+        if (!payload?.data || code !== activeCloudProjectCode || code !== data.projectCode) return;
+        if (Number(payload.revision || 0) < cloudRevision) return;
+        pendingRemotePayload = payload;
+        window.clearTimeout(cloudSaveTimer);
+        if (hasOpenEditorModal() || cloudSaveInFlight) {
+          setCloudStatus('Teammate update waiting. Your current edit is preserved.', 'warning');
+          return;
+        }
+        processRemotePayload();
+      }
+
+      function mergeFieldLabel(path) {
+        const parts = path.split('/').filter(Boolean);
+        const labels = [];
+        const row = data.rows.find(candidate => candidate.id === parts[1]) || pendingRemotePayload?.data?.rows?.find(candidate => candidate.id === parts[1]);
+        if (row) labels.push(row.item || row.action || row.category);
+        const itemIndex = parts.indexOf('checklist');
+        const item = itemIndex >= 0 ? row?.checklist?.find(candidate => candidate.id === parts[itemIndex + 1]) : null;
+        if (item) labels.push(item.text);
+        const subIndex = parts.indexOf('subitems');
+        const sub = subIndex >= 0 ? item?.subitems?.find(candidate => candidate.id === parts[subIndex + 1]) : null;
+        if (sub) labels.push(sub.text);
+        const field = parts.at(-1);
+        const names = {action:'Action',actionBy:data.actionByLabel,text:'Item name',remarks:'Remarks',done:'Completed',order:'Position',start:'Start date',end:'End date',projectName:'Project name',projectOwner:'Responsible person'};
+        labels.push(names[field] || (parts.length === 1 ? field : 'Removed or edited entry'));
+        return labels.filter(Boolean).join(' / ');
+      }
+
+      function processRemotePayload(choices) {
+        if (!pendingRemotePayload || processingRemote || !activeCloudProjectCode || data.projectCode !== activeCloudProjectCode || (hasOpenEditorModal() && !choices)) return;
+        processingRemote = true;
+        try {
+          const payload = pendingRemotePayload;
+          const reviewed = choices && mergeDialogRevision === Number(payload.revision || 0);
+          const remote = contentData(payload.data);
+          let base;
+          try { base = JSON.parse(cloudBaseJson || '{}'); } catch (_) { base = {}; }
+          const result = mergeVersions(base,contentData(data),remote,reviewed ? choices : {});
+          if (result.conflicts.length && !reviewed) {
+            cloudConflictPending = true;
+            mergeDialogRevision = Number(payload.revision || 0);
+              setHtml('mergeBody', result.conflicts.map(conflict => '<tr><td>' + escapeHtml(mergeFieldLabel(conflict.path)) + '</td><td><pre>' + escapeHtml(JSON.stringify(conflict.local ?? '(deleted)')) + '</pre></td><td><pre>' + escapeHtml(JSON.stringify(conflict.remote ?? '(deleted)')) + '</pre></td><td><select data-merge-path="' + escapeHtml(conflict.path) + '"><option value="local">Keep mine</option><option value="remote">Use cloud</option></select></td></tr>').join(''));
+            safeClassAdd(byId('mergeModal'), 'show');
+            setCloudStatus('Conflicting edits: review changes. Both versions are retained.', 'warning');
+            return;
+          }
+          recordRecovery(data, 'Before merging teammate update');
+          const view = { viewMode:data.viewMode, audienceMode:data.audienceMode, weekLabelMode:data.weekLabelMode };
+          data = normalizeData({ ...result.value, ...view });
+          if (data.updatedAtISO && !Number.isNaN(Date.parse(data.updatedAtISO))) data.lastUpdate = 'Last update: ' + formatDisplayDateTime(new Date(data.updatedAtISO));
+          setCloudBaseFromPayload(payload,data.projectCode);
+          pendingRemotePayload = null;
+          suppressCloudSave = true;
+          render();
+          suppressCloudSave = false;
+          safeClassRemove(byId('mergeModal'),'show');
+          if (cloudDataJson(data,data.projectCode) !== cloudBaseJson) queueCloudSave();
+          else setCloudStatus('Cloud: up to date', 'success');
+        } finally { processingRemote = false; }
+      }
+
       function localProjectStorageKey(projectCode) {
         const code = normalizeProjectCode(projectCode);
         return code ? `${LOCAL_PROJECT_PREFIX}${encodeURIComponent(code)}` : '';
@@ -2464,12 +2903,26 @@
       function saveData() {
         try {
           const serialized = JSON.stringify(data);
+          const snapshot = contentData(data);
+          const currentContent = JSON.stringify(snapshot);
+          const changed = currentContent !== lastSavedContent;
           localStorage.setItem(STORE_KEY, serialized);
           const projectKey = localProjectStorageKey(data?.projectCode);
           if (projectKey) localStorage.setItem(projectKey, serialized);
+          if (changed && lastSavedSnapshot && lastSavedSnapshot.projectCode === data.projectCode && !historyApplying && !dragState) {
+            undoEntries.push(lastSavedSnapshot);
+            if (undoEntries.length > 20) undoEntries.shift();
+            redoEntries = [];
+            recordRecovery(lastSavedSnapshot, 'Before edit');
+          }
+          lastSavedContent = currentContent;
+          lastSavedSnapshot = snapshot;
           lastSaveError = false;
           setSaveStatus(`Saved locally${data?.projectCode ? `: ${data.projectCode}` : ''} ${new Date().toLocaleTimeString()}`, 'success');
-          queueCloudSave();
+          if (byId('undoButton')) byId('undoButton').disabled = undoEntries.length === 0;
+          if (byId('redoButton')) byId('redoButton').disabled = redoEntries.length === 0;
+          setText('lastUpdateText', data.lastUpdate);
+          if (changed) queueCloudSave();
           return true;
         } catch (error) {
           lastSaveError = true;
@@ -2491,19 +2944,22 @@
 
       function importProjectFromFile(file) {
         const reader = new FileReader();
+        const epoch = cloudSessionEpoch;
+        const before = cloudDataJson(data, data.projectCode);
         reader.onload = () => {
           try {
+            if (epoch !== cloudSessionEpoch || before !== cloudDataJson(data, data.projectCode)) throw new Error('Project changed while reading. Import again.');
             const parsed = JSON.parse(reader.result);
-            const source = parsed && parsed.data && typeof parsed.data === 'object' ? parsed.data : parsed;
-            if (!source || typeof source !== 'object' || !Array.isArray(source.rows)) throw new Error('bad project file');
-          if (data.rows.length && !window.confirm('Import Project JSON 會取代目前 project data。是否繼續？')) return;
-          data = normalizeData(source);
-          touchLastUpdate();
-          render();
-            alert('Project JSON 已匯入。');
-          } catch (error) {
-            alert('Project JSON 格式不正確，請使用 Export Project JSON 產生的檔案。');
-          }
+            const source = parsed?.data && typeof parsed.data === 'object' ? parsed.data : parsed;
+            if (!source || !Array.isArray(source.rows) || source.rows.some(row => !row || typeof row !== 'object')) throw new Error('Invalid project file');
+            if (!window.confirm('Import this project as local data? The current project will be backed up and Auto Sync will stop.')) return;
+            const code = normalizeProjectCode(source.projectCode || source.code);
+            const stored = code && readStore(localProjectStorageKey(code), null);
+            if (stored && !window.confirm(code + ' exists locally. Back up and replace that local version?')) return;
+            if (stored) recordRecovery(stored, 'Before JSON import');
+            replaceCurrentProject(source, 'Before JSON import');
+            setCloudStatus('Project imported. Local only; press Sync Cloud to upload.', 'success');
+          } catch (error) { alert('Import failed: ' + error.message); }
         };
         reader.readAsText(file);
       }
@@ -2532,6 +2988,7 @@
           projectCode: normalizeProjectCode(source.projectCode || source.code || ''),
           version: String(source.version || 'Version: 1.0'),
           lastUpdate: String(source.lastUpdate || `Last update: ${formatDisplayDate(todayISO())}`),
+          updatedAtISO: String(source.updatedAtISO || ''),
           projectOwner: String(source.projectOwner || source.owner || source.responsiblePerson || ''),
           projectOwnerTitle: String(source.projectOwnerTitle || source.ownerTitle || ''),
           actionByLabel: String(source.actionByLabel || 'Action By').trim() || 'Action By',
@@ -2560,7 +3017,7 @@
           holidays: Array.isArray(source.holidays) ? source.holidays.filter(isValidDate) : [],
           rows: []
         };
-        output.rows = Array.isArray(source.rows) ? source.rows.map((row, index) => normalizeRow(row, index, output.startDate)) : [];
+        output.rows = Array.isArray(source.rows) ? uniqueIds(source.rows.filter(row => row && typeof row === 'object').map((row, index) => normalizeRow(row, index, output.startDate)),'row') : [];
         if (output.eventStartDate && output.eventEndDate && output.eventEndDate < output.eventStartDate) {
           [output.eventStartDate, output.eventEndDate] = [output.eventEndDate, output.eventStartDate];
         }
@@ -2631,9 +3088,18 @@
         return /\S/.test(text) ? text : '';
       }
 
+      function uniqueIds(entries,prefix) {
+        const seen = new Set();
+        return entries.map(entry => {
+          if (seen.has(entry.id)) entry = {...entry,id:uid(prefix)};
+          seen.add(entry.id);
+          return entry;
+        });
+      }
+
       function normalizeChecklist(items) {
         if (!Array.isArray(items)) return [];
-        return items.map((item, index) => {
+        return uniqueIds(items.map((item, index) => {
           if (typeof item === 'string') {
             return { id: uid('item'), text: item, remarks: '', done: false, subitems: [], order: index };
           }
@@ -2646,12 +3112,12 @@
             subitems: normalizeSubChecklist(source.subitems || source.children || source.checklist),
             order: Number.isFinite(Number(source.order)) ? Number(source.order) : index
           };
-        }).filter(item => item.text || cleanRemark(item.remarks)).sort((a, b) => a.order - b.order).map((item, order) => ({ ...item, order }));
+        }).filter(item => item.text || cleanRemark(item.remarks)).sort((a, b) => a.order - b.order).map((item, order) => ({ ...item, order })),'item');
       }
 
       function normalizeSubChecklist(items) {
         if (!Array.isArray(items)) return [];
-        return items.map((item, index) => {
+        return uniqueIds(items.map((item, index) => {
           if (typeof item === 'string') return { id: uid('subitem'), text: item, done: false, order: index };
           const source = item && typeof item === 'object' ? item : {};
           return {
@@ -2660,7 +3126,7 @@
             done: source.done === true || String(source.done || '').toUpperCase() === 'YES',
             order: Number.isFinite(Number(source.order)) ? Number(source.order) : index
           };
-        }).filter(item => item.text).sort((a, b) => a.order - b.order).map((item, order) => ({ ...item, order }));
+        }).filter(item => item.text).sort((a, b) => a.order - b.order).map((item, order) => ({ ...item, order })),'subitem');
       }
 
       function normalizeSubChecklistForEditor(items) {
@@ -2694,19 +3160,21 @@
       }
 
       function checklistFromTextareas(itemsText, remarksText, existing = []) {
-        const oldItems = normalizeChecklist(existing);
+        const old = normalizeChecklist(existing);
         const remarks = String(remarksText || '').split(/\r?\n/);
-        return String(itemsText || '').split(/\r?\n/).map((text, index) => {
-          const old = oldItems[index] || {};
-          return {
-            id: old.id || uid('item'),
-            text: text.trim(),
-            remarks: cleanRemark(remarks[index] || ''),
-            done: old.done === true,
-            subitems: normalizeSubChecklist(old.subitems),
-            order: index
-          };
-        }).filter(item => item.text || cleanRemark(item.remarks));
+        const output = [];
+        String(itemsText || '').split(/\r?\n/).forEach(line => {
+          const child = line.match(/^\s*[-*]\s+\[([ xX])\]\s+(.+)$/);
+          if (child && output.length) {
+            const parent = output[output.length - 1];
+            parent.subitems.push({id:uid('subitem'),text:child[2],done:child[1].toLowerCase() === 'x',order:parent.subitems.length});
+            return;
+          }
+          if (!line.trim()) return;
+          const index = output.length;
+          output.push({id:old[index]?.id || uid('item'),text:line.trim(),remarks:cleanRemark(remarks[index] || ''),done:old[index]?.done === true,subitems:[],order:index});
+        });
+        return normalizeChecklist(output);
       }
 
       function isValidDate(value) {
@@ -2756,12 +3224,15 @@
       }
 
       function formatDisplayDateTime(date = new Date()) {
-        const iso = toISO(date);
-        return `${formatDisplayDate(iso)} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+        const parts = Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Hong_Kong',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(date).map(part => [part.type,part.value]));
+        return parts.day + ' ' + parts.month.toUpperCase() + ' ' + parts.year + ' ' + parts.hour + ':' + parts.minute;
       }
 
       function touchLastUpdate() {
-        if (data) data.lastUpdate = `Last update: ${formatDisplayDateTime()}`;
+        if (!data) return;
+        data.lastUpdate = `Last update: ${formatDisplayDateTime()}`;
+        data.updatedAtISO = new Date().toISOString();
+        setText('lastUpdateText', data.lastUpdate);
       }
 
       function formatOptionalDateRange(start, end, emptyText = '') {
@@ -2918,6 +3389,9 @@
       }
 
       async function updateHongKongHolidays(options = {}) {
+        const request = ++holidayRequest;
+        const code = data.projectCode;
+        const key = holidayYearKey();
         const silent = Boolean(options.silent);
         const yearRange = getProgrammeYearRange();
         setHolidayStatus(`HK Holidays: updating ${yearRange.startYear}-${yearRange.endYear} from GovHK...`, 'loading');
@@ -2927,6 +3401,8 @@
           const endYear = yearRange.endYear;
           const requiredYears = yearRange.years;
           const result = await fetchHongKongHolidays(requiredYears);
+          if (request !== holidayRequest || code !== data.projectCode || key !== holidayYearKey()) return false;
+          const previous = JSON.stringify([data.govHolidays,data.holidaySourceYears]);
           data.holidaySourceYears = result.availableYears;
           const filtered = result.dates.filter(date => {
             const year = Number(date.slice(0, 4));
@@ -2939,7 +3415,7 @@
             return false;
           }
         applyFetchedGovHolidays(filtered, result.availableYears);
-        touchLastUpdate();
+        if (previous !== JSON.stringify([data.govHolidays,data.holidaySourceYears])) touchLastUpdate();
         if (result.missingYears.length) {
             setHolidayStatus(`HK Holidays: partial success from GovHK. Applied ${filtered.length}; missing ${result.missingYears.join(', ')}`, 'warning');
           } else {
@@ -2949,6 +3425,7 @@
           if (!silent) alert(`已自動套用 ${data.govHolidays.length} 個 GovHK holiday date。手動 Holidays 會保留，星期六日仍會自動灰色顯示。`);
           return true;
         } catch (error) {
+          if (request !== holidayRequest || code !== data.projectCode) return false;
           setHolidayStatus('HK Holidays: GovHK fetch failed. Add proxy URL or use Edit Project → Holidays manually.', 'error');
           saveData();
           if (!silent) alert('未能自動連接 GovHK 取得香港公眾假期。可能是瀏覽器 CORS 或網絡限制。你可以在 Edit Project 填入 Holiday Proxy URL，或手動貼上日期。');
@@ -3107,7 +3584,11 @@
         if (!hasAllRequiredElements()) return;
         data = normalizeData(data);
         saveData();
-        const rows = data.rows.slice().sort((a, b) => a.order - b.order);
+        const wrap = byId('programmeWrap');
+        const previousScroll = { top:wrap.scrollTop, left:wrap.scrollLeft };
+        const innerScroll = new Map(Array.from(wrap.querySelectorAll('.checklist-col[data-row-id]')).map(cell => [cell.dataset.rowId,cell.querySelector('.checklist-list')?.scrollTop || 0]));
+        const rows = visibleRows();
+        updateFilterControls();
         const mode = getResolvedViewMode();
         const periods = data.audienceMode === 'actions' ? [] : buildPeriods(mode);
         document.documentElement.style.setProperty('--work', data.colors.work);
@@ -3120,6 +3601,7 @@
         safeClassToggle(document.body, 'actions-only-view', data.audienceMode === 'actions');
         document.documentElement.style.setProperty('--period-count', String(periods.length));
         setText('projectName', data.projectName);
+        setText('workspaceProject', (data.projectCode ? data.projectCode + ' / ' : '') + data.projectName);
         const logoElement = byId('companyLogo');
         if (logoElement) logoElement.src = data.logoDataUrl || '';
         safeClassToggle(document.body, 'has-logo', Boolean(data.logoDataUrl));
@@ -3147,11 +3629,19 @@
         safeClassToggle(byId('app'), 'compact', byId('densityInput') ? byId('densityInput').value === 'compact' : true);
         applyWorkspaceColumnWidths();
         setHtml('programmeWrap', buildTable(rows, periods, mode));
+        wrap.scrollTop = previousScroll.top;
+        wrap.scrollLeft = previousScroll.left;
         bindProgrammeDoubleClick();
         bindProgrammeDrag();
         bindProgrammeChecklist();
         bindColumnResize();
-        window.requestAnimationFrame(() => alignAllChecklistRemarks());
+        window.requestAnimationFrame(() => {
+          alignAllChecklistRemarks();
+          innerScroll.forEach((top,id) => {
+            const list = wrap.querySelector('.checklist-col[data-row-id="' + cssEscape(id) + '"] .checklist-list');
+            if (list) list.scrollTop = top;
+          });
+        });
       }
 
       function getLeftColumnKeys() {
@@ -3261,13 +3751,13 @@
           const subDoneCount = subitems.filter(subitem => subitem.done).length;
           const subButtonText = `${subExpanded ? '▾' : '▸'} (${subDoneCount}/${subitems.length})`;
           const subButton = subitems.length ? `<button type="button" class="subcheck-toggle-button" data-row-id="${escapeHtml(row.id)}" data-item-id="${escapeHtml(item.id)}" title="${subExpanded ? 'Hide sub checklist' : 'Show sub checklist'}">${escapeHtml(subButtonText)}</button>` : '';
-          const sublist = subitems.length && subExpanded ? `<div class="subcheck-list">${subitems.map(subitem => {
+          const sublist = subitems.length ? `<div class="subcheck-list${subExpanded ? '' : ' print-extra-subitems'}">${subitems.map(subitem => {
             const subDoneClass = subitem.done ? ' done' : '';
             const subChecked = subitem.done ? ' checked' : '';
             return `<label class="subcheck-item${subDoneClass}"><input type="checkbox" class="subchecklist-toggle" data-row-id="${escapeHtml(row.id)}" data-item-id="${escapeHtml(item.id)}" data-subitem-id="${escapeHtml(subitem.id)}"${subChecked}><span>${escapeHtml(subitem.text)}</span></label>`;
           }).join('')}</div>` : '';
           return `<div class="checklist-entry" data-item-id="${escapeHtml(item.id)}"><div class="check-parent-row"><label class="check-item${doneClass}"${title}><input type="checkbox" class="checklist-toggle" data-row-id="${escapeHtml(row.id)}" data-item-id="${escapeHtml(item.id)}"${checked}><span>${escapeHtml(item.text)}</span></label>${subButton}</div>${sublist}</div>`;
-        }).join('') : '<div class="items-empty">No action items</div>';
+        }).join('') : '';
         return `<div class="checklist-list${rowExpanded ? ' expanded' : ''}">${progress}${list}</div>`;
       }
 
@@ -3301,22 +3791,17 @@
       }
 
       function alignChecklistRemarks(rowId) {
-        const checklistCell = document.querySelector(`.checklist-col[data-row-id="${cssEscape(rowId)}"]`);
-        const remarksCell = document.querySelector(`.remarks-col[data-row-id="${cssEscape(rowId)}"]`);
-        if (!checklistCell || !remarksCell) return;
-        const progress = checklistCell.querySelector('.checklist-progress');
-        const spacer = remarksCell.querySelector('.remarks-progress-spacer');
-        if (progress && spacer) spacer.style.height = `${progress.getBoundingClientRect().height}px`;
-        checklistCell.querySelectorAll('.checklist-entry').forEach(checkEntry => {
-          const itemId = checkEntry.dataset.itemId;
-          const remarkEntry = remarksCell.querySelector(`.remarks-entry[data-item-id="${cssEscape(itemId)}"]`);
-          if (!remarkEntry) return;
-          checkEntry.style.minHeight = '';
-          remarkEntry.style.minHeight = '';
-          const height = Math.max(checkEntry.getBoundingClientRect().height, remarkEntry.getBoundingClientRect().height);
-          checkEntry.style.minHeight = `${height}px`;
-          remarkEntry.style.minHeight = `${height}px`;
-        });
+        const checklist = document.querySelector('.checklist-col[data-row-id="' + cssEscape(rowId) + '"]');
+        const remarks = document.querySelector('.remarks-col[data-row-id="' + cssEscape(rowId) + '"]');
+        if (!checklist || !remarks) return;
+        const progress = checklist.querySelector('.checklist-progress');
+        const spacer = remarks.querySelector('.remarks-progress-spacer');
+        if (progress && spacer) spacer.style.height = progress.getBoundingClientRect().height + 'px';
+        const checks = Array.from(checklist.querySelectorAll('.checklist-entry'));
+        const notes = Array.from(remarks.querySelectorAll('.remarks-entry'));
+        checks.forEach((entry,index) => { entry.style.minHeight=''; if (notes[index]) notes[index].style.minHeight=''; });
+        const heights = checks.map((entry,index) => Math.max(entry.getBoundingClientRect().height,notes[index]?.getBoundingClientRect().height || 0));
+        checks.forEach((entry,index) => { entry.style.minHeight=heights[index]+'px'; if (notes[index]) notes[index].style.minHeight=heights[index]+'px'; });
       }
 
       function bindChecklistRemarkScroll(rowId) {
@@ -3348,52 +3833,37 @@
       }
 
       function openProjectModal() {
-        setValue('projectNameInput', data.projectName);
-        setValue('projectCodeProjectInput', data.projectCode || getProjectCode());
-        setValue('projectOwnerInput', data.projectOwner || '');
-        setValue('projectOwnerTitleInput', data.projectOwnerTitle || '');
-        setValue('actionByLabelInput', data.actionByLabel || 'Action By');
-        setValue('actionByPositionInput', data.actionByPosition || 'afterAction');
-        setValue('clientShowFreeColumnInput', data.clientShowFreeColumn ? 'yes' : 'no');
-        setValue('eventStartInput', data.eventStartDate || '');
-        setValue('eventEndInput', data.eventEndDate || '');
-        setValue('versionInput', data.version);
-        setValue('lastUpdateInput', data.lastUpdate);
-        setValue('projectStartInput', data.startDate);
-        setValue('projectEndInput', data.endDate);
-        setValue('summaryInput', data.summary);
-        setValue('notesInput', data.notes);
-        setValue('holidaysInput', data.holidays.join(', '));
-        setValue('holidayProxyInput', data.holidayProxyUrl || '');
-        setValue('workColorInput', data.colors.work);
-        setValue('weekendColorInput', data.colors.weekend);
-        setValue('highlightColorInput', data.colors.highlight);
-        setText('logoStatus', data.logoDataUrl ? 'Logo uploaded and will appear on client PDF.' : 'No logo uploaded.');
+        const fields = { projectNameInput: data.projectName, projectCodeProjectInput: data.projectCode, projectOwnerInput: data.projectOwner, projectOwnerTitleInput: data.projectOwnerTitle, actionByLabelInput: data.actionByLabel, actionByPositionInput: data.actionByPosition, clientShowFreeColumnInput: data.clientShowFreeColumn ? 'yes' : 'no', eventStartInput: data.eventStartDate, eventEndInput: data.eventEndDate, versionInput: data.version, lastUpdateInput: data.lastUpdate, projectStartInput: data.startDate, projectEndInput: data.endDate, summaryInput: data.summary, notesInput: data.notes, holidaysInput: data.holidays.join(', '), holidayProxyInput: data.holidayProxyUrl, workColorInput: data.colors.work, weekendColorInput: data.colors.weekend, highlightColorInput: data.colors.highlight };
+        Object.entries(fields).forEach(([id,value]) => setValue(id,value || ''));
+        projectLogoDraft = data.logoDataUrl || '';
+        projectLogoRead += 1;
+        setText('logoStatus', projectLogoDraft ? 'Logo selected' : 'No logo');
         safeClassAdd(byId('projectModal'), 'show');
+        captureEditor('projectModal');
       }
 
       function closeProjectModal() {
+        projectLogoRead += 1;
         safeClassRemove(byId('projectModal'), 'show');
+        settleRemoteAfterEditor();
       }
 
       function importLogoFile(file) {
-        if (!file) return;
-        if (file.size > 1000000) return alert('Logo 檔案太大，建議用 1MB 以下的 PNG / JPG / SVG。');
+        if (!file || file.size > 700000) return alert('Choose a PNG, JPG, WebP or SVG below 700 KB.');
         const reader = new FileReader();
+        const request = ++projectLogoRead;
         reader.onload = () => {
-          data.logoDataUrl = String(reader.result || '');
-          setText('logoStatus', 'Logo uploaded and will appear on client PDF.');
-          touchLastUpdate();
-          render();
+          if (request !== projectLogoRead || !byId('projectModal').classList.contains('show')) return;
+          projectLogoDraft = String(reader.result || '');
+          setText('logoStatus', 'New logo selected');
         };
         reader.readAsDataURL(file);
       }
 
       function removeLogo() {
-        data.logoDataUrl = '';
-        setText('logoStatus', 'No logo uploaded.');
-        touchLastUpdate();
-        render();
+        projectLogoRead += 1;
+        projectLogoDraft = '';
+        setText('logoStatus', 'Logo removed from draft');
       }
 
       function applyClientPdfPreset() {
@@ -3401,9 +3871,8 @@
         data.viewMode = days > 180 ? 'month' : days > 31 ? 'week' : 'day';
         data.audienceMode = 'client';
         setValue('densityInput', 'normal');
-        touchLastUpdate();
+        rememberView();
         render();
-        window.alert('已切換到較適合客戶 PDF 的版面，並隱藏 Action Items / Remarks。長 programme 會自動改用 Week / Month View，列印時建議使用 A3 landscape。');
       }
 
       function applyProjectEditor() {
@@ -3413,9 +3882,20 @@
           byId('projectOwnerInput')?.focus();
           return;
         }
-        data.projectName = (byId('projectNameInput')?.value || '').trim() || 'Project Timeline';
         const requestedProjectCode = normalizeProjectCode(byId('projectCodeProjectInput')?.value || getProjectCode());
+        if (requestedProjectCode !== data.projectCode) {
+          if (readStore(localProjectStorageKey(requestedProjectCode),null)) return alert('That Project Code already exists. Load it from Projects, or use a new code.');
+          if (!window.confirm('Save under ' + requestedProjectCode + ' as a new local project? The old code will be retained and Auto Sync will stop.')) return;
+          if (!saveData()) return;
+          stopCloudSyncSilently();
+          data.projectCode = requestedProjectCode;
+          lastSavedSnapshot = null;
+          lastSavedContent = '';
+          undoEntries = []; redoEntries = [];
+        }
+        data.projectName = (byId('projectNameInput')?.value || '').trim() || 'Project Timeline';
         data.projectOwner = owner;
+        data.logoDataUrl = projectLogoDraft;
         data.projectOwnerTitle = (byId('projectOwnerTitleInput')?.value || '').trim();
         data.actionByLabel = (byId('actionByLabelInput')?.value || '').trim() || 'Action By';
         data.actionByPosition = ['afterAction', 'afterItems', 'afterRemarks'].includes(byId('actionByPositionInput')?.value) ? byId('actionByPositionInput').value : 'afterAction';
@@ -3446,6 +3926,7 @@
         render();
         suppressCloudSave = false;
         handleProjectCodeChange(requestedProjectCode, { saveWhenSame: true });
+        queueCloudSave();
         autoUpdateHolidays('project-editor', true);
       }
 
@@ -3565,11 +4046,13 @@
             safeClassAdd(document.body, 'column-resizing');
             const move = moveEvent => {
               setWorkspaceColumnWidth(key, startWidth + moveEvent.clientX - startX);
+              scheduleAlignment();
             };
             const end = () => {
               safeClassRemove(document.body, 'column-resizing');
               window.removeEventListener('pointermove', move);
               saveUiState();
+              scheduleAlignment();
             };
             window.addEventListener('pointermove', move);
             window.addEventListener('pointerup', end, { once: true });
@@ -3578,6 +4061,7 @@
             event.preventDefault();
             event.stopPropagation();
             resetWorkspaceColumnWidth(handle.dataset.columnKey);
+            scheduleAlignment();
           };
         });
       }
@@ -3587,6 +4071,7 @@
         if (!row) return;
         clearInlineEditors();
         dragState = {
+            snapshot: contentData(data),
           rowId: row.id,
           action,
           originStart: row.start,
@@ -3646,9 +4131,17 @@
         }
         window.removeEventListener('pointermove', onTimelineDragMove);
         safeClassRemove(document.body, 'timeline-dragging');
-        if (dragState?.moved) touchLastUpdate();
+        if (dragState?.moved) {
+          undoEntries.push(dragState.snapshot);
+          redoEntries = [];
+          recordRecovery(dragState.snapshot,'Before moving timeline');
+          touchLastUpdate();
+        }
         dragState = null;
+        historyApplying = true;
         render();
+        historyApplying = false;
+        queueCloudSave();
       }
 
       function cssEscape(value) {
@@ -3751,6 +4244,7 @@
           if (isValidDate(start)) row.start = start;
           if (isValidDate(end)) row.end = end;
           if (row.end < row.start) [row.start, row.end] = [row.end, row.start];
+          touchLastUpdate();
           render();
         };
         const cancel = () => render();
@@ -3784,13 +4278,17 @@
         setValue('quickHighlightInput', row.highlight ? 'YES' : 'NO');
         setValue('quickChecklistInput', checklistItemsText(row));
         setValue('quickRemarksInput', checklistRemarksText(row));
+        byId('quickChecklistInput').readOnly = true;
+        byId('quickRemarksInput').readOnly = true;
         setText('quickRowHint', quickPeriod ? `Clicked: ${quickPeriod.start} to ${quickPeriod.end}` : '');
         safeClassAdd(byId('quickRowModal'), 'show');
+        captureEditor('quickRowModal');
       }
 
       function closeQuickRowModal() {
         safeClassRemove(byId('quickRowModal'), 'show');
         quickPeriod = null;
+        settleRemoteAfterEditor();
       }
 
       function applyQuickRowEditor() {
@@ -3805,7 +4303,7 @@
         row.start = isValidDate(start) ? start : row.start;
         row.end = isValidDate(end) ? end : row.end;
         if (row.end < row.start) [row.start, row.end] = [row.end, row.start];
-        row.checklist = checklistFromTextareas(byId('quickChecklistInput')?.value || '', byId('quickRemarksInput')?.value || '', row.checklist);
+        // Checklist structure is edited in the dedicated item editor.
         row.highlight = (byId('quickHighlightInput')?.value || 'NO') === 'YES';
         touchLastUpdate();
         closeQuickRowModal();
@@ -3838,11 +4336,13 @@
         editingItems = normalizeChecklist(row.checklist);
         renderItemsEditor();
         safeClassAdd(byId('itemsModal'), 'show');
+        captureEditor('itemsModal');
       }
 
       function closeItemsModal() {
         safeClassRemove(byId('itemsModal'), 'show');
         editingItems = [];
+        settleRemoteAfterEditor();
       }
 
       function renderItemsEditor() {
@@ -3852,8 +4352,9 @@
         const previousScrollTop = wrap ? wrap.scrollTop : 0;
         body.innerHTML = editingItems.map((item, index) => `
           <tr>
+            <td class="editor-order-cell"><span class="drag-order-handle" draggable="true" data-drag-index="${index}" title="Drag to reorder" role="button" tabindex="0" aria-label="Move item ${index + 1}">::</span><select class="move-position" data-move-index="${index}" aria-label="Move item ${index + 1} to position">${editingItems.map((_,position) => '<option value="' + position + '"' + (position === index ? ' selected' : '') + '>' + (position + 1) + '</option>').join('')}</select></td>
             <td><input data-index="${index}" data-field="done" type="checkbox" ${isChecklistItemDone(item) ? 'checked' : ''}></td>
-            <td><input data-index="${index}" data-field="text" value="${escapeHtml(item.text)}"></td>
+            <td><textarea class="item-title-input" data-index="${index}" data-field="text" aria-label="Action item">${escapeHtml(item.text)}</textarea></td>
             <td>
               <div class="subitems-editor">
                 ${normalizeSubChecklistForEditor(item.subitems).map((subitem, subIndex) => `
@@ -3868,7 +4369,6 @@
             <td><textarea class="item-remark-input" data-index="${index}" data-field="remarks">${escapeHtml(item.remarks)}</textarea></td>
             <td>
               <div class="item-action-controls">
-                <span class="drag-order-handle" draggable="true" data-drag-index="${index}" title="Drag to reorder action item">Drag</span>
                 <button class="mini danger" data-action="deleteItem" data-index="${index}">Delete</button>
               </div>
             </td>
@@ -3884,6 +4384,7 @@
           handleItemButton({ currentTarget: button });
         };
         bindEditorDragOrder(body, 'items');
+        bindPositionMoves(body,'items');
       }
 
       function updateEditingItemField(event) {
@@ -3935,6 +4436,12 @@
       function applyItemsEditor() {
         const row = findRowById(byId('itemsRowId')?.value || '');
         if (!row) return;
+        const empty = editingItems.findIndex(item => !item.text.trim());
+        if (empty >= 0) {
+          alert('Enter an Action Item name, or delete the empty item.');
+          byId('itemsEditorBody')?.querySelector('[data-field="text"][data-index="' + empty + '"]')?.focus();
+          return;
+        }
         row.checklist = normalizeChecklist(editingItems);
         touchLastUpdate();
         closeItemsModal();
@@ -3945,10 +4452,12 @@
         editingRows = data.rows.slice().sort((a, b) => a.order - b.order).map((row, order) => ({ ...row, order }));
         renderRowsEditor();
         safeClassAdd(byId('rowsModal'), 'show');
+        captureEditor('rowsModal');
       }
 
       function closeRowsModal() {
         safeClassRemove(byId('rowsModal'), 'show');
+        settleRemoteAfterEditor();
       }
 
       function renderRowsEditor() {
@@ -3981,6 +4490,7 @@
           button.addEventListener('click', handleRowButton);
         });
         bindEditorDragOrder(body, 'rows');
+        bindPositionMoves(body,'rows');
       }
 
       function updateEditingRowField(event) {
@@ -4006,48 +4516,42 @@
       }
 
       function bindEditorDragOrder(body, type) {
-        if (!body) return;
-        body.querySelectorAll('.drag-order-handle').forEach(handle => {
-          handle.addEventListener('dragstart', event => {
-            const index = Number(handle.dataset.dragIndex);
-            if (!Number.isInteger(index)) return;
-            if (type === 'items') draggedItemIndex = index;
-            else draggedRowIndex = index;
-            safeClassAdd(handle.closest('tr'), 'dragging-row');
+        let source = null;
+        let after = false;
+        const clear = () => body.querySelectorAll('tr').forEach(row => { row.classList.remove('dragging-row','drag-over-row','drag-after-row'); });
+        body.querySelectorAll('.drag-order-handle').forEach((handle,index) => {
+          handle.ondragstart = event => {
+            source = index;
+            handle.closest('tr').classList.add('dragging-row');
             event.dataTransfer.effectAllowed = 'move';
-            event.dataTransfer.setData('text/plain', String(index));
-          });
-          handle.addEventListener('dragend', () => {
-            draggedItemIndex = null;
-            draggedRowIndex = null;
-            body.querySelectorAll('tr').forEach(row => {
-              safeClassRemove(row, 'dragging-row');
-              safeClassRemove(row, 'drag-over-row');
-            });
-          });
+            event.dataTransfer.setData('text/plain',String(index));
+          };
+          handle.ondragend = () => { source = null; clear(); };
         });
-        body.querySelectorAll('tr').forEach((row, targetIndex) => {
-          row.addEventListener('dragover', event => {
+        body.querySelectorAll('tr').forEach((row,index) => {
+          row.ondragover = event => {
+            if (source === null) return;
             event.preventDefault();
-            event.dataTransfer.dropEffect = 'move';
-            body.querySelectorAll('tr').forEach(candidate => safeClassRemove(candidate, 'drag-over-row'));
-            safeClassAdd(row, 'drag-over-row');
-          });
-          row.addEventListener('drop', event => {
+            after = event.clientY > row.getBoundingClientRect().top + row.getBoundingClientRect().height / 2;
+            body.querySelectorAll('tr').forEach(candidate => candidate.classList.remove('drag-over-row','drag-after-row'));
+            row.classList.add(after ? 'drag-after-row' : 'drag-over-row');
+            const wrap = body.closest('.row-editor-wrap');
+            const bounds = wrap.getBoundingClientRect();
+            if (event.clientY < bounds.top + 40) wrap.scrollTop -= 12;
+            else if (event.clientY > bounds.bottom - 40) wrap.scrollTop += 12;
+          };
+          row.ondrop = event => {
             event.preventDefault();
-            const sourceIndex = type === 'items' ? draggedItemIndex : draggedRowIndex;
-            if (!Number.isInteger(sourceIndex) || sourceIndex === targetIndex) return;
-            const collection = type === 'items' ? editingItems : editingRows;
-            const [moved] = collection.splice(sourceIndex, 1);
-            collection.splice(targetIndex, 0, moved);
-            if (type === 'items') {
-              editingItems = collection.map((item, order) => ({ ...item, order }));
-              renderItemsEditor();
-            } else {
-              editingRows = collection.map((item, order) => ({ ...item, order }));
-              renderRowsEditor();
-            }
-          });
+            if (source === null) return;
+            let target = index + (after ? 1 : 0);
+            if (source < target) target -= 1;
+            const list = type === 'items' ? editingItems : editingRows;
+            target = Math.min(list.length - 1,Math.max(0,target));
+            const origin = source;
+            source = null;
+            clear();
+            moveEditorEntry(type,origin,target);
+          };
         });
       }
 
@@ -4083,15 +4587,23 @@
       function openDataModal() {
         setValue('dataEditor', JSON.stringify(data, null, 2));
         safeClassAdd(byId('dataModal'), 'show');
+        captureEditor('dataModal');
       }
 
       function closeDataModal() {
         safeClassRemove(byId('dataModal'), 'show');
+        settleRemoteAfterEditor();
       }
 
       function applyDataEditor() {
         try {
-          data = normalizeData(JSON.parse(byId('dataEditor')?.value || '{}'));
+          const parsed = JSON.parse(byId('dataEditor')?.value || '{}');
+          if (!Array.isArray(parsed.rows)) throw new Error('Rows must be an array');
+          if (normalizeProjectCode(parsed.projectCode) !== data.projectCode) {
+            if (!window.confirm('Changing Project Code stops Auto Sync. Continue?')) return;
+            stopCloudSyncSilently();
+          }
+          data = normalizeData(parsed);
           touchLastUpdate();
           closeDataModal();
           render();
@@ -4126,8 +4638,8 @@
       function exportCsv() {
         const includeChecklist = data.audienceMode !== 'client';
         const keys = getLeftColumnKeys().filter(key => includeChecklist || !['checklist', 'remarks'].includes(key));
-        const headers = keys.map(key => leftColumnMeta(key).label).concat(['Start', 'End', 'Highlight']);
-        const rows = [headers].concat(data.rows.map(row => keys.map(key => exportColumnValue(row, key)).concat([row.start, row.end, row.highlight ? 'YES' : 'NO'])));
+        const headers = keys.map(key => leftColumnMeta(key).label).concat(['Start', 'End', 'Highlight'],includeChecklist ? ['Checklist JSON'] : []);
+        const rows = [headers].concat(visibleRows().map(row => keys.map(key => exportColumnValue(row, key)).concat([row.start, row.end, row.highlight ? 'YES' : 'NO'],includeChecklist ? [JSON.stringify(normalizeChecklist(row.checklist))] : [])));
         const csv = BOM + rows.map(row => row.map(csvEscape).join(',')).join(CR + LF);
         downloadBlob(csv, `${safeFileName(data.projectName)}-programme.csv`, 'text/csv;charset=utf-8');
       }
@@ -4147,7 +4659,7 @@
       }
 
       function exportExcel() {
-        const rows = data.rows.slice().sort((a, b) => a.order - b.order);
+        const rows = visibleRows();
         const mode = getResolvedViewMode();
         const periods = data.audienceMode === 'actions' ? [] : buildPeriods(mode);
         const includeChecklist = data.audienceMode !== 'client';
@@ -4233,34 +4745,50 @@ ${visualRows}
 
       function importCsv(file) {
         const reader = new FileReader();
+        const code = data.projectCode;
+        const before = cloudDataJson(data,code);
         reader.onload = () => {
           try {
+            if (data.projectCode !== code || cloudDataJson(data,code) !== before) throw new Error('Project changed while reading the CSV. Import again.');
             const rows = parseCsv(reader.result);
-            if (!rows.length) throw new Error('empty csv');
-            const headers = rows.shift().map(header => header.trim().toLowerCase());
-            const index = name => headers.indexOf(name.toLowerCase());
-            const value = (row, name) => {
-              const position = index(name);
-              return position >= 0 ? row[position] || '' : '';
+            if (rows.length < 2) throw new Error('CSV has no data rows.');
+            const headers = rows.shift().map(value => value.trim().toLowerCase());
+            for (const name of ['category','action','start','end']) if (!headers.includes(name)) throw new Error('Missing column: ' + name);
+            if (!headers.includes('sub-category') && !headers.includes('item')) throw new Error('Missing Sub-Category column.');
+            const value = (row,name) => row[headers.indexOf(name.toLowerCase())] || '';
+            const parseInputDate = text => {
+              if (isValidDate(text)) return text;
+              const match = text.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+              const date = match ? match[3] + '-' + match[2] + '-' + match[1] : '';
+              return isValidDate(date) ? date : '';
             };
-            data.rows = rows.map((row, order) => normalizeRow({
-              category: value(row, 'Category'),
-              item: value(row, 'Sub-Category') || value(row, 'Item'),
-              action: value(row, 'Action'),
-              actionBy: value(row, data.actionByLabel) || value(row, 'Action By'),
-              checklist: checklistFromTextareas(value(row, 'Action Items'), value(row, 'Remarks')),
-              start: value(row, 'Start'),
-              end: value(row, 'End'),
-              highlight: value(row, 'Highlight'),
-              order
-            }, order, data.startDate));
-            touchLastUpdate();
-            render();
-          } catch (error) {
-            alert('CSV 格式不正確，請用 Export CSV 的格式再匯入。');
-          }
+            const parsed = rows.map((row,index) => {
+              const start = parseInputDate(value(row,'Start').trim());
+              const end = parseInputDate(value(row,'End').trim());
+              if (!start || !end || end < start) throw new Error('Row ' + (index + 2) + ': invalid period. Use YYYY-MM-DD or DD/MM/YYYY.');
+              const encoded = value(row,'Checklist JSON');
+              let checklist = encoded ? JSON.parse(encoded) : checklistFromTextareas(value(row,'Action Items'),value(row,'Remarks'));
+              if (!Array.isArray(checklist) || checklist.some(item => !item || typeof item !== 'object')) throw new Error('Row ' + (index + 2) + ': invalid Checklist JSON.');
+              return normalizeRow({category:value(row,'Category'),item:value(row,'Sub-Category') || value(row,'Item'),action:value(row,'Action'),actionBy:value(row,data.actionByLabel) || value(row,'Action By'),start,end,checklist,highlight:value(row,'Highlight'),order:index},index,start);
+            });
+            pendingCsvRows = parsed;
+            setText('csvImportSummary',parsed.length + ' rows validated');
+            setHtml('csvPreviewBody',parsed.slice(0,100).map(row => '<tr><td>' + escapeHtml(row.category) + '</td><td>' + escapeHtml(row.item) + '</td><td>' + escapeHtml(row.action) + '</td><td>' + escapeHtml(row.start + ' to ' + row.end) + '</td></tr>').join(''));
+            safeClassAdd(byId('csvImportModal'),'show');
+          } catch (error) { alert('CSV not imported: ' + error.message); }
         };
         reader.readAsText(file);
+      }
+
+      function applyCsvImport(replace) {
+        if (!pendingCsvRows.length) return;
+        if (replace && !window.confirm('Back up and replace all current rows?')) return;
+        recordRecovery(data,'Before CSV import');
+        data.rows = (replace ? [] : data.rows).concat(pendingCsvRows).map((row,order) => ({...row,order}));
+        touchLastUpdate();
+        pendingCsvRows = [];
+        safeClassRemove(byId('csvImportModal'),'show');
+        render();
       }
 
       function bind(id, eventName, handler) {
@@ -4320,7 +4848,288 @@ ${visualRows}
         console.assert(hasAllRequiredElements() === true, 'required DOM elements should exist');
       }
 
+      function scheduleAlignment() {
+        if (alignFrame) window.cancelAnimationFrame(alignFrame);
+        alignFrame = window.requestAnimationFrame(() => { alignFrame = 0; alignAllChecklistRemarks(); });
+      }
+
+      function visibleRows() {
+        return data.rows.slice().sort((a,b) => a.order - b.order).filter(row => {
+          if (rowFilters.category && row.category !== rowFilters.category) return false;
+          if (rowFilters.person && row.actionBy !== rowFilters.person) return false;
+          const items = normalizeChecklist(row.checklist);
+          if (rowFilters.status === 'empty' && items.length) return false;
+          if (rowFilters.status === 'complete' && (!items.length || !items.every(isChecklistItemDone))) return false;
+          if (rowFilters.status === 'incomplete' && !items.some(item => !isChecklistItemDone(item))) return false;
+          const text = [row.category,row.item,row.action,row.actionBy, ...items.flatMap(item => [item.text,item.remarks,...item.subitems.map(subitem => subitem.text)])].join(' ').toLowerCase();
+          return text.includes(rowFilters.search.trim().toLowerCase());
+        });
+      }
+
+      function updateFilterControls() {
+        setValue('rowSearchInput',rowFilters.search);
+        setValue('completionFilter',rowFilters.status);
+        [['categoryFilter','category','All categories'],['personFilter','actionBy','All people / teams']].forEach(([id,key,label]) => {
+          const control = byId(id);
+          if (!control) return;
+          const value = key === 'category' ? rowFilters.category : rowFilters.person;
+          const options = Array.from(new Set(data.rows.map(row => row[key]).filter(Boolean))).sort();
+          control.innerHTML = '<option value="">' + label + '</option>' + options.map(option => '<option value="' + escapeHtml(option) + '">' + escapeHtml(option) + '</option>').join('');
+          control.value = value;
+        });
+        const rows = visibleRows();
+        const items = rows.flatMap(row => normalizeChecklist(row.checklist));
+        setText('filterSummary', rows.length + '/' + data.rows.length + ' rows / ' + items.filter(isChecklistItemDone).length + '/' + items.length + ' items complete');
+      }
+
+      function moveEditorEntry(type, from, to) {
+        const list = type === 'items' ? editingItems : editingRows;
+        if (from < 0 || to < 0 || from >= list.length || to >= list.length || from === to) return;
+        const [entry] = list.splice(from,1);
+        list.splice(to,0,entry);
+        list.forEach((candidate,index) => candidate.order = index);
+        if (type === 'items') renderItemsEditor();
+        else renderRowsEditor();
+        const body = byId(type === 'items' ? 'itemsEditorBody' : 'rowsEditorBody');
+        body.querySelectorAll('.drag-order-handle')[to]?.focus({preventScroll:true});
+      }
+
+      function bindPositionMoves(body,type) {
+        body.querySelectorAll('.move-position').forEach(select => select.onchange = event => {
+          event.stopPropagation();
+          moveEditorEntry(type,Number(select.dataset.moveIndex),Number(select.value));
+        });
+        body.querySelectorAll('.drag-order-handle').forEach((handle,index) => {
+          handle.tabIndex = 0;
+          handle.setAttribute('role','button');
+          handle.setAttribute('aria-label','Reorder ' + type + ' ' + (index + 1));
+          handle.onkeydown = event => {
+            if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+            event.preventDefault();
+            moveEditorEntry(type,index,index + (event.key === 'ArrowUp' ? -1 : 1));
+          };
+        });
+      }
+
+      function freshChecklist(items) {
+        return normalizeChecklist(items).map((item,order) => ({
+          ...item,id:uid('item'),done:false,order,
+          subitems:normalizeSubChecklist(item.subitems).map((subitem,index) => ({...subitem,id:uid('subitem'),done:false,order:index}))
+        }));
+      }
+
+      function refreshLibrary() {
+        const library = readStore(LIBRARY_KEY,{});
+        const select = byId('librarySelect');
+        const selected = select.value;
+        select.innerHTML = Object.keys(library).sort().map(name => '<option value="' + escapeHtml(name) + '">' + escapeHtml(name) + '</option>').join('');
+        if (library[selected]) select.value = selected;
+        const items = normalizeChecklist(library[select.value]?.items);
+        setText('libraryPreview', items.length ? items.map((item,index) => (index + 1) + '. ' + item.text + (item.remarks ? '\n   ' + item.remarks : '') + item.subitems.map(subitem => '\n   - ' + subitem.text).join('')).join('\n\n') : 'No saved checklist.');
+        byId('libraryAppendButton').disabled = !items.length;
+        byId('libraryReplaceButton').disabled = !items.length;
+      }
+
+      function loadLibraryItems(replace) {
+        const set = readStore(LIBRARY_KEY,{})[byId('librarySelect').value];
+        if (!set) return;
+        if (replace && editingItems.length && !window.confirm('Replace the editor checklist?')) return;
+        const names = new Set(editingItems.map(item => item.text.trim().toLowerCase()));
+        const fresh = freshChecklist(set.items).filter(item => replace || !byId('librarySkipDuplicates').checked || !names.has(item.text.trim().toLowerCase()));
+        editingItems = (replace ? [] : editingItems).concat(fresh).map((item,order) => ({...item,order}));
+        renderItemsEditor();
+        safeClassRemove(byId('libraryModal'),'show');
+      }
+
+      function openOutputPreview() {
+        if (hasOpenEditorModal()) return;
+        setValue('outputAudience',data.audienceMode);
+        setValue('outputPeriod','auto');
+        byId('outputFree').checked = data.clientShowFreeColumn;
+        safeClassAdd(byId('outputModal'),'show');
+        refreshOutputPreview();
+      }
+
+      function refreshOutputPreview() {
+        const original = data;
+        const originalSubitems = expandedSubitems;
+        const originalExpanded = expandedChecklistRows;
+        const previewData = normalizeData(data);
+        previewData.audienceMode = byId('outputAudience').value;
+        previewData.clientShowFreeColumn = byId('outputFree').checked;
+        const days = dayDiff(previewData.startDate,previewData.endDate) + 1;
+        const chosen = byId('outputPeriod').value;
+        previewData.viewMode = chosen === 'auto' ? (days > 180 ? 'month' : days > 31 ? 'week' : 'day') : chosen;
+        let table,mode;
+        try {
+          data = previewData;
+          expandedChecklistRows = new Set(data.rows.map(row => row.id));
+          expandedSubitems = new Set(data.rows.flatMap(row => normalizeChecklist(row.checklist).map(item => row.id + ':' + item.id)));
+          mode = getResolvedViewMode();
+          const periods = data.audienceMode === 'actions' ? [] : buildPeriods(mode);
+          table = buildTable(byId('outputAllRows').checked ? data.rows.slice().sort((a,b) => a.order - b.order) : visibleRows(),periods,mode);
+        } finally { data = original; expandedSubitems = originalSubitems; expandedChecklistRows = originalExpanded; }
+        const head = document.querySelector('.sheet-head').cloneNode(true);
+        head.querySelector('#viewText').textContent = 'View: ' + (previewData.audienceMode === 'actions' ? 'ACTIONS ONLY' : mode.toUpperCase() + ' / ' + previewData.audienceMode.toUpperCase());
+        const classes = ['freeze-cols-0',previewData.audienceMode === 'client' ? 'client-view' : '',previewData.audienceMode === 'actions' ? 'actions-only-view' : '',previewData.clientShowFreeColumn ? 'client-show-free-column' : '',original.logoDataUrl ? 'has-logo' : '',mode === 'week' ? 'week-view' : mode === 'month' ? 'month-view' : ''].join(' ');
+        const styles = document.querySelector('style').textContent;
+        const paper = byId('outputPaper').value === 'A4' ? 'A4' : 'A3';
+        const previewStyle = ':root{--work:' + data.colors.work + ';--weekend:' + data.colors.weekend + ';--highlight:' + data.colors.highlight + '}body{background:white} .app{padding:12px} .programme-wrap{max-height:none;overflow:visible} .sheet{box-shadow:none;overflow:visible} .checklist-list,.remarks-list{max-height:none!important;height:auto!important;overflow:visible!important}.column-resize-handle,.edit-items-button,.row-expand-toggle,.subcheck-toggle-button,.drag-handle{display:none!important}.programme [data-left-index]{position:static!important;left:auto!important} @page{size:' + paper + ' landscape;margin:6mm}';
+        const frame = byId('outputFrame');
+        frame.onload = () => {
+          const doc = frame.contentDocument;
+          if (!doc) return;
+          const align = () => alignPreviewEntries(doc);
+          frame.contentWindow.addEventListener('beforeprint',align);
+          align();
+        };
+        frame.srcdoc = '<!doctype html><html><head><meta charset="utf-8"><style>' + styles + '\n' + previewStyle + '.checklist-progress{display:block;position:static}.progress-label{white-space:nowrap}.progress-track{margin-top:4px}</style></head><body class="' + classes + '"><div class="app compact"><section class="sheet">' + head.outerHTML + '<div class="client-summary">' + escapeHtml(data.summary) + '</div><div class="programme-wrap">' + table + '</div><div class="notes">' + escapeHtml(data.notes).replace(/\n/g,'<br>') + '</div></section></div></body></html>';
+      }
+
+      function alignPreviewEntries(doc) {
+        doc.querySelectorAll('.checklist-col[data-row-id]').forEach(cell => {
+          const remark = doc.querySelector('.remarks-col[data-row-id="' + cssEscape(cell.dataset.rowId) + '"]');
+          if (!remark) return;
+          const progress = cell.querySelector('.checklist-progress');
+          const spacer = remark.querySelector('.remarks-progress-spacer');
+          if (spacer && progress) spacer.style.height = progress.getBoundingClientRect().height + 'px';
+          const checks = Array.from(cell.querySelectorAll('.checklist-entry'));
+          const notes = Array.from(remark.querySelectorAll('.remarks-entry'));
+          checks.forEach((entry,index) => { entry.style.minHeight=''; if (notes[index]) notes[index].style.minHeight=''; });
+          const heights = checks.map((entry,index) => Math.max(entry.getBoundingClientRect().height,notes[index]?.getBoundingClientRect().height || 0));
+          checks.forEach((entry,index) => { entry.style.minHeight=heights[index]+'px'; if (notes[index]) notes[index].style.minHeight=heights[index]+'px'; });
+        });
+      }
+
+      function installWorkspaceFeatures() {
+        document.documentElement.dataset.build = '20261104-workspace-v3';
+        document.querySelectorAll('.modal').forEach(modal => {
+          modal.setAttribute('role','dialog');
+          modal.setAttribute('aria-modal','true');
+          const heading = modal.querySelector('h2');
+          if (heading) { heading.id = heading.id || modal.id + 'Heading'; modal.setAttribute('aria-labelledby',heading.id); }
+        });
+        bind('undoButton','click',() => undoProject());
+        bind('redoButton','click',() => undoProject(true));
+        bind('historyButton','click',openHistory);
+        bind('historyBody','click',event => {
+          const id = event.target.closest('[data-history-id]')?.dataset.historyId;
+          const entry = readStore(HISTORY_KEY,[]).find(candidate => candidate.id === id);
+          if (!entry || !window.confirm('Restore this local version? Current data will be backed up.')) return;
+          recordRecovery(data,'Before version restore');
+          const view = {audienceMode:data.audienceMode,viewMode:data.viewMode,weekLabelMode:data.weekLabelMode};
+          data = normalizeData({...entry.data,...view});
+          touchLastUpdate();
+          render();
+          safeClassRemove(byId('historyModal'),'show');
+        });
+        document.querySelectorAll('[data-close-modal]').forEach(button => button.onclick = () => {
+          safeClassRemove(byId(button.dataset.closeModal),'show');
+          settleRemoteAfterEditor();
+        });
+        document.querySelectorAll('[data-project-tab]').forEach(button => button.onclick = () => {
+          projectListMode = button.dataset.projectTab;
+          document.querySelectorAll('[data-project-tab]').forEach(tab => tab.setAttribute('aria-selected',String(tab === button)));
+          refreshProjectList();
+        });
+        bind('projectSearchInput','input',() => {
+          if (projectListMode === 'cloud') renderProjectList(cachedCloudProjects);
+          else refreshProjectList();
+        });
+        let searchTimer;
+        bind('rowSearchInput','input',event => {
+          rowFilters.search = event.target.value;
+          window.clearTimeout(searchTimer);
+          searchTimer = window.setTimeout(render,160);
+        });
+        [['categoryFilter','category'],['personFilter','person'],['completionFilter','status']].forEach(([id,key]) => bind(id,'change',event => { rowFilters[key] = event.target.value; render(); }));
+        bind('clearFiltersButton','click',() => {
+          rowFilters = {search:'',category:'',person:'',status:'all'};
+          setValue('rowSearchInput',''); setValue('completionFilter','all'); render();
+        });
+        bind('openLibraryButton','click',() => { refreshLibrary(); safeClassAdd(byId('libraryModal'),'show'); });
+        bind('librarySelect','change',refreshLibrary);
+        bind('librarySaveButton','click',() => {
+          const name = byId('libraryNameInput').value.trim();
+          if (!name) return byId('libraryNameInput').focus();
+          const library = readStore(LIBRARY_KEY,{});
+          if (library[name] && !window.confirm('Replace checklist "' + name + '"?')) return;
+          library[name] = {items:freshChecklist(editingItems)};
+          try { localStorage.setItem(LIBRARY_KEY,JSON.stringify(library)); } catch (_) { return alert('Library could not be saved. Export a backup first.'); }
+          refreshLibrary(); setValue('librarySelect',name); refreshLibrary();
+        });
+        bind('libraryAppendButton','click',() => loadLibraryItems(false));
+        bind('libraryReplaceButton','click',() => loadLibraryItems(true));
+        bind('libraryDeleteButton','click',() => {
+          const name = byId('librarySelect').value;
+          if (!name || !window.confirm('Delete library set "' + name + '"?')) return;
+          const library = readStore(LIBRARY_KEY,{}); delete library[name];
+          localStorage.setItem(LIBRARY_KEY,JSON.stringify(library)); refreshLibrary();
+        });
+        bind('libraryExportButton','click',() => downloadBlob(JSON.stringify({type:'checklist-library',sets:readStore(LIBRARY_KEY,{})},null,2),'checklist-library.json','application/json'));
+        bind('libraryImportButton','click',() => byId('libraryFileInput').click());
+        bind('libraryFileInput','change',async event => {
+          try {
+            const file = event.target.files[0]; if (!file) return;
+            const parsed = JSON.parse(await file.text());
+            if (parsed.type !== 'checklist-library' || !parsed.sets || typeof parsed.sets !== 'object' || Array.isArray(parsed.sets)) throw new Error('Invalid library');
+            const incoming = Object.entries(parsed.sets);
+            if (incoming.some(([name,set]) => !name.trim() || !Array.isArray(set?.items))) throw new Error('Invalid checklist set');
+            if (!window.confirm('Import ' + incoming.length + ' checklist sets? Matching names will be replaced.')) return;
+            const library = readStore(LIBRARY_KEY,{});
+            incoming.forEach(([name,set]) => { library[name] = {items:freshChecklist(set.items)}; });
+            localStorage.setItem(LIBRARY_KEY,JSON.stringify(library)); refreshLibrary();
+          } catch (error) { alert('Library import failed: ' + error.message); }
+          event.target.value='';
+        });
+        bind('mergeApplyButton','click',() => {
+          const choices = {};
+          byId('mergeBody').querySelectorAll('select[data-merge-path]').forEach(select => choices[select.dataset.mergePath] = select.value);
+          processRemotePayload(choices);
+        });
+        bind('mergePauseButton','click',() => {
+          recordRecovery(data,'Local version before stopping conflict sync');
+          if (pendingRemotePayload?.data) recordRecovery(pendingRemotePayload.data,'Cloud version at conflict');
+          stopCloudSyncSilently(); safeClassRemove(byId('mergeModal'),'show');
+          setCloudStatus('Local version retained. Auto Sync stopped.', 'warning');
+        });
+        bind('quickEditItemsButton','click',() => {
+          const id = byId('quickRowId').value;
+          applyQuickRowEditor(); openItemsModal(id);
+        });
+        bind('csvAppendButton','click',() => applyCsvImport(false));
+        bind('csvReplaceButton','click',() => applyCsvImport(true));
+        ['outputAudience','outputPeriod','outputPaper','outputFree','outputAllRows'].forEach(id => bind(id,'change',refreshOutputPreview));
+        bind('outputPrintButton','click',() => {
+          const frame = byId('outputFrame');
+          if (!frame.contentDocument?.querySelector('.programme')) return;
+          alignPreviewEntries(frame.contentDocument);
+          frame.contentWindow.focus(); frame.contentWindow.print();
+        });
+        window.addEventListener('resize',scheduleAlignment);
+        window.addEventListener('beforeprint',() => alignPreviewEntries(document));
+        window.addEventListener('afterprint',scheduleAlignment);
+        window.addEventListener('beforeunload',event => {
+          const dirtyEditor = Array.from(editorBaselines.keys()).some(id => byId(id)?.classList.contains('show') && editorBaselines.get(id) !== editorSignature(id));
+          if (dirtyEditor || lastSaveError || (activeCloudProjectCode && cloudDataJson() !== cloudBaseJson)) { event.preventDefault(); event.returnValue=''; }
+        });
+        document.addEventListener('keydown',event => {
+          const modal = Array.from(document.querySelectorAll('.modal.show')).at(-1);
+          if (modal && event.key === 'Tab') {
+            const controls = Array.from(modal.querySelectorAll('button,input,select,textarea,[tabindex="0"]')).filter(control => !control.disabled && control.getClientRects().length);
+            const first = controls[0],last = controls.at(-1);
+            if (!modal.contains(document.activeElement)) { event.preventDefault(); first?.focus(); }
+            else if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+            else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+          }
+          if (!modal && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z' && !event.target.closest('input,textarea,[contenteditable=true]')) {
+            event.preventDefault(); undoProject(event.shiftKey);
+          }
+        });
+      }
+
       function init() {
+        installWorkspaceFeatures();
         cloudClientId = getCloudClientId();
         uiState = loadUiState();
         setToolbarHidden(uiState.toolbarHidden);
@@ -4332,6 +5141,8 @@ ${visualRows}
         });
         populateTemplateSelect();
         data = loadData();
+        restoreView();
+        setValue('densityInput',uiState.density || 'compact');
         initFirebaseWhenReady();
         bind('hideToolbarButton', 'click', () => setToolbarHidden(true));
         bind('showToolbarButton', 'click', () => setToolbarHidden(false));
@@ -4353,16 +5164,16 @@ ${visualRows}
           const loadButton = event.target.closest('.project-list-load-button');
           const deleteButton = event.target.closest('.project-list-delete-button');
           if (loadButton) loadProjectFromList(loadButton.dataset.code || '');
-          if (deleteButton) deleteCloudProject(deleteButton.dataset.code || '');
+          if (deleteButton) deleteProjectFromList(deleteButton.dataset.code || '');
         });
-        bind('cancelNewProjectButton', 'click', closeNewProjectModal);
+        bind('cancelNewProjectButton', 'click', () => requestEditorClose('newProjectModal',closeNewProjectModal));
         bind('createBlankProjectButton', 'click', () => createProject('blank'));
         bind('createFromCurrentButton', 'click', () => createProject('current'));
         bind('projectListModal', 'click', event => {
           if (event.target.id === 'projectListModal') closeProjectListModal();
         });
         bind('newProjectModal', 'click', event => {
-          if (event.target.id === 'newProjectModal') closeNewProjectModal();
+          // Background clicks retain the new-project draft.
         });
         bind('projectCodeInput', 'change', event => {
           handleProjectCodeChange(event.target.value);
@@ -4376,35 +5187,35 @@ ${visualRows}
           if (file) importLogoFile(file);
           event.target.value = '';
         });
-        bind('cancelProjectButton', 'click', closeProjectModal);
+        bind('cancelProjectButton', 'click', () => requestEditorClose('projectModal',closeProjectModal));
         bind('applyProjectButton', 'click', applyProjectEditor);
         bind('editRowsButton', 'click', openRowsModal);
         bind('addRowButton', 'click', addRow);
         bind('duplicateLastRowButton', 'click', duplicateLastRow);
-        bind('cancelRowsButton', 'click', closeRowsModal);
+        bind('cancelRowsButton', 'click', () => requestEditorClose('rowsModal',closeRowsModal));
         bind('applyRowsButton', 'click', applyRowsEditor);
         bind('editDataButton', 'click', openDataModal);
         bind('exportCsvButton', 'click', exportCsv);
         bind('exportExcelButton', 'click', exportExcel);
         bind('importCsvButton', 'click', () => byId('csvInput')?.click());
         bind('updateHkHolidaysButton', 'click', updateHongKongHolidays);
-        bind('printButton', 'click', () => window.print());
-        bind('cancelQuickRowButton', 'click', closeQuickRowModal);
+        bind('printButton', 'click', openOutputPreview);
+        bind('cancelQuickRowButton', 'click', () => requestEditorClose('quickRowModal',closeQuickRowModal));
         bind('applyQuickRowButton', 'click', applyQuickRowEditor);
         bind('deleteQuickRowButton', 'click', deleteQuickRow);
         bind('useClickedAsStartButton', 'click', useClickedAsStart);
         bind('useClickedAsEndButton', 'click', useClickedAsEnd);
         bind('addChecklistItemButton', 'click', addChecklistItem);
-        bind('cancelItemsButton', 'click', closeItemsModal);
+        bind('cancelItemsButton', 'click', () => requestEditorClose('itemsModal',closeItemsModal));
         bind('applyItemsButton', 'click', applyItemsEditor);
-        bind('cancelEditButton', 'click', closeDataModal);
+        bind('cancelEditButton', 'click', () => requestEditorClose('dataModal',closeDataModal));
         bind('applyEditButton', 'click', applyDataEditor);
         bind('startInput', 'change', event => { data.startDate = event.target.value; touchLastUpdate(); render(); autoUpdateHolidays('start-date', true); });
         bind('endInput', 'change', event => { data.endDate = event.target.value; touchLastUpdate(); render(); autoUpdateHolidays('end-date', true); });
-        bind('viewInput', 'change', event => { data.viewMode = event.target.value; touchLastUpdate(); render(); });
-        bind('weekLabelInput', 'change', event => { data.weekLabelMode = event.target.value; touchLastUpdate(); render(); });
-        bind('audienceInput', 'change', event => { data.audienceMode = event.target.value; touchLastUpdate(); render(); });
-        bind('densityInput', 'change', render);
+        bind('viewInput', 'change', event => { data.viewMode = event.target.value; rememberView(); render(); });
+        bind('weekLabelInput', 'change', event => { data.weekLabelMode = event.target.value; rememberView(); render(); });
+        bind('audienceInput', 'change', event => { data.audienceMode = event.target.value; rememberView(); render(); });
+        bind('densityInput', 'change', () => { uiState.density = byId('densityInput').value; saveUiState(); render(); });
         bind('freezeColumnsInput', 'change', event => setFreezeColumns(event.target.value));
         bind('applyTemplateButton', 'click', applyTemplate);
         bind('saveTemplateButton', 'click', saveCurrentAsTemplate);
@@ -4427,22 +5238,6 @@ ${visualRows}
           const file = event.target.files && event.target.files[0];
           if (file) importProjectFromFile(file);
           event.target.value = '';
-        });
-        bind('quickRowModal', 'click', event => {
-          if (event.target.id === 'quickRowModal') closeQuickRowModal();
-        });
-        bind('itemsModal', 'click', event => {
-          if (event.target.id === 'itemsModal') closeItemsModal();
-        });
-        bind('dataModal', 'click', event => {
-          if (event.target.id === 'dataModal') closeDataModal();
-        });
-        document.addEventListener('keydown', event => {
-          if (event.key === 'Escape') {
-            closeQuickRowModal();
-            closeItemsModal();
-            closeDataModal();
-          }
         });
         runTests();
         render();
